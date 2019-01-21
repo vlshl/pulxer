@@ -1,0 +1,89 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Downloader>
+  <Url Base="http://export.finam.ru/{TICKER}_{YYF}{MMF}{DDF}_{YYT}{MMT}{DDT}.txt?d=d&amp;market={Market}&amp;em={ID}&amp;p={TfParam}&amp;df={DF}&amp;mf={MF-1}&amp;yf={YYYYF}&amp;dt={DT}&amp;mt={MT-1}&amp;yt={YYYYT}&amp;f={TICKER}_{YYF}{MMF}{DDF}_{YYT}{MMT}{DDT}&amp;e=.txt&amp;dtf=1&amp;tmf=1&amp;MSOR=0&amp;cn={TICKER}&amp;sep=1&amp;sep2=1&amp;datf={DATF}&amp;at=1" />
+
+  <Timeframes>
+    <Timeframe Tf="8" TfKey="D" TfParam="8" Datf="1" />
+    <Timeframe Tf="7" TfKey="h" TfParam="7" Datf="1" />
+    <Timeframe Tf="6" TfKey="30m" TfParam="6" Datf="1" />
+    <Timeframe Tf="4" TfKey="15m" TfParam="5" Datf="1" />
+    <Timeframe Tf="3" TfKey="10m" TfParam="4" Datf="1" />
+    <Timeframe Tf="2" TfKey="5m" TfParam="3" Datf="1" />
+    <Timeframe Tf="1" TfKey="1m" TfParam="2" Datf="1" />
+    <Timeframe Tf="0" TfKey="t" TfParam="1" Datf="6" />
+  </Timeframes>
+
+  <Tickers>
+    <!-- Расчетная база индекса ММВБ (с 16.12.2015 по 15.03.2016 года) -->
+    <Ticker Ticker="GAZP" ShortName="Газпром ао" Name="ПАО &quot;Газпром&quot;, ао" LotSize="10" Digits="2" Market="1" ID="16842" />
+    <Ticker Ticker="SBER" ShortName="Сбербанк" Name="ПАО Сбербанк, ао" LotSize="10" Digits="2" Market="1" ID="3" />
+    <Ticker Ticker="SBERP" ShortName="Сбербанк пр" Name="ПАО Сбербанк, ап" LotSize="100" Digits="2" Market="1" ID="23" />
+    <Ticker Ticker="LKOH" ShortName="Лукойл" Name="ПАО &quot;ЛУКОЙЛ&quot;, ао" LotSize="1" Digits="1" Market="1" ID="8" />
+    <Ticker Ticker="MGNT" ShortName="Магнит ао" Name="ПАО &quot;Магнит&quot;, ао" LotSize="1" Digits="0" Market="1" ID="17086" />
+    <Ticker Ticker="SNGS" ShortName="Сургнфгз" Name="ОАО &quot;Сургутнефтегаз&quot;, ао" LotSize="100" Digits="3" Market="1" ID="4" />
+    <Ticker Ticker="SNGSP" ShortName="Сургнфгз-п" Name="ОАО &quot;Сургутнефтегаз&quot;, ап" LotSize="100" Digits="3" Market="1" ID="13" />
+    <Ticker Ticker="NVTK" ShortName="Новатэк ао" Name="ОАО &quot;НОВАТЭК&quot;, ао" LotSize="10" Digits="1" Market="1" ID="17370" />
+    <Ticker Ticker="GMKN" ShortName="ГМКНорНик" Name="ПАО &quot;ГМК &quot;Норильский никель&quot;, ао" LotSize="1" Digits="0" Market="1" ID="795" />
+    <Ticker Ticker="VTBR" ShortName="ВТБ ао" Name="Банк ВТБ (ПАО), ао" LotSize="10000" Digits="5" Market="1" ID="19043" />
+    <Ticker Ticker="ROSN" ShortName="Роснефть" Name="ОАО &quot;НК &quot;Роснефть&quot;, ао" LotSize="10" Digits="2" Market="1" ID="17273" />
+    <Ticker Ticker="TATN" ShortName="Татнфт 3ао" Name="ПАО &quot;Татнефть&quot; им. В.Д. Шашина, ао" LotSize="10" Digits="2" Market="1" ID="825" />
+    <Ticker Ticker="TATNP" ShortName="Татнфт 3ап" Name="ПАО &quot;Татнефть&quot; им. В.Д. Шашина, ап" LotSize="10" Digits="1" Market="1" ID="826" />
+    <Ticker Ticker="TRNFP" ShortName="Транснф ап" Name="ОАО &quot;АК &quot;Транснефть&quot;, ап" LotSize="1" Digits="0" Market="1" ID="1012" />
+    <Ticker Ticker="MTSS" ShortName="МТС-ао" Name="ПАО &quot;МТС&quot;, ао" LotSize="10" Digits="2" Market="1" ID="15523" />
+    <Ticker Ticker="CHMF" ShortName="СевСт-ао" Name="ПАО &quot;Северсталь&quot;, ао" LotSize="10" Digits="1" Market="1" ID="16136" />
+    <Ticker Ticker="MOEX" ShortName="МосБиржа" Name="ПАО Московская Биржа, ао" LotSize="10" Digits="2" Market="1" ID="152798" />
+    <Ticker Ticker="YNDX" ShortName="Yandex clA" Name="Компания с ограниченной ответственностью &quot;Яндекс Н.В.&quot;, акции иностранного эмитента" LotSize="1" Digits="1" Market="1" ID="388383" />
+    <Ticker Ticker="MFON" ShortName="МегаФон ао" Name="ПАО &quot;МегаФон&quot;, ао" LotSize="10" Digits="0" Market="1" ID="152516" />
+    <Ticker Ticker="ALRS" ShortName="АЛРОСА ао" Name="АК &quot;АЛРОСА&quot; (ПАО), ао" LotSize="100" Digits="2" Market="1" ID="81820" />
+    <Ticker Ticker="RTKM" ShortName="Ростел -ао" Name="ПАО &quot;Ростелеком&quot;, ао" LotSize="10" Digits="2" Market="1" ID="7" />
+    <Ticker Ticker="RTKMP" ShortName="Ростел -ап" Name="ПАО &quot;Ростелеком&quot;, ап" LotSize="100" Digits="2" Market="1" ID="15" />
+    <Ticker Ticker="HYDR" ShortName="РусГидро" Name="ПАО &quot;РусГидро&quot;, ао" LotSize="1000" Digits="4" Market="1" ID="20266" />
+    <Ticker Ticker="URKA" ShortName="Уркалий-ао" Name="ПАО &quot;Уралкалий&quot;, ао" LotSize="10" Digits="2" Market="1" ID="19623" />
+    <Ticker Ticker="PHOR" ShortName="ФосАгро ао" Name="ОАО &quot;ФосАгро&quot;, ао" LotSize="1" Digits="0" Market="1" ID="81114" />
+    <Ticker Ticker="BANE" ShortName="Башнефт ао" Name="ПАО АНК &quot;Башнефть&quot;, ао" LotSize="1" Digits="1" Market="1" ID="81757" />
+    <Ticker Ticker="BANEP" ShortName="Башнефт ап" Name="ПАО АНК &quot;Башнефть&quot;, ап" LotSize="1" Digits="1" Market="1" ID="81758" />
+    <Ticker Ticker="AFKS" ShortName="Система ао" Name="ОАО АФК &quot;Система&quot;, ао" LotSize="100" Digits="3" Market="1" ID="19715" />
+    <Ticker Ticker="NLMK" ShortName="НЛМК ао" Name="ОАО &quot;НЛМК&quot;, ао" LotSize="10" Digits="2" Market="1" ID="17046" />
+    <Ticker Ticker="POLY" ShortName="Polymetal" Name="Полиметалл Интернэшнл плс, акции иностранного эмитента" LotSize="1" Digits="1" Market="1" ID="175924" />
+    <Ticker Ticker="PIKK" ShortName="ПИК ао" Name="ПАО &quot;Группа Компаний ПИК&quot;, ао" LotSize="10" Digits="1" Market="1" ID="18654" />
+    <Ticker Ticker="EONR" ShortName="Э.ОНРоссия" Name="ОАО &quot;Э.ОН Россия&quot;, ао" LotSize="1000" Digits="3" Market="1" ID="18584" />
+    <Ticker Ticker="RUAL" ShortName="RUSAL plc" Name="Юнайтед Компани РУСАЛ Плс, акции иностранного эмитента" LotSize="100" Digits="2" Market="1" ID="414279" />
+    <Ticker Ticker="MAGN" ShortName="ММК" Name="ОАО &quot;ММК&quot;, ао" LotSize="100" Digits="3" Market="1" ID="16782" />
+    <Ticker Ticker="LNTA" ShortName="Лента др" Name="Лента Лтд., ДР иностранного эмитента на акции (эмитент ДР — Deutsche Bank Luxembourg S.A.)" LotSize="1" Digits="0" Market="1" ID="385792" />
+    <Ticker Ticker="LSRG" ShortName="ЛСР ао" Name="ПАО &quot;Группа ЛСР&quot;, ао" LotSize="1" Digits="1" Market="1" ID="19736" />
+    <Ticker Ticker="IRAO" ShortName="ИнтерРАОао" Name="ПАО &quot;Интер РАО&quot;, ао" LotSize="1000" Digits="4" Market="1" ID="20516" />
+    <Ticker Ticker="AKRN" ShortName="Акрон" Name="ОАО &quot;Акрон&quot;, ао" LotSize="1" Digits="0" Market="1" ID="17564" />
+    <Ticker Ticker="AFLT" ShortName="Аэрофлот" Name="ПАО &quot;Аэрофлот&quot;, ао" LotSize="100" Digits="2" Market="1" ID="29" />
+    <Ticker Ticker="MVID" ShortName="М.видео" Name="ПАО &quot;М.видео&quot;, ао" LotSize="10" Digits="1" Market="1" ID="19737" />
+    <Ticker Ticker="DIXY" ShortName="ДИКСИ ао" Name="ПАО &quot;ДИКСИ Групп&quot;, ао" LotSize="10" Digits="1" Market="1" ID="18564" />
+    <Ticker Ticker="AGRO" ShortName="AGRO-гдр" Name="РОС АГРО ПЛС, ДР иностранного эмитента на акции (эмитент ДР —The Bank of New York Mellon Corporation)" LotSize="1" Digits="0" Market="1" ID="399716" />
+    <Ticker Ticker="FEES" ShortName="ФСК ЕЭС ао" Name="ПАО &quot;ФСК ЕЭС&quot;, ао" LotSize="10000" Digits="5" Market="1" ID="20509" />
+    <Ticker Ticker="GCHE" ShortName="ЧеркизГ-ао" Name="ПАО &quot;Группа Черкизово&quot;, ао" LotSize="1" Digits="0" Market="1" ID="20125" />
+    <Ticker Ticker="PHST" ShortName="Фармстанд" Name="ПАО &quot;Фармстандарт&quot;, ао" LotSize="1" Digits="0" Market="1" ID="19717" />
+    <Ticker Ticker="VSMO" ShortName="ВСМПО-АВСМ" Name="ПАО &quot;Корпорация ВСМПО-АВИСМА&quot;, ао" LotSize="1" Digits="0" Market="1" ID="15965" />
+    <Ticker Ticker="TRMK" ShortName="ТМК ао" Name="ПАО &quot;ТМК&quot;, ао" LotSize="10" Digits="2" Market="1" ID="18441" />
+    <Ticker Ticker="NKNC" ShortName="НКНХ ао" Name="ПАО &quot;Нижнекамскнефтехим&quot;, ао" LotSize="100" Digits="1" Market="1" ID="20100" />
+    <Ticker Ticker="RSTI" ShortName="Россети ао" Name="ПАО &quot;Россети&quot;, ао" LotSize="1000" Digits="4" Market="1" ID="20971" />
+    <Ticker Ticker="MTLR" ShortName="Мечел ао" Name="ОАО &quot;Мечел&quot;, ао" LotSize="1" Digits="2" Market="1" ID="21018" />
+
+    <!-- дополнительно -->
+    <Ticker Ticker="SIBN" ShortName="Газпрнефть" Name="ПАО Газпром нефть, ао" LotSize="10" Digits="2" Market="1" ID="2" />
+    <Ticker Ticker="MTLRP" ShortName="Мечел ап" Name="ОАО Мечел, ап" LotSize="10" Digits="2" Market="1" ID="80745" />
+    <Ticker Ticker="PLZL" ShortName="ПолюсЗолот" Name="ОАО &quot;Полюс Золото&quot;" LotSize="1" Digits="0" Market="1" ID="17123" />
+    <Ticker Ticker="RUALR" ShortName="Русал рдр" Name="РДР Юнайтед Компани РУСАЛ Плс" LotSize="10" Digits="1" Market="1" ID="74718" />
+
+    <!-- Российские индексы -->
+    <Ticker Ticker="MICEX" ShortName="Индекс ММВБ" Name="Индекс ММВБ" LotSize="1" Digits="2" Market="6" ID="13851" />
+    <Ticker Ticker="RTSI" ShortName="Индекс РТС" Name="Индекс РТС" LotSize="1" Digits="2" Market="6" ID="95" />
+    <Ticker Ticker="MICEXO&amp;G" ShortName="Нефть и газ" Name="Индекс Нефти и газа" LotSize="1" Digits="2" Market="6" ID="18454" />
+    <Ticker Ticker="MICEXPWR" ShortName="Электроэнергетика" Name="Индекс Электроэнергетики" LotSize="1" Digits="2" Market="6" ID="18455" />
+    <Ticker Ticker="MICEXTLC" ShortName="Телеком" Name="Индекс Телекоммуникаций" LotSize="1" Digits="2" Market="6" ID="18456" />
+    <Ticker Ticker="MICEXM&amp;M" ShortName="Металлы" Name="Индекс Металлов и добычи" LotSize="1" Digits="2" Market="6" ID="18886" />
+    <Ticker Ticker="MICEXMNF" ShortName="Машиностроение" Name="Индекс Машиностроения" LotSize="1" Digits="2" Market="6" ID="18887" />
+    <Ticker Ticker="MICEXFNL" ShortName="Финансы" Name="Индекс Банков и финансов" LotSize="1" Digits="2" Market="6" ID="20739" />
+    <Ticker Ticker="MICEXCGS" ShortName="Торговля" Name="Индекс Потребительских товаров и торговли" LotSize="1" Digits="2" Market="6" ID="22772" />
+    <Ticker Ticker="MICEXCHM" ShortName="Химия" Name="Индекс Химического производства" LotSize="1" Digits="2" Market="6" ID="22773" />
+    <Ticker Ticker="MICEXTRN" ShortName="Транспорт" Name="Индекс Транспорт" LotSize="1" Digits="2" Market="6" ID="181860" />
+  </Tickers>
+
+</Downloader>
