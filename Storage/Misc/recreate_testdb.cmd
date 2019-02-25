@@ -1,8 +1,8 @@
 echo Recreate empty testdb
-psql -f recreate_empty_testdb.sql
+psql -U postgres -f recreate_empty_testdb.sql
 
 echo Create testdb structure
-psql -d pulxer_test -f createdb.sql
+psql -U postgres -d pulxer_test -f createdb.sql
 
 pause
 

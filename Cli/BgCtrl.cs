@@ -10,8 +10,8 @@ namespace Cli
     public class BgCtrl
     {
         private readonly IConsole _console;
-        protected BgTaskProgress _progress = null;
-        protected CancellationTokenSource _cancel;
+        protected static BgTaskProgress _progress = null;
+        protected static CancellationTokenSource _cancel;
         protected SyncContext _syncContext = new SyncContext();
 
         public BgCtrl(IConsole console)

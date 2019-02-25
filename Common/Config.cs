@@ -30,5 +30,10 @@ namespace Common
         {
             return _section["HistoryProviderCache"];
         }
+
+        public string GetBotsPath()
+        {
+            return _section["BotsPath"];
+        }
     }
 }

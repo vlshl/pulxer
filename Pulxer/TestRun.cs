@@ -5,12 +5,15 @@ using Common.Interfaces;
 using Platform;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace Pulxer
 {
+    public delegate void TestRunFinished(bool isComplete);
+
     public class TestRun
     {
         private TradeEngine _engine = null;
@@ -24,9 +27,11 @@ namespace Pulxer
         private Dictionary<IBot, ILeechPlatform> _bot_platform;
         private BgTaskProgress _progress = null;
         private ILogger _logger = null;
+        private IConfig _config;
+        private TestRunFinished _finished = null;
 
         public TestRun(IAccountDA accountDA, IInstrumBL instrumBL, IInsStoreBL insStoreBL,
-            ITickSourceBL tickSourceBL, ITestConfigBL testConfigBL, ILogger logger)
+            ITickSourceBL tickSourceBL, ITestConfigBL testConfigBL, ILogger logger, IConfig config)
         {
             _accountDA = accountDA;
             _instrumBL = instrumBL;
@@ -35,6 +40,7 @@ namespace Pulxer
             _testConfigBL = testConfigBL;
             _bot_platform = new Dictionary<IBot, ILeechPlatform>();
             _logger = logger;
+            _config = config;
         }
 
         public async Task<int> Initialize(int tickSourceID, int testConfigID, BgTaskProgress progress = null)
@@ -54,9 +60,20 @@ namespace Pulxer
             {
                 try
                 {
-                    var asm = Assembly.LoadFrom(conf.Assembly);
+                    string asmPath = "";
+                    if (Path.IsPathRooted(conf.Assembly))
+                    {
+                        asmPath = conf.Assembly;
+                    }
+                    else
+                    {
+                        string botsPath = _config.GetBotsPath();
+                        asmPath = Path.Combine(botsPath, conf.Assembly);
+                    }
+
+                    var asm = Assembly.LoadFrom(asmPath);
                     if (asm == null)
-                        throw new ApplicationException("Сборка не загружена: " + conf.Assembly);
+                        throw new ApplicationException("Сборка не загружена: " + asmPath);
 
                     var type = asm.GetType(conf.Class);
                     if (type == null)
@@ -108,11 +125,13 @@ namespace Pulxer
             {
                 _progress.OnProgress(percent);
                 _progress.OnComplete();
+                _finished?.Invoke(true);
             }
             else if (state == TestTickSourceState.Stopped)
             {
                 _progress.OnProgress(percent);
                 _progress.OnAbort();
+                _finished?.Invoke(false);
             }
         }
 
@@ -121,8 +140,9 @@ namespace Pulxer
             _engine.OnTick(tick);
         }
 
-        public void Start()
+        public void Start(TestRunFinished finished)
         {
+            _finished = finished;
             if (_tickSource != null) _tickSource.Start();
             if (_progress != null) _progress.OnStart();
         }
@@ -131,6 +151,11 @@ namespace Pulxer
         {
             if (_tickSource != null) _tickSource.Stop();
             if (_progress != null) _progress.OnAbort();
+        }
+
+        public TradeEngineData GetData()
+        {
+            return _data;
         }
 
         public void Close()

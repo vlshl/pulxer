@@ -1,7 +1,7 @@
 ﻿Создание тестовой базы
 ----------------------
 
-psql -d pulxer_test -f CreateDb.sql - исполнение скрипта
+psql -U postgres -d pulxer_test -f CreateDb.sql - исполнение скрипта
 
 
 

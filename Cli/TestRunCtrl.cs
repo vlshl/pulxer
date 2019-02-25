@@ -1,4 +1,5 @@
-﻿using Common.Interfaces;
+﻿using BL;
+using Common.Interfaces;
 using Pulxer;
 using System;
 using System.Collections.Generic;
@@ -16,9 +17,10 @@ namespace Cli
         private readonly ITickSourceBL _tickSourceBL; 
         private readonly ITestConfigBL _testConfigBL;
         private readonly ILogger _logger;
+        private readonly IConfig _config;
 
         public TestRunCtrl(IConsole console, IAccountDA accountDA, IInstrumBL instrumBL, IInsStoreBL insStoreBL, ITickSourceBL tickSourceBL, 
-            ITestConfigBL testConfigBL, ILogger logger) : base(console)
+            ITestConfigBL testConfigBL, ILogger logger, IConfig config) : base(console)
         {
             _console = console;
             _accountDA = accountDA;
@@ -27,6 +29,7 @@ namespace Cli
             _tickSourceBL = tickSourceBL;
             _testConfigBL = testConfigBL;
             _logger = logger;
+            _config = config;
         }
 
         public async void TestRunAsync(List<string> args)
@@ -89,19 +92,60 @@ namespace Cli
             }
 
             _console.WriteLine("Загрузка данных ... ");
-            _testRun = new TestRun(_accountDA, _instrumBL, _insStoreBL, _tickSourceBL, _testConfigBL, _logger);
+            _testRun = new TestRun(_accountDA, _instrumBL, _insStoreBL, _tickSourceBL, _testConfigBL, _logger, _config);
             _progress = new BgTaskProgress(_syncContext, "Тестовый прогон");
 
             try
             {
                 int count = await _testRun.Initialize(tickSourceID, testConfigID, _progress);
                 _console.WriteLine("Загружено: " + count.ToString());
-                _console.Write("Тестовый прогон выполняется ... ");
-                _testRun.Start();
+                _console.WriteLine("Тестовый прогон выполняется ... ");
+                _testRun.Start(TestRunFinished);
             }
             catch (Exception ex)
             {
                 _console.WriteError(ex.ToString());
+            }
+        }
+
+        private void TestRunFinished(bool isComplete)
+        {
+            if (!isComplete)
+            {
+                _console.WriteLine("Тестовый прогон прерван");
+                return;
+            }
+
+            _console.WriteLine("Тестовый прогон завершен");
+            var data = _testRun.GetData();
+            data.SaveData();
+            _console.WriteLine("Данные сохранены");
+            ViewData(data);
+            _testRun.Close();
+            _console.WriteLine("Завершено");
+        }
+
+        private void ViewData(TradeEngineData data)
+        {
+            var acc = data.GetAccount();
+            var cash = data.GetCash();
+
+            var accStr = string.Format("Торговый счет: Id = {0}\nCode:{1}\nName:{2}", 
+                acc.AccountID.ToString(), acc.Code, acc.Name);
+            _console.WriteLine(accStr);
+
+            decimal init = cash.Initial;
+            decimal curr = cash.Current;
+
+            var cashStr = string.Format("Cash initial={0}, current={1}", 
+                init.ToString(), curr.ToString());
+            _console.WriteLine(cashStr);
+
+            if (init != 0)
+            {
+                var profitStr = string.Format("Profit={0} ({1} %)",
+                    (curr - init).ToString(), ((curr - init) / init * 100m).ToString());
+                _console.WriteLine(profitStr);
             }
         }
     }

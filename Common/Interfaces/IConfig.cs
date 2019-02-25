@@ -9,5 +9,6 @@ namespace Common.Interfaces
         string GetLeechDataPath();
         string GetHistoryProviderConfig();
         string GetHistoryProviderCache();
+        string GetBotsPath();
     }
 }

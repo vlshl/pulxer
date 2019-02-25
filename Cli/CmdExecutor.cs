@@ -201,7 +201,7 @@ namespace Cli
             _console.WriteLine("Create-InsStores Tf Ticker Ticker ... - Создание потоков данных для указанных тикеров");
             _console.WriteLine("List-InsStore - Список потоков данных");
             _console.WriteLine("Get-InsStore Tf Ticker [FreeDays] - Информация по потоку данных");
-            _console.WriteLine("Download Date1, Date2, [Dirty], Tf, Ticker, Ticker, ... - Загрузка указанного потока данных (старт фонового процесса), Dirty - последний день неполный");
+            _console.WriteLine("Download Date1 Date2 [Dirty] Tf Ticker Ticker ... - Загрузка указанного потока данных (старт фонового процесса), Dirty - последний день неполный");
             _console.WriteLine("Download Progress|Cancel - Показать состояние фонового процесса загрузки | Прервать фоновый процесс");
             _console.WriteLine("Download-All [Full] - Загрузка потоков данных (Full - последний день полный, иначе последний день помечается как Dirty)");
             _console.WriteLine("Download-All Progress|Cancel - Показать состояние фонового процесса загрузки | Прервать фоновый процесс");
