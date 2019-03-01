@@ -60,11 +60,11 @@ namespace Pulxer
         }
 
         /// <summary>
-        /// Вычислить хэш для строки в виде base64
+        /// Вычислить хэш для строки в виде xxxxxx
         /// </summary>
         /// <param name="data">Входная строка</param>
-        /// <returns>Хэш в виде base64-строки</returns>
-        private string CalcHash(string data)
+        /// <returns>Хэш в виде xxxxxx-строки</returns>
+        public string CalcHash(string data)
         {
             if (data == null) data = "";
 
@@ -72,7 +72,13 @@ namespace Pulxer
             MD5 md5 = MD5.Create();
             var hash = md5.ComputeHash(bytes);
 
-            return Convert.ToBase64String(hash);
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < hash.Length; i++)
+            {
+                sb.Append(hash[i].ToString("x2"));
+            }
+
+            return sb.ToString();
         }
     }
 }
