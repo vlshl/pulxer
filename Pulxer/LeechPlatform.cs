@@ -23,14 +23,16 @@ namespace Pulxer
         //private Task _onTimerTask = null;
         private ILogger _logger = null;
         private readonly TradeEngine _engine = null;
+        private readonly TradeEngineData _data;
         private Dictionary<int, OnTickDelegate> _insID_onTick = null;
 
-        public LeechPlatform(TickSource tickSrc, IInstrumBL instrumBL, IInsStoreBL insStoreBL, TradeEngine engine, ILogger logger)
+        public LeechPlatform(TickSource tickSrc, IInstrumBL instrumBL, IInsStoreBL insStoreBL, TradeEngine engine, TradeEngineData data, ILogger logger)
         {
             _tickSource = tickSrc;
             _instrumBL = instrumBL;
             _insStoreBL = insStoreBL;
             _engine = engine;
+            _data = data;
             _logger = logger;
 
             _barRows = new List<BarRow>();
@@ -163,6 +165,42 @@ namespace Pulxer
                 _insID_onTick.Add(insID, onTick);
             else if (_insID_onTick.ContainsKey(insID) && onTick == null)
                 _insID_onTick.Remove(insID);
+        }
+
+        public decimal GetCommPerc()
+        {
+            if (_data == null) return 0;
+            var account = _data.GetAccount();
+            if (account == null) return 0;
+
+            return account.CommPerc;
+        }
+
+        public bool GetShortEnable()
+        {
+            if (_data == null) return false;
+            var account = _data.GetAccount();
+            if (account == null) return false;
+
+            return account.IsShortEnable;
+        }
+
+        public decimal GetInitialSumma()
+        {
+            if (_data == null) return 0;
+            var cash = _data.GetCash();
+            if (cash == null) return 0;
+
+            return cash.Initial;
+        }
+
+        public decimal GetCurrentSumma()
+        {
+            if (_data == null) return 0;
+            var cash = _data.GetCash();
+            if (cash == null) return 0;
+
+            return cash.Current;
         }
 
         //public void OnTimer(OnTimerDelegate onTimer)

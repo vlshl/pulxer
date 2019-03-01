@@ -79,7 +79,7 @@ namespace Pulxer
                     if (type == null)
                         throw new ApplicationException("Тип не найден: " + conf.Class);
 
-                    var platform = new LeechPlatform(_tickSource, _instrumBL, _insStoreBL, _engine, _logger);
+                    var platform = new LeechPlatform(_tickSource, _instrumBL, _insStoreBL, _engine, _data, _logger);
                     var bot = Activator.CreateInstance(type, platform) as IBot;
                     if (bot == null)
                         throw new ApplicationException("Бот не создан: " + conf.Key);

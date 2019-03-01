@@ -187,9 +187,12 @@ namespace Pulxer
                     while (date <= EndDate)
                     {
                         var ticks = await _tickHistoryBL.GetTicksAsync(instrum.InsID, date);
-                        lock(_ticks)
+                        if (ticks != null && ticks.Any())
                         {
-                            _ticks.AddRange(ticks);
+                            lock (_ticks)
+                            {
+                                _ticks.AddRange(ticks);
+                            }
                         }
                         date = date.AddDays(1);
                     }

@@ -29,5 +29,11 @@ namespace Platform
         IEnumerable<StopOrder> GetStopOrders(int insID);
         void RemoveStopOrders(int insID);
         int GetHolding(int insID);
+
+        decimal GetCommPerc();
+        bool GetShortEnable();
+        decimal GetInitialSumma();
+        decimal GetCurrentSumma();
     }
 }
+

@@ -40,9 +40,7 @@ namespace Pulxer
                 var allTradesTicks = encoding.Decode(data);
                 if (allTradesTicks == null) return new List<Tick>();
 
-                var ticks = allTradesTicks.Select(t => new Tick(0, date.AddSeconds(t.Second), insID, t.Lots, t.Price));
-
-                return ticks;
+                return allTradesTicks.Select(t => new Tick(0, date.AddSeconds(t.Second), insID, t.Lots, t.Price)).ToList();
             });
         }
 
