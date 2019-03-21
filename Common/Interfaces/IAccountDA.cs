@@ -41,5 +41,6 @@ namespace Common.Interfaces
         Trade CreateTrade(int accountID, int orderID, DateTime time, int insID, BuySell bs, int lotCount, decimal price, decimal comm, long tradeNo);
 
         void DeleteAccountData(int accountID);
+        void DeleteAccount(int accountID);
     }
 }

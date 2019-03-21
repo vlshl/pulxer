@@ -72,6 +72,26 @@ namespace Pulxer
         {
             _accountDA.UpdateAccount(account);
         }
+
+        /// <summary>
+        /// Удаление тестового счета вместе со всеми данными
+        /// </summary>
+        /// <param name="accountID">ID счета</param>
+        /// <param name="fullDelete">true-удаление и данных, и самого счета, false-удаление только данных по счету (заявки, сделки и т.д.)</param>
+        /// <returns>true-успешно, false-удаления не произошло (или уже был удален ранее, или счет не тестовый)</returns>
+        public bool DeleteTestAccountData(int accountID, bool fullDelete)
+        {
+            var acc = GetAccountByID(accountID);
+            if (acc == null || acc.AccountType != AccountTypes.Test) return false;
+
+            _accountDA.DeleteAccountData(accountID);
+            if (fullDelete)
+            {
+                _accountDA.DeleteAccount(accountID);
+            }
+
+            return true;
+        }
         #endregion
 
         #region Cash

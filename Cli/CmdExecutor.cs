@@ -182,6 +182,16 @@ namespace Cli
             {
                 FileProtect(args);
             }
+            else if (cmd == "list-account")
+            {
+                var accCtrl = ActivatorUtilities.CreateInstance<AccountCtrl>(_sp);
+                accCtrl.ListAccounts();
+            }
+            else if (cmd == "delete-account")
+            {
+                var accCtrl = ActivatorUtilities.CreateInstance<AccountCtrl>(_sp);
+                accCtrl.DeleteAccount(args);
+            }
             else
             {
                 _console.WriteError("Неизвестная команда");
@@ -228,6 +238,9 @@ namespace Cli
             _console.WriteLine("Delete-User Login - Удаление пользователя");
             _console.WriteSeparator();
             _console.WriteLine("File-Protect filename M[achine]|U[ser] - Сформировать новый файл с защищенным содержимым по исходному, M|U - уровень защиты (local machile|current user)");
+            _console.WriteSeparator();
+            _console.WriteLine("List-Account - Список счетов");
+            _console.WriteLine("Delete-Account accountID [full] - Удаление тестового счета, full - полное удаление, иначе удаляются только данные по счету");
             _console.WriteSeparator();
             _console.WriteLine("Log - Вывод лога");
         }

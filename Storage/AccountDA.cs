@@ -442,7 +442,8 @@ namespace Storage
         }
 
         /// <summary>
-        /// Delete all account data by accountID (trades, stoporders, orders, holdings, cashes and account)
+        /// Delete all account data by accountID (trades, stoporders, orders, holdings, cashes)
+        /// Account not delete
         /// </summary>
         /// <param name="accountID">AccountID</param>
         public void DeleteAccountData(int accountID)
@@ -453,20 +454,40 @@ namespace Storage
                 {
                     try
                     {
-                        db.Database.ExecuteSqlCommand("delete from \"Trade\" where \"AccountID\" = " + accountID.ToString());
-                        db.Database.ExecuteSqlCommand("delete from \"StopOrder\" where \"AccountID\" = " + accountID.ToString());
-                        db.Database.ExecuteSqlCommand("delete from \"Order\" where \"AccountID\" = " + accountID.ToString());
-                        db.Database.ExecuteSqlCommand("delete from \"Holding\" where \"AccountID\" = " + accountID.ToString());
-                        db.Database.ExecuteSqlCommand("delete from \"Cash\" where \"AccountID\" = " + accountID.ToString());
-                        db.Database.ExecuteSqlCommand("delete from \"Account\" where \"AccountID\" = " + accountID.ToString());
+                        db.Database.ExecuteSqlCommand(string.Format("delete from postrade where trade_id in (select trade_id from trade where account_id = {0})", accountID.ToString()));
+                        db.Database.ExecuteSqlCommand(string.Format("delete from postrade where pos_id in (select pos_id from positions where account_id = {0})", accountID.ToString()));
+                        db.Database.ExecuteSqlCommand("delete from positions where account_id = " + accountID.ToString());
+                        db.Database.ExecuteSqlCommand("delete from trade where account_id = " + accountID.ToString());
+                        db.Database.ExecuteSqlCommand("delete from stoporder where account_id = " + accountID.ToString());
+                        db.Database.ExecuteSqlCommand("delete from orders where account_id = " + accountID.ToString());
+                        db.Database.ExecuteSqlCommand("delete from holding where account_id = " + accountID.ToString());
+                        db.Database.ExecuteSqlCommand("delete from cash where account_id = " + accountID.ToString());
+
 
                         db.Database.CommitTransaction();
                     }
                     catch (Exception ex)
                     {
                         db.Database.RollbackTransaction();
-                        throw new Exception("Database error occurred while deleting account", ex);
+                        throw new Exception("Database error occurred while deleting account data", ex);
                     }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Delete account, all account data (trades, orders, etc) must be deleted before
+        /// </summary>
+        /// <param name="accountID">AccountID</param>
+        public void DeleteAccount(int accountID)
+        {
+            using (var db = new DaContext(_options))
+            {
+                var account = db.Account.Find(accountID);
+                if (account != null)
+                {
+                    db.Account.Remove(account);
+                    db.SaveChanges();
                 }
             }
         }

@@ -1,8 +1,6 @@
 ﻿using Indic;
 using Platform;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Bot
 {
@@ -55,9 +53,6 @@ namespace Bot
 
             _platform.OnTick(_gazp.InsID, OnTick);
 
-
-            //_platform.OnTimer(OnTimer);
-
             _platform.AddLog("MyBot", "Initialized");
         }
 
@@ -86,46 +81,31 @@ namespace Bot
             decimal? close = _bars2.Close[index];
         }
 
-        //private void OnTimer(DateTime? time, int delay)
-        //{
-        //    _platform.AddLog("MyBot", string.Format("OnTimer: time={0}, delay={1}",
-        //        (time != null ? time.Value.ToString("dd.MM.yyyy HH:mm:ss") : "null"), delay.ToString()));
-        //}
-
         private void OnTick(DateTime time, decimal price, int lots)
         {
             if (ma1 == 0) return;
+            if (_order != null && _order.Status == OrderStatus.Active) return; // находимся в состоянии активной заявки
+
             int t = time.Hour * 10000 + time.Minute * 100 + time.Second;
-
             int hold = _platform.GetHolding(_gazp.InsID);
-
-            if (_isOpeningPos && hold > 0) _isOpeningPos = false;
-            if (_isClosingPos && hold == 0) _isClosingPos = false;
-
             
             // вход
-            if (!_isOpeningPos && !_isClosingPos && hold == 0 && price >= ma1 + 0.5m && t >= 103000 && t < 183000)
+            if (hold == 0 && price >= ma1 + 0.2m && t >= 103000 && t < 183000)
             {
-                int openLots = (int)decimal.Round(_platform.GetCurrentSumma() / (price * 10));
-
-                _platform.AddBuyOrder(_gazp.InsID, null, openLots);
-                _isOpeningPos = true;
+                int openLots = (int)decimal.Round(_platform.GetCurrentSumma() / (price * 10)) - 1;
+                if (openLots > 0)
+                {
+                    _order = _platform.AddBuyOrder(_gazp.InsID, null, openLots);
+                }
             }
 
             // выход
-            if (!_isOpeningPos && !_isClosingPos && hold > 0 && (price <= ma1 || t >= 183000))
+            if (hold > 0 && (price <= ma1 || t >= 183000))
             {
-                _platform.AddSellOrder(_gazp.InsID, null, hold);
-                _isClosingPos = true;
-            }
-
-            if (t >= 183500 && (_isOpeningPos || _isClosingPos))
-            {
-                _isOpeningPos = _isClosingPos = false;
+                _order = _platform.AddSellOrder(_gazp.InsID, null, hold);
             }
         }
 
-        private bool _isOpeningPos;
-        private bool _isClosingPos;
+        private Order _order = null;
     }
 }

@@ -60,6 +60,11 @@ namespace PulxerTest
         {
             throw new NotImplementedException();
         }
+
+        public void DeleteAccount(int accountID)
+        {
+            throw new NotImplementedException();
+        }
         #endregion
 
         #region StopOrder
