@@ -41,17 +41,26 @@ namespace Pulxer
         /// <param name="name">Наименование счета</param>
         /// <param name="commPerc">Процент комиссии по операциям</param>
         /// <param name="isShortEnable">Разрешены ли короткие позиции</param>
-        /// <param name="initialSumma">Начальная сумма на счете</param>
-        /// <param name="isTestAccount">Тестовый счет</param>
         /// <returns></returns>
-        public Account CreateAccount(string code, string name, decimal commPerc, bool isShortEnable, 
-            decimal initialSumma, bool isTestAccount)
+        public Account CreateTestAccount(string code, string name, decimal commPerc, bool isShortEnable)
         {
-            var account = _accountDA.CreateAccount(code, name, commPerc, isShortEnable,
-                isTestAccount ? AccountTypes.Test : AccountTypes.Real);
-            _accountDA.CreateCash(account.AccountID, initialSumma, initialSumma, 0, 0, 0, 0);
+            return _accountDA.CreateAccount(code, name, commPerc, isShortEnable, AccountTypes.Test);
+        }
 
-            return account;
+        /// <summary>
+        /// Создать cash для торгового счета
+        /// </summary>
+        /// <param name="accountID">Торговый счет</param>
+        /// <param name="initialSumma">Начальная сумма</param>
+        /// <param name="currSumma">Текущая сумма</param>
+        /// <param name="sellSumma">Сумма продаж</param>
+        /// <param name="buySumma">Сумма покупок</param>
+        /// <param name="sellCommSumma">Сумма ком. при продажах</param>
+        /// <param name="buyCommSumma">Сумма ком. при покупках</param>
+        /// <returns></returns>
+        public Cash CreateCash(int accountID, decimal initialSumma, decimal currSumma, decimal sellSumma, decimal buySumma, decimal sellCommSumma, decimal buyCommSumma)
+        {
+            return _accountDA.CreateCash(accountID, initialSumma, currSumma, sellSumma, buySumma, sellCommSumma, buyCommSumma);
         }
 
         /// <summary>
@@ -125,7 +134,7 @@ namespace Pulxer
         /// <param name="accountID">Торговый счет</param>
         /// <param name="fromID">Начиная с указанного ID или все (null)</param>
         /// <returns>Список заявок</returns>
-        public IEnumerable<Order> GetOrders(int accountID, int? fromID)
+        public IEnumerable<Order> GetOrders(int accountID, int? fromID = null)
         {
             return _accountDA.GetOrders(accountID, fromID);
         }
@@ -148,7 +157,7 @@ namespace Pulxer
         /// <param name="accountID">Торговый счет</param>
         /// <param name="fromID">Начиная с указанного ID или все (null)</param>
         /// <returns>Список заявок</returns>
-        public IEnumerable<StopOrder> GetStopOrders(int accountID, int? fromID)
+        public IEnumerable<StopOrder> GetStopOrders(int accountID, int? fromID = null)
         {
             return _accountDA.GetStopOrders(accountID, fromID);
         }
@@ -171,7 +180,7 @@ namespace Pulxer
         /// <param name="accountID">Торговый счет</param>
         /// <param name="fromID">Начиная с указанного ID или все (null)</param>
         /// <returns>Список сделок</returns>
-        public IEnumerable<Trade> GetTrades(int accountID, int? fromID)
+        public IEnumerable<Trade> GetTrades(int accountID, int? fromID = null)
         {
             return _accountDA.GetTrades(accountID, fromID);
         }

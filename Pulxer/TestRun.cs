@@ -16,23 +16,25 @@ namespace Pulxer
 
     public class TestRun
     {
-        private TradeEngine _engine = null;
-        private TradeEngineData _data = null;
-        private TickSource _tickSource = null;
-        private readonly IAccountDA _accountDA = null;
-        private readonly IInstrumBL _instrumBL = null;
-        private readonly IInsStoreBL _insStoreBL = null;
-        private readonly ITickSourceBL _tickSourceBL = null;
-        private readonly ITestConfigBL _testConfigBL = null;
+        private TradeEngine _engine;
+        private TradeEngineData _data;
+        private TickSource _tickSource;
+        private readonly IAccountBL _accountBL;
+        private readonly IAccountDA _accountDA;
+        private readonly IInstrumBL _instrumBL;
+        private readonly IInsStoreBL _insStoreBL;
+        private readonly ITickSourceBL _tickSourceBL;
+        private readonly ITestConfigBL _testConfigBL;
         private Dictionary<IBot, ILeechPlatform> _bot_platform;
-        private BgTaskProgress _progress = null;
-        private ILogger _logger = null;
+        private BgTaskProgress _progress;
+        private ILogger _logger;
         private IConfig _config;
-        private TestRunFinished _finished = null;
+        private TestRunFinished _finished;
 
-        public TestRun(IAccountDA accountDA, IInstrumBL instrumBL, IInsStoreBL insStoreBL,
+        public TestRun(IAccountBL accountBL, IAccountDA accountDA, IInstrumBL instrumBL, IInsStoreBL insStoreBL,
             ITickSourceBL tickSourceBL, ITestConfigBL testConfigBL, ILogger logger, IConfig config)
         {
+            _accountBL = accountBL;
             _accountDA = accountDA;
             _instrumBL = instrumBL;
             _insStoreBL = insStoreBL;
@@ -43,11 +45,29 @@ namespace Pulxer
             _config = config;
         }
 
-        public async Task<int> Initialize(int tickSourceID, int testConfigID, BgTaskProgress progress = null)
+        /// <summary>
+        /// Инициализация объекта Тестовый прогон
+        /// </summary>
+        /// <param name="tickSourceID">Источник тиковых данных</param>
+        /// <param name="testConfigID">Тестовая конфигурация</param>
+        /// <param name="accountID">Торговый счет, если не указан, то создается новый, иначе берется указанный, в нем очищаются все данные и он заполняется новыми данными</param>
+        /// <param name="progress">Индикатор прогресса</param>
+        /// <returns>Количество загруженных тиков, на которых будет выполняться тестирование</returns>
+        public async Task<int> Initialize(int tickSourceID, int testConfigID, int? accountID, BgTaskProgress progress = null)
         {
             _tickSource = _tickSourceBL.GetTickSourceByID(tickSourceID);
             var testConfig = _testConfigBL.GetTestConfig(testConfigID);
             if (_tickSource == null || testConfig == null) return 0;
+
+            Account account = null;
+            if (accountID != null)
+            {
+                account = _accountBL.GetAccountByID(accountID.Value);
+                if (account == null)
+                    throw new ApplicationException("Указанный счет не найден.");
+                if (account.AccountType != AccountTypes.Test)
+                    throw new ApplicationException("Указанный счет не может использоваться для тестирования.");
+            }
 
             _progress = progress;
             _data = new TradeEngineData(_accountDA);
@@ -95,13 +115,19 @@ namespace Pulxer
                 }
             }
 
-            var account = _data.GetAccount();
+            if (account != null)
+            {
+                _accountBL.DeleteTestAccountData(account.AccountID, false);
+                _data.LoadData(account.AccountID);
+            }
+
+            var acc = _data.GetAccount();
             var cash = _data.GetCash();
-            account.AccountType = AccountTypes.Test;
-            account.CommPerc = testConfig.CommPerc;
-            account.IsShortEnable = testConfig.IsShortEnable;
-            account.Name = testConfig.Name + " / " + _tickSource.Name;
-            account.Code = "";
+            acc.AccountType = AccountTypes.Test;
+            acc.CommPerc = testConfig.CommPerc;
+            acc.IsShortEnable = testConfig.IsShortEnable;
+            acc.Name = testConfig.Name + " - " + _tickSource.Name;
+            acc.Code = DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss");
             cash.Initial = cash.Current = testConfig.InitialSumma;
 
             return await _tickSource.LoadDataAsync();

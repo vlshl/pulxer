@@ -11,25 +11,29 @@ namespace Cli
     {
         private TestRun _testRun = null;
         private readonly IConsole _console;
-        private readonly IAccountDA _accountDA; 
+        private readonly IAccountDA _accountDA;
+        private readonly IAccountBL _accountBL;
         private readonly IInstrumBL _instrumBL; 
         private readonly IInsStoreBL _insStoreBL; 
         private readonly ITickSourceBL _tickSourceBL; 
         private readonly ITestConfigBL _testConfigBL;
         private readonly ILogger _logger;
         private readonly IConfig _config;
+        private readonly IPositionBL _posBL;
 
-        public TestRunCtrl(IConsole console, IAccountDA accountDA, IInstrumBL instrumBL, IInsStoreBL insStoreBL, ITickSourceBL tickSourceBL, 
-            ITestConfigBL testConfigBL, ILogger logger, IConfig config) : base(console)
+        public TestRunCtrl(IConsole console, IAccountDA accountDA, IAccountBL accountBL, IInstrumBL instrumBL, IInsStoreBL insStoreBL, ITickSourceBL tickSourceBL, 
+            ITestConfigBL testConfigBL, ILogger logger, IConfig config, IPositionBL posBL) : base(console)
         {
             _console = console;
             _accountDA = accountDA;
+            _accountBL = accountBL;
             _instrumBL = instrumBL;
             _insStoreBL = insStoreBL;
             _tickSourceBL = tickSourceBL;
             _testConfigBL = testConfigBL;
             _logger = logger;
             _config = config;
+            _posBL = posBL;
         }
 
         public async void TestRunAsync(List<string> args)
@@ -71,6 +75,8 @@ namespace Cli
 
             int tickSourceID;
             int testConfigID;
+            int? accountID = null;
+
             int r;
             if (int.TryParse(args[0].Trim(), out r))
             {
@@ -91,13 +97,26 @@ namespace Cli
                 return;
             }
 
+            if (args.Count >= 3)
+            {
+                if (int.TryParse(args[2].Trim(), out r))
+                {
+                    accountID = r;
+                }
+                else
+                {
+                    _console.WriteError("Неверно указан id счета");
+                    return;
+                }
+            }
+
             _console.WriteLine("Загрузка данных ... ");
-            _testRun = new TestRun(_accountDA, _instrumBL, _insStoreBL, _tickSourceBL, _testConfigBL, _logger, _config);
+            _testRun = new TestRun(_accountBL, _accountDA, _instrumBL, _insStoreBL, _tickSourceBL, _testConfigBL, _logger, _config);
             _progress = new BgTaskProgress(_syncContext, "Тестовый прогон");
 
             try
             {
-                int count = await _testRun.Initialize(tickSourceID, testConfigID, _progress);
+                int count = await _testRun.Initialize(tickSourceID, testConfigID, accountID, _progress);
                 _console.WriteLine("Загружено: " + count.ToString());
                 _console.WriteLine("Тестовый прогон выполняется ... ");
                 _testRun.Start(TestRunFinished);
@@ -119,6 +138,7 @@ namespace Cli
             _console.WriteLine("Тестовый прогон завершен");
             var data = _testRun.GetData();
             data.SaveData();
+            _posBL.RefreshPositions(data.GetAccount().AccountID);
             _console.WriteLine("Данные сохранены");
             ViewData(data);
             _testRun.Close();

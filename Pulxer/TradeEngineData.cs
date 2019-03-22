@@ -26,13 +26,13 @@ namespace BL
     /// </summary>
     public class TradeEngineData : ITradeEngineData
     {
+        private IAccountDA _accountDA;
         private Account _account = null;
         private Cash _cash = null;
         private List<Holding> _holdings;
         private List<Order> _orders;
         private List<StopOrder> _stopOrders;
         private List<Trade> _trades;
-        private readonly IAccountDA _accountDA;
         private List<Order> _modifiedOrders;
         private List<StopOrder> _modifiedStopOrders;
 
@@ -314,7 +314,17 @@ namespace BL
         public void LoadData(int accountID)
         {
             _account = _accountDA.GetAccountByID(accountID);
+
+            if (_account == null)
+                throw new ApplicationException("Счет не найден.");
+
             _cash = _accountDA.GetCash(accountID);
+            if (_cash == null)
+            {
+                _cash = new Cash();
+                _cash.AccountID = accountID;
+            }
+
             _holdings = _accountDA.GetHoldings(accountID).ToList();
             _orders = _accountDA.GetOrders(accountID).ToList();
             _stopOrders = _accountDA.GetStopOrders(accountID).ToList();
@@ -401,15 +411,6 @@ namespace BL
                     nt.Comm, nt.TradeNo);
                 _trades.Add(t);
             }
-        }
-
-        /// <summary>
-        /// Удалить все данные по торговому счету вместе с самим счетом
-        /// </summary>
-        /// <param name="accountID">Идентификатор торгового счета</param>
-        public void DeleteData(int accountID)
-        {
-            _accountDA.DeleteAccountData(accountID);
         }
     }
 }

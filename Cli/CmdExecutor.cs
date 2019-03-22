@@ -218,7 +218,7 @@ namespace Cli
             _console.WriteLine("Get-Bars Tf Ticker Date1, Date2 - Вывод исторических данных");
             _console.WriteLine("Get-TickHistoryDates Ticker - Вывод списка дат тиковых исторических данных для инструмента");
             _console.WriteLine("Get-TickHistoryInstrums Date - Вывод списка инструментов тиковых исторических данных для даты");
-            _console.WriteLine("TestRun tickSourceID testConfigID - Выполнение тестового прогона (запуск фонового процесса)");
+            _console.WriteLine("TestRun tickSourceID testConfigID [AccountID] - Выполнение тестового прогона (запуск фонового процесса), если указан счет, то используется он, иначе создается новый");
             _console.WriteLine("TestRun Stop - Остановка тестового прогона");
             _console.WriteLine("Load-trades accountID xml-file - Ручная загрузка сделок из xml-файла");
             _console.WriteSeparator();
