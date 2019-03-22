@@ -13,13 +13,15 @@ namespace WebApp.Controllers
     [ApiController]
     public class AccountController : ControllerBase
     {
-        private IAccountBL _accountBL = null;
-        private IPositionBL _positionBL = null;
+        private IAccountBL _accountBL;
+        private IPositionBL _positionBL;
+        private IRepositoryBL _reposBL;
 
-        public AccountController(IAccountBL accountBL, IPositionBL positionBL)
+        public AccountController(IAccountBL accountBL, IPositionBL positionBL, IRepositoryBL reposBL)
         {
             _accountBL = accountBL;
             _positionBL = positionBL;
+            _reposBL = reposBL;
         }
 
         #region Account
@@ -145,6 +147,17 @@ namespace WebApp.Controllers
             }).ToList();
 
             return list;
+        }
+        #endregion
+
+        #region Account metadata
+        [HttpGet("{accountID}/meta")]
+        [Authorize]
+        public string GetAccountMeta(int accountID)
+        {
+            var json = _reposBL.GetStringParam(TestRun.ACCOUNT_META + accountID.ToString());
+            if (json == null) json = "";
+            return json;
         }
         #endregion
     }

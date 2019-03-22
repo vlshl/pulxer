@@ -30,6 +30,7 @@ namespace Pulxer
             services.AddTransient<HistoryDownloader>();
             services.AddTransient<ISyncBL, SyncBL>();
             services.AddTransient<IUserBL, UserBL>();
+            services.AddTransient<IRepositoryBL, RepositoryBL>();
         }
     }
 }

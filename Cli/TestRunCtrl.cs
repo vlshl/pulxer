@@ -20,9 +20,10 @@ namespace Cli
         private readonly ILogger _logger;
         private readonly IConfig _config;
         private readonly IPositionBL _posBL;
+        private readonly IRepositoryBL _reposBL;
 
         public TestRunCtrl(IConsole console, IAccountDA accountDA, IAccountBL accountBL, IInstrumBL instrumBL, IInsStoreBL insStoreBL, ITickSourceBL tickSourceBL, 
-            ITestConfigBL testConfigBL, ILogger logger, IConfig config, IPositionBL posBL) : base(console)
+            ITestConfigBL testConfigBL, ILogger logger, IConfig config, IPositionBL posBL, IRepositoryBL reposBL) : base(console)
         {
             _console = console;
             _accountDA = accountDA;
@@ -34,6 +35,7 @@ namespace Cli
             _logger = logger;
             _config = config;
             _posBL = posBL;
+            _reposBL = reposBL;
         }
 
         public async void TestRunAsync(List<string> args)
@@ -111,7 +113,7 @@ namespace Cli
             }
 
             _console.WriteLine("Загрузка данных ... ");
-            _testRun = new TestRun(_accountBL, _accountDA, _instrumBL, _insStoreBL, _tickSourceBL, _testConfigBL, _logger, _config);
+            _testRun = new TestRun(_accountBL, _accountDA, _instrumBL, _insStoreBL, _tickSourceBL, _testConfigBL, _logger, _config, _posBL, _reposBL);
             _progress = new BgTaskProgress(_syncContext, "Тестовый прогон");
 
             try
@@ -129,6 +131,7 @@ namespace Cli
 
         private void TestRunFinished(bool isComplete)
         {
+            _testRun.Close();
             if (!isComplete)
             {
                 _console.WriteLine("Тестовый прогон прерван");
@@ -137,12 +140,7 @@ namespace Cli
 
             _console.WriteLine("Тестовый прогон завершен");
             var data = _testRun.GetData();
-            data.SaveData();
-            _posBL.RefreshPositions(data.GetAccount().AccountID);
-            _console.WriteLine("Данные сохранены");
             ViewData(data);
-            _testRun.Close();
-            _console.WriteLine("Завершено");
         }
 
         private void ViewData(TradeEngineData data)

@@ -23,6 +23,7 @@ namespace Storage
             services.AddTransient<IReplicationDA, ReplicationDA>();
             services.AddTransient<IPositionDA, PositionDA>();
             services.AddTransient<IUserDA, UserDA>();
+            services.AddTransient<IRepositoryDA, RepositoryDA>();
 
             services.AddDbContext<DaContext>(options => options.UseNpgsql(pulxerConnectionString));
             services.AddDbContext<LeechDAContext>(options => options.UseSqlite(leechConnectionString));

@@ -37,6 +37,7 @@ namespace Storage
         public DbSet<Position> Position { get; set; }
         public DbSet<PosTrade> PosTrade { get; set; }
         public DbSet<User> User { get; set; }
+        public DbSet<ReposObject> Repository { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -216,6 +217,13 @@ namespace Storage
             userBuilder.Property(p => p.Login).HasColumnName("login");
             userBuilder.Property(p => p.PasswordHash).HasColumnName("pwd_hash");
             userBuilder.Property(p => p.Role).HasColumnName("role");
+
+            // Repository
+            var reposBuilder = modelBuilder.Entity<ReposObject>().ToTable("repository");
+            reposBuilder.HasKey(r => new { r.ReposID });
+            reposBuilder.Property(p => p.ReposID).HasColumnName("repos_id");
+            reposBuilder.Property(p => p.Key).HasColumnName("key");
+            reposBuilder.Property(p => p.Data).HasColumnName("data");
         }
     }
 }

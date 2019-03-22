@@ -2,10 +2,12 @@
 using Common;
 using Common.Data;
 using Common.Interfaces;
+using Newtonsoft.Json;
 using Platform;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
@@ -16,6 +18,8 @@ namespace Pulxer
 
     public class TestRun
     {
+        public const string ACCOUNT_META = "AccountMeta_";
+
         private TradeEngine _engine;
         private TradeEngineData _data;
         private TickSource _tickSource;
@@ -25,6 +29,8 @@ namespace Pulxer
         private readonly IInsStoreBL _insStoreBL;
         private readonly ITickSourceBL _tickSourceBL;
         private readonly ITestConfigBL _testConfigBL;
+        private readonly IPositionBL _posBL;
+        private readonly IRepositoryBL _reposBL;
         private Dictionary<IBot, ILeechPlatform> _bot_platform;
         private BgTaskProgress _progress;
         private ILogger _logger;
@@ -32,7 +38,7 @@ namespace Pulxer
         private TestRunFinished _finished;
 
         public TestRun(IAccountBL accountBL, IAccountDA accountDA, IInstrumBL instrumBL, IInsStoreBL insStoreBL,
-            ITickSourceBL tickSourceBL, ITestConfigBL testConfigBL, ILogger logger, IConfig config)
+            ITickSourceBL tickSourceBL, ITestConfigBL testConfigBL, ILogger logger, IConfig config, IPositionBL posBL, IRepositoryBL reposBL)
         {
             _accountBL = accountBL;
             _accountDA = accountDA;
@@ -43,6 +49,8 @@ namespace Pulxer
             _bot_platform = new Dictionary<IBot, ILeechPlatform>();
             _logger = logger;
             _config = config;
+            _posBL = posBL;
+            _reposBL = reposBL;
         }
 
         /// <summary>
@@ -149,6 +157,7 @@ namespace Pulxer
             }
             else if (state == TestTickSourceState.Completed)
             {
+                Complete();
                 _progress.OnProgress(percent);
                 _progress.OnComplete();
                 _finished?.Invoke(true);
@@ -177,6 +186,25 @@ namespace Pulxer
         {
             if (_tickSource != null) _tickSource.Stop();
             if (_progress != null) _progress.OnAbort();
+        }
+
+        private void Complete()
+        {
+            _data.SaveData();
+            _posBL.RefreshPositions(_data.GetAccount().AccountID);
+            var account = _data.GetAccount();
+
+            // сохранить метаданные
+            if (_tickSource != null && account != null)
+            {
+                AccountMeta meta = new AccountMeta();
+                meta.TickSource_StartDate = _tickSource.StartDate;
+                meta.TickSource_EndDate = _tickSource.EndDate;
+                meta.TickSource_Tickers = string.Join(',', _tickSource.GetInstrums().Select(r => r.Ticker).ToArray());
+                meta.TestRun_CompleteTime = DateTime.Now;
+                var json = JsonConvert.SerializeObject(meta);
+                _reposBL.SetStringParam(ACCOUNT_META + account.AccountID.ToString(), json);
+            }
         }
 
         public TradeEngineData GetData()
