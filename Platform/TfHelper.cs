@@ -218,5 +218,80 @@ namespace Platform
             int ai = (int)a; int bi = (int)b;
             return ai <= bi;
         }
+
+        public static Timeframes? Parse(string str)
+        {
+            Timeframes tf;
+            if (TryParse(str, out tf)) return tf;
+            return null;
+        }
+
+        public static bool TryParse(string str, out Timeframes tf)
+        {
+            str = str.ToLower();
+            tf = Timeframes.Tick;
+
+            if (str == "0" || str == "tick")
+            {
+                tf = Timeframes.Tick;
+                return true;
+            }
+
+            if (str == "1" || str == "min1" || str == "min")
+            {
+                tf = Timeframes.Min;
+                return true;
+            }
+
+            if (str == "5" || str == "min5")
+            {
+                tf = Timeframes.Min5;
+                return true;
+            }
+
+            if (str == "10" || str == "min10")
+            {
+                tf = Timeframes.Min10;
+                return true;
+            }
+
+            if (str == "15" || str == "min15")
+            {
+                tf = Timeframes.Min15;
+                return true;
+            }
+
+            if (str == "20" || str == "min20")
+            {
+                tf = Timeframes.Min20;
+                return true;
+            }
+
+            if (str == "30" || str == "min30")
+            {
+                tf = Timeframes.Min30;
+                return true;
+            }
+
+            if (str == "h" || str == "hour")
+            {
+                tf = Timeframes.Hour;
+                return true;
+            }
+
+            if (str == "d" || str == "day")
+            {
+                tf = Timeframes.Day;
+                return true;
+            }
+
+            if (str == "w" || str == "week")
+            {
+                tf = Timeframes.Week;
+                return true;
+            }
+
+            return false;
+        }
     }
 }

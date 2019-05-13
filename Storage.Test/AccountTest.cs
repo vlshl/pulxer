@@ -25,8 +25,9 @@ namespace Storage.Test
             var acc = accDA.CreateAccount("code", "name", 100, true, AccountTypes.Test);
             var accounts = accDA.GetAccounts().ToList();
 
-            Assert.Single(accounts);
-            var acc1 = accounts[0];
+            var accs = accounts.Where(a => a.AccountID == acc.AccountID).ToList();
+            Assert.Single(accs);
+            var acc1 = accs[0];
 
             Assert.Equal(acc.Code, acc1.Code);
             Assert.Equal(acc.Name, acc1.Name);
@@ -69,9 +70,9 @@ namespace Storage.Test
             // delete and cleanp
             accDA.DeleteAccount(accID);
 
-            var emptyList = accDA.GetAccounts();
+            var list = accDA.GetAccounts();
 
-            Assert.Empty(emptyList);
+            Assert.Empty(list.Where(a => a.AccountID == accID));
         }
 
         [Fact]

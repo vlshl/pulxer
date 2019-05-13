@@ -15,7 +15,7 @@ namespace Platform
         Task<IBarRow> CreateBarRow(int insID, Timeframes tf, int historyDays);
         void Close();
         void OnTimer(OnTimerDelegate onTimer);
-        void OnTick(int insID, OnTickDelegate onTick);
+        void OnTick(int insID, OnTickDelegate onTick, bool isSubscribe);
 
         Order AddBuyOrder(int insID, decimal? price, int lots);
         Order AddSellOrder(int insID, decimal? price, int lots);
@@ -28,12 +28,14 @@ namespace Platform
         void RemoveStopOrder(StopOrder so);
         IEnumerable<StopOrder> GetStopOrders(int insID);
         void RemoveStopOrders(int insID);
-        int GetHolding(int insID);
+        int GetHoldingLots(int insID);
 
         decimal GetCommPerc();
         bool GetShortEnable();
         decimal GetInitialSumma();
         decimal GetCurrentSumma();
+
+        IPosManager GetPosManager(int insID);
     }
 }
 

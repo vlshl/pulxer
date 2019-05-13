@@ -21,11 +21,11 @@ namespace Bot
         public override void Close()
         {
             _platform.OnTimer(null);
-            _platform.OnTick(_gazp.InsID, null);
+            _platform.OnTick(_gazp.InsID, OnTick, false);
             _platform.AddLog("MyBot", "Closed");
         }
 
-        public async override void Initialize(string data)
+        public async override void Initialize(IBotParams botParams)
         {
             _platform.AddLog("MyBot", "Initialize ...");
             _gazp = _platform.GetInstrum("GAZP");
@@ -51,7 +51,7 @@ namespace Bot
             _bars2_ma = new Ma(_bars2.Close, AverageMethod.Exponencial, 10);
             _bars2.OnCloseBar += Bars2_OnCloseBar;
 
-            _platform.OnTick(_gazp.InsID, OnTick);
+            _platform.OnTick(_gazp.InsID, OnTick, true);
 
             _platform.AddLog("MyBot", "Initialized");
         }
@@ -87,7 +87,7 @@ namespace Bot
             if (_order != null && _order.Status == OrderStatus.Active) return; // находимся в состоянии активной заявки
 
             int t = time.Hour * 10000 + time.Minute * 100 + time.Second;
-            int hold = _platform.GetHolding(_gazp.InsID);
+            int hold = _platform.GetHoldingLots(_gazp.InsID);
             
             // вход
             if (hold == 0 && price >= ma1 + 0.2m && t >= 103000 && t < 183000)

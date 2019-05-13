@@ -112,7 +112,20 @@ namespace Pulxer
                     if (bot == null)
                         throw new ApplicationException("Бот не создан: " + conf.Key);
 
-                    bot.Initialize(conf.InitData);
+                    var loader = new BotParamsLoader();
+                    var botParams = loader.Load(asmPath, conf.Class);
+                    if (loader.Exception != null)
+                        throw new ApplicationException("Ошибка при загрузке файла конфигурации бота '" + conf.Key + "'.\n" + loader.Exception.Message);
+
+                    if (botParams == null)
+                    {
+                        botParams = loader.Load(conf.InitData);
+                        if (loader.Exception != null)
+                            throw new ApplicationException("Ошибка при загрузке данных инициализации бота '" + conf.Key + "'.\n" + loader.Exception.Message);
+                    }
+
+                    if (botParams == null) botParams = new BotParams(null);
+                    bot.Initialize(botParams);
 
                     // после успешной инициализации бота
                     _bot_platform.Add(bot, platform);

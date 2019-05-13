@@ -6,13 +6,13 @@ namespace Platform
 {
     public interface IBot
     {
-        void Initialize(string data);
+        void Initialize(IBotParams botParams);
         void Close();
     }
 
     public class BotBase : IBot
     {
-        public virtual void Initialize(string data) { }
+        public virtual void Initialize(IBotParams botParams) { }
         public virtual void Close() { }
     }
 }

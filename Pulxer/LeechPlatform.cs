@@ -24,7 +24,8 @@ namespace Pulxer
         private ILogger _logger = null;
         private readonly TradeEngine _engine = null;
         private readonly TradeEngineData _data;
-        private Dictionary<int, OnTickDelegate> _insID_onTick = null;
+        private Dictionary<int, List<OnTickDelegate>> _insID_onTicks = null;
+        private Dictionary<int, IPosManager> _insID_pm = null;
 
         public LeechPlatform(TickSource tickSrc, IInstrumBL instrumBL, IInsStoreBL insStoreBL, TradeEngine engine, TradeEngineData data, ILogger logger)
         {
@@ -37,14 +38,16 @@ namespace Pulxer
 
             _barRows = new List<BarRow>();
             _tickSource.OnTick += _tickSource_OnTick;
-            _insID_onTick = new Dictionary<int, OnTickDelegate>();
+            _insID_onTicks = new Dictionary<int, List<OnTickDelegate>>();
+            _insID_pm = new Dictionary<int, IPosManager>();
         }
 
         private void _tickSource_OnTick(Tick tick)
         {
-            if (_insID_onTick.ContainsKey(tick.InsID))
+            if (_insID_onTicks.ContainsKey(tick.InsID))
             {
-                _insID_onTick[tick.InsID]?.Invoke(tick.Time, tick.Price, tick.Lots);
+                var onTicks = _insID_onTicks[tick.InsID];
+                foreach (var onTick in onTicks) { onTick?.Invoke(tick.Time, tick.Price, tick.Lots); }
             }
 
             if (_onTimer != null)
@@ -91,7 +94,12 @@ namespace Pulxer
         public void Close()
         {
             foreach (var br in _barRows) br.CloseBarRow();
+            _barRows.Clear();
+
             _tickSource.OnTick -= _tickSource_OnTick;
+
+            foreach (var insID in _insID_pm.Keys) _insID_pm[insID].ClosePosManager();
+            _insID_pm.Clear();
         }
 
         public void OnTimer(OnTimerDelegate onTimer)
@@ -154,17 +162,42 @@ namespace Pulxer
             _engine.RemoveActiveStopOrders(insID);
         }
 
-        public int GetHolding(int insID)
+        public int GetHoldingLots(int insID)
         {
             return _engine.GetHoldingLots(insID);
         }
 
-        public void OnTick(int insID, OnTickDelegate onTick)
+        public void OnTick(int insID, OnTickDelegate onTick, bool isSubscribe)
         {
-            if (!_insID_onTick.ContainsKey(insID) && onTick != null)
-                _insID_onTick.Add(insID, onTick);
-            else if (_insID_onTick.ContainsKey(insID) && onTick == null)
-                _insID_onTick.Remove(insID);
+            if (onTick == null) return;
+
+            if (isSubscribe)
+            {
+                if (!_insID_onTicks.ContainsKey(insID))
+                {
+                    _insID_onTicks.Add(insID, new List<OnTickDelegate>() { onTick });
+                }
+                else
+                {
+                    var onTicks = _insID_onTicks[insID];
+                    if (!onTicks.Contains(onTick)) { onTicks.Add(onTick); }
+                }
+            }
+            else
+            {
+                if (_insID_onTicks.ContainsKey(insID))
+                {
+                    var onTicks = _insID_onTicks[insID];
+                    if (onTicks.Contains(onTick))
+                    {
+                        onTicks.Remove(onTick);
+                        if (!onTicks.Any())
+                        {
+                            _insID_onTicks.Remove(insID);
+                        }
+                    }
+                }
+            }
         }
 
         public decimal GetCommPerc()
@@ -201,6 +234,21 @@ namespace Pulxer
             if (cash == null) return 0;
 
             return cash.Current;
+        }
+
+        public IPosManager GetPosManager(int insID)
+        {
+            if (_insID_pm.ContainsKey(insID))
+            {
+                return _insID_pm[insID];
+            }
+            else
+            {
+                var pm = new PosManager(this, insID);
+                _insID_pm.Add(insID, pm);
+
+                return pm;
+            }
         }
 
         //public void OnTimer(OnTimerDelegate onTimer)
