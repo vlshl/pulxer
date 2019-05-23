@@ -108,31 +108,47 @@ namespace Pulxer
                         throw new ApplicationException("Тип не найден: " + conf.Class);
 
                     var platform = new LeechPlatform(_tickSource, _instrumBL, _insStoreBL, _engine, _data, _logger);
-                    var bot = Activator.CreateInstance(type, platform) as IBot;
+                    IBot bot = null;
+                    try
+                    {
+                        bot = Activator.CreateInstance(type, platform) as IBot;
+                    }
+                    catch(Exception ex)
+                    {
+                        throw new ApplicationException("Ошибка при создании бота: " + conf.Key, ex);
+                    }
                     if (bot == null)
                         throw new ApplicationException("Бот не создан: " + conf.Key);
 
                     var loader = new BotParamsLoader();
                     var botParams = loader.Load(asmPath, conf.Class);
                     if (loader.Exception != null)
-                        throw new ApplicationException("Ошибка при загрузке файла конфигурации бота '" + conf.Key + "'.\n" + loader.Exception.Message);
+                        throw new ApplicationException("Ошибка при загрузке файла конфигурации бота: " + conf.Key, loader.Exception);
 
                     if (botParams == null)
                     {
                         botParams = loader.Load(conf.InitData);
                         if (loader.Exception != null)
-                            throw new ApplicationException("Ошибка при загрузке данных инициализации бота '" + conf.Key + "'.\n" + loader.Exception.Message);
+                            throw new ApplicationException("Ошибка при загрузке данных инициализации бота: " + conf.Key, loader.Exception);
                     }
-
                     if (botParams == null) botParams = new BotParams(null);
-                    bot.Initialize(botParams);
 
-                    // после успешной инициализации бота
-                    _bot_platform.Add(bot, platform);
+                    try
+                    {
+                        bool isSuccess = await bot.Initialize(botParams);
+                        if (!isSuccess)
+                            throw new ApplicationException("При инициализации бот вернул статус 'Ошибка'.");
+
+                        _bot_platform.Add(bot, platform);
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new ApplicationException("Ошибка при инициализации бота: " + conf.Key, ex);
+                    }
                 }
                 catch (Exception ex)
                 {
-                    throw new ApplicationException("Ошибка при инициализации ботов", ex);
+                    throw new ApplicationException("Ошибка при инициализации ботов.", ex);
                 }
             }
 
@@ -235,8 +251,15 @@ namespace Pulxer
 
             foreach (var bot in _bot_platform.Keys)
             {
-                bot.Close();
-                _bot_platform[bot].Close();
+                try
+                {
+                    bot.Close();
+                    _bot_platform[bot].Close();
+                }
+                catch(Exception ex)
+                {
+                    throw new ApplicationException("Ошибка при завершении бота: " + bot.GetType().Name, ex);
+                }
             }
         }
     }

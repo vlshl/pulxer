@@ -131,7 +131,15 @@ namespace Cli
 
         private void TestRunFinished(bool isComplete)
         {
-            _testRun.Close();
+            try
+            {
+                _testRun.Close();
+            }
+            catch (Exception ex)
+            {
+                _console.WriteError("Ошибка при завершении тестового прогона.\n" + ex.ToString());
+            }
+
             if (!isComplete)
             {
                 _console.WriteLine("Тестовый прогон прерван");
