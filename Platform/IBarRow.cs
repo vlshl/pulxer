@@ -15,5 +15,7 @@ namespace Platform
         ValueRow Close { get; }
         ValueRow High { get; }
         ValueRow Low { get; }
+        ValueRow Median { get; }
+        ValueRow Typical { get; }
     }
 }
