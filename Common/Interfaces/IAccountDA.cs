@@ -40,6 +40,11 @@ namespace Common.Interfaces
         IEnumerable<Trade> GetTrades(int accountID, int? fromID = null);
         Trade CreateTrade(int accountID, int orderID, DateTime time, int insID, BuySell bs, int lotCount, decimal price, decimal comm, long tradeNo);
 
+        Series CreateSeries(int accountID, string key, string name, SeriesAxis axis, string data);
+        void CreateSeriesValues(IEnumerable<SeriesValue> values);
+        IEnumerable<Series> GetSeries(int accountID);
+        IEnumerable<SeriesValue> GetSeriesValues(int seriesID);
+
         void DeleteAccountData(int accountID);
         void DeleteAccount(int accountID);
     }

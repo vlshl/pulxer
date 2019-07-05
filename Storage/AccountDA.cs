@@ -441,6 +441,57 @@ namespace Storage
             return trade;
         }
 
+        #region Series
+        public Series CreateSeries(int accountID, string key, string name, SeriesAxis axis, string data)
+        {
+            Series series = new Series()
+            {
+                SeriesID = 0,
+                Key = key,
+                AccountID = accountID,
+                Name = name,
+                Axis = axis,
+                Data = data
+            };
+
+            using (var db = new DaContext(_options))
+            {
+                db.Series.Add(series);
+                db.SaveChanges();
+            }
+
+            return series;
+        }
+
+        public void CreateSeriesValues(IEnumerable<SeriesValue> values)
+        {
+            using (var db = new DaContext(_options))
+            {
+                foreach (var v in values)
+                {
+                    db.SeriesValue.Add(v);
+                }
+                db.SaveChanges();
+            }
+        }
+
+        public IEnumerable<Series> GetSeries(int accountID)
+        {
+            using (var db = new DaContext(_options))
+            {
+                return db.Series.Where(r => r.AccountID == accountID).ToList();
+            }
+        }
+
+        public IEnumerable<SeriesValue> GetSeriesValues(int seriesID)
+        {
+            using (var db = new DaContext(_options))
+            {
+                return db.SeriesValue.Where(r => r.SeriesID == seriesID).ToList();
+            }
+        }
+        #endregion
+
         /// <summary>
         /// Delete all account data by accountID (trades, stoporders, orders, holdings, cashes)
         /// Account not delete
@@ -462,7 +513,8 @@ namespace Storage
                         db.Database.ExecuteSqlCommand("delete from orders where account_id = " + accountID.ToString());
                         db.Database.ExecuteSqlCommand("delete from holding where account_id = " + accountID.ToString());
                         db.Database.ExecuteSqlCommand("delete from cash where account_id = " + accountID.ToString());
-
+                        db.Database.ExecuteSqlCommand("delete from seriesvalue where series_id in (select series_id from series where account_id = " + accountID.ToString() + ")");
+                        db.Database.ExecuteSqlCommand("delete from series where account_id = " + accountID.ToString());
 
                         db.Database.CommitTransaction();
                     }

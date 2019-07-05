@@ -22,6 +22,7 @@ namespace Pulxer
 
         private TradeEngine _engine;
         private TradeEngineData _data;
+        private SeriesData _seriesData;
         private TickSource _tickSource;
         private readonly IAccountBL _accountBL;
         private readonly IAccountDA _accountDA;
@@ -67,10 +68,9 @@ namespace Pulxer
             var testConfig = _testConfigBL.GetTestConfig(testConfigID);
             if (_tickSource == null || testConfig == null) return 0;
 
-            Account account = null;
             if (accountID != null)
             {
-                account = _accountBL.GetAccountByID(accountID.Value);
+                var account = _accountBL.GetAccountByID(accountID.Value);
                 if (account == null)
                     throw new ApplicationException("Указанный счет не найден.");
                 if (account.AccountType != AccountTypes.Test)
@@ -80,8 +80,16 @@ namespace Pulxer
             _progress = progress;
             _data = new TradeEngineData(_accountDA);
             _engine = new TradeEngine(_data, _instrumBL, (ITimeProvider)_tickSource);
+            _seriesData = new SeriesData(_accountDA);
             _tickSource.OnTick += _tickSource_OnTick;
             _tickSource.OnStateChange += _tickSource_OnStateChange;
+
+            if (accountID != null)
+            {
+                _accountBL.DeleteTestAccountData(accountID.Value, false);
+                _data.LoadData(accountID.Value);
+                _seriesData.LoadData(accountID.Value);
+            }
 
             var botConfigs = testConfig.GetBotConfigs();
             foreach (var conf in botConfigs)
@@ -107,7 +115,7 @@ namespace Pulxer
                     if (type == null)
                         throw new ApplicationException("Тип не найден: " + conf.Class);
 
-                    var platform = new LeechPlatform(_tickSource, _instrumBL, _insStoreBL, _engine, _data, _logger);
+                    var platform = new LeechPlatform(_tickSource, _instrumBL, _insStoreBL, _engine, _data, _seriesData, _logger);
                     IBot bot = null;
                     try
                     {
@@ -150,12 +158,6 @@ namespace Pulxer
                 {
                     throw new ApplicationException("Ошибка при инициализации ботов.", ex);
                 }
-            }
-
-            if (account != null)
-            {
-                _accountBL.DeleteTestAccountData(account.AccountID, false);
-                _data.LoadData(account.AccountID);
             }
 
             var acc = _data.GetAccount();
@@ -220,8 +222,10 @@ namespace Pulxer
         private void Complete()
         {
             _data.SaveData();
-            _posBL.RefreshPositions(_data.GetAccount().AccountID);
             var account = _data.GetAccount();
+            _posBL.RefreshPositions(account.AccountID);
+            _seriesData.SetAccount(account.AccountID);
+            _seriesData.SaveData();
 
             // сохранить метаданные
             if (_tickSource != null && account != null)

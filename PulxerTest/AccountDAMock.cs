@@ -16,12 +16,17 @@ namespace PulxerTest
         private Dictionary<int, Trade> _id_trades = new Dictionary<int, Trade>();
         private Dictionary<int, Holding> _id_holdings = new Dictionary<int, Holding>();
         private Dictionary<int, Cash> _id_cash = new Dictionary<int, Cash>();
+        private List<Series> _series = new List<Series>();
+        private List<SeriesValue> _seriesvalue = new List<SeriesValue>();
+
         private int _nextAccountID = 1001;
         private int _nextOrderID = 1001;
         private int _nextStopOrderID = 1001;
         private int _nextTradeID = 1001;
         private int _nextHoldingID = 1001;
         private int _nextCashID = 1001;
+        private int _nextSeriesID = 1001;
+        private int _nextSeriesValueID = 1001;
 
         #region Account
         public IEnumerable<Account> GetAccounts()
@@ -246,6 +251,34 @@ namespace PulxerTest
             {
                 _id_holdings.Remove(holdingID);
             }
+        }
+        #endregion
+
+        #region Series
+        public Series CreateSeries(int accountID, string key, string name, SeriesAxis axis, string data)
+        {
+            Series series = new Series() { SeriesID = _nextSeriesID++, AccountID = accountID, Key = key, Name = name, Axis = axis, Data = data };
+            _series.Add(series);
+            return series;
+        }
+
+        public void CreateSeriesValues(IEnumerable<SeriesValue> values)
+        {
+            foreach (var v in values)
+            {
+                v.SeriesValueID = _nextSeriesValueID++;
+                _seriesvalue.Add(v);
+            }
+        }
+
+        public IEnumerable<Series> GetSeries(int accountID)
+        {
+            return _series.Where(s => s.AccountID == accountID);
+        }
+
+        public IEnumerable<SeriesValue> GetSeriesValues(int seriesID)
+        {
+            return _seriesvalue.Where(s => s.SeriesID == seriesID);
         }
         #endregion
     }

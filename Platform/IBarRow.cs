@@ -10,6 +10,7 @@ namespace Platform
     {
         event OnBarEventHandler OnCloseBar;
 
+        Timeline Dates { get; }
         Bar this[int i] { get; }
         ValueRow Open { get; }
         ValueRow Close { get; }

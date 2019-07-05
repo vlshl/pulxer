@@ -32,7 +32,7 @@ namespace Indic
             if (_source != null)
             {
                 _source.Change += Sources_Change;
-                Sources_Change(true);
+                Sources_Change(null, true);
             }
         }
 
@@ -49,7 +49,7 @@ namespace Indic
                 if (_source != null) _source.Change -= Sources_Change; // отписываемся от прежнего, если он был
                 _source = value;
                 if (_source != null) _source.Change += Sources_Change;
-                Sources_Change(true);
+                Sources_Change(null, true);
             }
         }
 
@@ -64,7 +64,7 @@ namespace Indic
                 if (value < 1 || _n == value) return;
 
                 _n = value;
-                Sources_Change(true);
+                Sources_Change(null, true);
             }
         }
 
@@ -79,11 +79,11 @@ namespace Indic
                 if (_am == value) return;
 
                 _am = value;
-                Sources_Change(true);
+                Sources_Change(null, true);
             }
         }
 
-        void Sources_Change(bool isReset)
+        void Sources_Change(ValueRow src, bool isReset)
         {
             SuspendEvents();
             if (isReset) Clear();

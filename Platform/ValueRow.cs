@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Platform
 {
-    public delegate void ValueRowChangeEventHandler(bool isReset);
+    public delegate void ValueRowChangeEventHandler(ValueRow vr, bool isReset);
 
     /// <summary>
     /// The notifying decimal values list.
@@ -137,7 +137,7 @@ namespace Platform
         {
             if (_isEventEnable)
             {
-                if (Change != null) Change(isReset);
+                if (Change != null) Change(this, isReset);
             }
             else
             {

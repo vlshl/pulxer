@@ -24,16 +24,19 @@ namespace Pulxer
         private ILogger _logger = null;
         private readonly TradeEngine _engine = null;
         private readonly TradeEngineData _data;
+        private readonly SeriesData _seriesData;
         private Dictionary<int, List<OnTickDelegate>> _insID_onTicks = null;
         private Dictionary<int, IPosManager> _insID_pm = null;
 
-        public LeechPlatform(TickSource tickSrc, IInstrumBL instrumBL, IInsStoreBL insStoreBL, TradeEngine engine, TradeEngineData data, ILogger logger)
+        public LeechPlatform(TickSource tickSrc, IInstrumBL instrumBL, IInsStoreBL insStoreBL, TradeEngine engine, 
+            TradeEngineData data, SeriesData seriesData, ILogger logger)
         {
             _tickSource = tickSrc;
             _instrumBL = instrumBL;
             _insStoreBL = insStoreBL;
             _engine = engine;
             _data = data;
+            _seriesData = seriesData;
             _logger = logger;
 
             _barRows = new List<BarRow>();
@@ -250,6 +253,23 @@ namespace Pulxer
                 return pm;
             }
         }
+
+        #region Series
+        public int OpenSeries(string key, string name, SeriesAxis axis)
+        {
+            return _seriesData.OpenSeries(key, name, axis);
+        }
+
+        public bool AddSeriesValue(int seriesID, DateTime time, decimal val)
+        {
+            return _seriesData.AddSeriesValue(seriesID, time, val);
+        }
+
+        public void SubscribeValueRow(int seriesID, ValueRow valueRow, Timeline timeline)
+        {
+            _seriesData.SubscribeValueRow(seriesID, valueRow, timeline);
+        }
+        #endregion
 
         //public void OnTimer(OnTimerDelegate onTimer)
         //{

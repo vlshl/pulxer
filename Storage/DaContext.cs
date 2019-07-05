@@ -38,6 +38,8 @@ namespace Storage
         public DbSet<PosTrade> PosTrade { get; set; }
         public DbSet<User> User { get; set; }
         public DbSet<ReposObject> Repository { get; set; }
+        public DbSet<Series> Series { get; set; }
+        public DbSet<SeriesValue> SeriesValue { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -224,6 +226,27 @@ namespace Storage
             reposBuilder.Property(p => p.ReposID).HasColumnName("repos_id");
             reposBuilder.Property(p => p.Key).HasColumnName("key");
             reposBuilder.Property(p => p.Data).HasColumnName("data");
+
+            // Series
+            var seriesBuilder = modelBuilder.Entity<Series>().ToTable("series");
+            seriesBuilder.HasKey(r => new { r.SeriesID });
+            seriesBuilder.Property(p => p.SeriesID).HasColumnName("series_id");
+            seriesBuilder.Property(p => p.Key).HasColumnName("key");
+            seriesBuilder.Property(p => p.AccountID).HasColumnName("account_id");
+            seriesBuilder.Property(p => p.Name).HasColumnName("name");
+            seriesBuilder.Property(p => p.Axis).HasColumnName("axis");
+            seriesBuilder.Property(p => p.Data).HasColumnName("data");
+
+            // SeriesValue
+            var seriesValueBuilder = modelBuilder.Entity<SeriesValue>().ToTable("seriesvalue");
+            seriesValueBuilder.HasKey(r => new { r.SeriesValueID });
+            seriesValueBuilder.Property(p => p.SeriesValueID).HasColumnName("seriesvalue_id");
+            seriesValueBuilder.Property(p => p.SeriesID).HasColumnName("series_id");
+            seriesValueBuilder.Property(p => p.Time).HasColumnName("value_time");
+            seriesValueBuilder.Property(p => p.EndTime).HasColumnName("end_time");
+            seriesValueBuilder.Property(p => p.Value).HasColumnName("value");
+            seriesValueBuilder.Property(p => p.EndValue).HasColumnName("end_value");
+            seriesValueBuilder.Property(p => p.Data).HasColumnName("data");
         }
     }
 }

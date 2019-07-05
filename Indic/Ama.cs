@@ -28,7 +28,7 @@ namespace Indic
             _fastSmooth = 2m / (fastPeriod + 1);
             _slowSmooth = 2m / (slowPeriod + 1);
             source.Change += Sources_Change;
-            if (source.Count > 0) Sources_Change(false);
+            if (source.Count > 0) Sources_Change(null, false);
         }
 
         /// <summary>
@@ -47,7 +47,7 @@ namespace Indic
             _source.Change += Sources_Change;
             _smoothRow = smoothRow;
             _smoothRow.Change += Sources_Change;
-            Sources_Change(false);
+            Sources_Change(null, false);
         }
 
         public ValueRow Source
@@ -63,7 +63,7 @@ namespace Indic
                 if (_source != null) _source.Change -= Sources_Change;
                 _source = value;
                 if (_source != null) _source.Change += Sources_Change;
-                Sources_Change(true);
+                Sources_Change(null, true);
             }
         }
 
@@ -78,11 +78,11 @@ namespace Indic
                 if (value < 1 || _n == value) return;
 
                 _n = value;
-                Sources_Change(true);
+                Sources_Change(null, true);
             }
         }
 
-        void Sources_Change(bool isReset)
+        void Sources_Change(ValueRow src, bool isReset)
         {
             if (_smoothRow == null)
             {

@@ -110,5 +110,56 @@ namespace Storage.Test
             insDA.DeleteInstrumByID(insID);
             accDA.DeleteAccount(accID);
         }
+
+        [Fact]
+        public void Series_CreateGetDelete()
+        {
+            int accID;
+
+            // create account
+            var accDA = new AccountDA(_options);
+            accID = accDA.CreateAccount("code", "name", 100, true, AccountTypes.Test).AccountID;
+
+            var s1 = accDA.CreateSeries(accID, "key1", "name1", Platform.SeriesAxis.LeftAxis, "data1");
+
+            var series = accDA.GetSeries(accID).ToList();
+            Assert.Single(series);
+            Assert.Equal(accID, series[0].AccountID);
+            Assert.Equal("key1", series[0].Key);
+            Assert.Equal("name1", series[0].Name);
+            Assert.Equal(Platform.SeriesAxis.LeftAxis, series[0].Axis);
+            Assert.Equal("data1", series[0].Data);
+
+            var s2 = accDA.CreateSeries(accID, "key2", "name2", Platform.SeriesAxis.AxisX, "data2");
+            var series2 = accDA.GetSeries(accID).ToList();
+            Assert.Equal(2, series2.Count);
+
+            // create series values
+
+            accDA.CreateSeriesValues(new List<Platform.SeriesValue>()
+            {
+                new Platform.SeriesValue() { SeriesID = s1.SeriesID, Time = new DateTime(2010, 1, 1, 10, 0, 0), EndTime = null, Value = 100, EndValue = null, Data = "d1" }
+            });
+            accDA.CreateSeriesValues(new List<Platform.SeriesValue>()
+            {
+                new Platform.SeriesValue() { SeriesID = s2.SeriesID, Time = new DateTime(2010, 1, 1, 10, 0, 0), EndTime = new DateTime(2010, 1, 1, 10, 0, 1), Value = 1000, EndValue = 2000, Data = "d2" }
+            });
+
+            var vals1 = accDA.GetSeriesValues(s1.SeriesID).ToList();
+            var vals2 = accDA.GetSeriesValues(s2.SeriesID).ToList();
+
+            Assert.Single(vals1);
+            Assert.Single(vals2);
+            Assert.Equal(s1.SeriesID, vals1[0].SeriesID);
+            Assert.Equal(new DateTime(2010, 1, 1, 10, 0, 0), vals1[0].Time);
+            Assert.Null(vals1[0].EndTime);
+            Assert.Equal(100, vals1[0].Value);
+            Assert.Null(vals1[0].EndValue);
+            Assert.Equal("d1", vals1[0].Data);
+
+            // delete and cleanp
+            accDA.DeleteAccountData(accID);
+            accDA.DeleteAccount(accID);
+        }
     }
 }

@@ -39,7 +39,7 @@ namespace Indic
             if (source != null)
             {
                 source.Change += Source_Change;
-                Source_Change(true);
+                Source_Change(null, true);
             }
         }
 
@@ -58,7 +58,7 @@ namespace Indic
                 _bbMiddle.Source = _source;
                 _stdDev.Source = _source;
                 if (_source != null) _source.Change += Source_Change;
-                Source_Change(true);
+                Source_Change(null, true);
             }
         }
 
@@ -75,7 +75,7 @@ namespace Indic
                 _n = value;
                 _bbMiddle.N = _n;
                 _stdDev.N = _n;
-                Source_Change(true);
+                Source_Change(null, true);
             }
         }
 
@@ -90,7 +90,7 @@ namespace Indic
                 if (value < 0 || _n == value) return;
 
                 _width = value;
-                Source_Change(true);
+                Source_Change(null, true);
             }
         }
 
@@ -127,7 +127,7 @@ namespace Indic
             }
         }
 
-        void Source_Change(bool isReset)
+        void Source_Change(ValueRow src, bool isReset)
         {
             _bbTop.SuspendEvents();
             _bbBottom.SuspendEvents();

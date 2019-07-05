@@ -59,7 +59,7 @@ namespace Bot
             return true;
         }
 
-        private void _bars1_ma_Change(bool isReset)
+        private void _bars1_ma_Change(ValueRow vr, bool isReset)
         {
             if (!isReset && _bars1_ma.LastValue != null)
             {

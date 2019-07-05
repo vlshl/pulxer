@@ -217,7 +217,7 @@ CREATE TABLE public.instrum (
     ins_id integer NOT NULL,
     ticker character varying(50) NOT NULL,
     short_name character varying(50) NOT NULL,
-    name character varying(1000) NOT NULL,
+    name text NOT NULL,
     lot_size integer NOT NULL,
     decimals integer NOT NULL,
     price_step numeric NOT NULL
@@ -403,6 +403,83 @@ ALTER TABLE public.repository_repos_id_seq OWNER TO postgres;
 --
 
 ALTER SEQUENCE public.repository_repos_id_seq OWNED BY public.repository.repos_id;
+
+
+--
+-- Name: series; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.series (
+    series_id integer NOT NULL,
+    key character varying(50) NOT NULL,
+    account_id integer NOT NULL,
+    name text NOT NULL,
+    axis smallint NOT NULL,
+    data text NOT NULL
+);
+
+
+ALTER TABLE public.series OWNER TO postgres;
+
+--
+-- Name: series_series_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.series_series_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.series_series_id_seq OWNER TO postgres;
+
+--
+-- Name: series_series_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.series_series_id_seq OWNED BY public.series.series_id;
+
+
+--
+-- Name: seriesvalue; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.seriesvalue (
+    seriesvalue_id integer NOT NULL,
+    series_id integer NOT NULL,
+    value_time timestamp without time zone NOT NULL,
+    end_time timestamp without time zone,
+    value numeric(18,5) NOT NULL,
+    end_value numeric(18,5),
+    data text NOT NULL
+);
+
+
+ALTER TABLE public.seriesvalue OWNER TO postgres;
+
+--
+-- Name: seriesvalue_seriesvalue_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.seriesvalue_seriesvalue_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.seriesvalue_seriesvalue_id_seq OWNER TO postgres;
+
+--
+-- Name: seriesvalue_seriesvalue_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.seriesvalue_seriesvalue_id_seq OWNED BY public.seriesvalue.seriesvalue_id;
 
 
 --
@@ -691,6 +768,20 @@ ALTER TABLE ONLY public.repository ALTER COLUMN repos_id SET DEFAULT nextval('pu
 
 
 --
+-- Name: series series_id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.series ALTER COLUMN series_id SET DEFAULT nextval('public.series_series_id_seq'::regclass);
+
+
+--
+-- Name: seriesvalue seriesvalue_id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.seriesvalue ALTER COLUMN seriesvalue_id SET DEFAULT nextval('public.seriesvalue_seriesvalue_id_seq'::regclass);
+
+
+--
 -- Name: stoporder stoporder_id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -794,6 +885,22 @@ ALTER TABLE ONLY public.positions
 
 ALTER TABLE ONLY public.repository
     ADD CONSTRAINT pk_repository PRIMARY KEY (repos_id);
+
+
+--
+-- Name: series pk_series; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.series
+    ADD CONSTRAINT pk_series PRIMARY KEY (series_id);
+
+
+--
+-- Name: seriesvalue pk_seriesvalue; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.seriesvalue
+    ADD CONSTRAINT pk_seriesvalue PRIMARY KEY (seriesvalue_id);
 
 
 --
@@ -1002,6 +1109,14 @@ ALTER TABLE ONLY public.positions
 
 
 --
+-- Name: series fk_account; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.series
+    ADD CONSTRAINT fk_account FOREIGN KEY (account_id) REFERENCES public.account(account_id);
+
+
+--
 -- Name: barhistory fk_barhistory_insstore; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1103,6 +1218,14 @@ ALTER TABLE ONLY public.trade
 
 ALTER TABLE ONLY public.postrade
     ADD CONSTRAINT fk_positions FOREIGN KEY (pos_id) REFERENCES public.positions(pos_id);
+
+
+--
+-- Name: seriesvalue fk_series; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.seriesvalue
+    ADD CONSTRAINT fk_series FOREIGN KEY (series_id) REFERENCES public.series(series_id);
 
 
 --

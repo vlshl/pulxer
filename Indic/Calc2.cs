@@ -41,7 +41,7 @@ namespace Indic
                 if (_source1 != null)
                 {
                     _source1.Change += Source_Change;
-                    Source_Change(true);
+                    Source_Change(null, true);
                 }
                 else
                 {
@@ -61,7 +61,7 @@ namespace Indic
                 if (_source2 != null)
                 {
                     _source2.Change += Source_Change;
-                    Source_Change(true);
+                    Source_Change(null, true);
                 }
                 else
                 {
@@ -78,7 +78,7 @@ namespace Indic
                 _calc = value;
                 if (_calc != null && _source1 != null)
                 {
-                    Source_Change(true);
+                    Source_Change(null, true);
                 }
                 else
                 {
@@ -87,7 +87,7 @@ namespace Indic
             }
         }
 
-        void Source_Change(bool isReset)
+        void Source_Change(ValueRow src, bool isReset)
         {
             if (_calc == null || _source1 == null || _source2 == null) return;
 
