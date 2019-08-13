@@ -185,5 +185,39 @@ namespace Pulxer
             return _accountDA.GetTrades(accountID, fromID);
         }
         #endregion
+
+        #region Series
+        /// <summary>
+        /// Получить список кастомных рядов данных по счету
+        /// </summary>
+        /// <param name="accountID">Торговый счет</param>
+        /// <returns>Список кастомных рядов</returns>
+        public IEnumerable<Series> GetSeries(int accountID)
+        {
+            return _accountDA.GetSeries(accountID);
+        }
+
+        /// <summary>
+        /// Получить кастомные значения для указанного ряда в порядке возрастания ID
+        /// </summary>
+        /// <param name="seriesID">Ряд кастомных значений</param>
+        /// <param name="skipCount">Пропустить указанное количество значений</param>
+        /// <param name="takeCount">Взять указанное количество значений после пропуска (null - все значения после пропуска)</param>
+        /// <returns>Список значений в порядке возрастания ID</returns>
+        public IEnumerable<SeriesValue> GetValues(int seriesID, int skipCount = 0, int? takeCount = null)
+        {
+            return _accountDA.GetValues(seriesID, skipCount, takeCount);
+        }
+
+        /// <summary>
+        /// Получить общее количество значений в указанном ряду
+        /// </summary>
+        /// <param name="seriesID">Ряд кастомных значений</param>
+        /// <returns>Кол-во значений в ряду</returns>
+        public int GetValuesCount(int seriesID)
+        {
+            return _accountDA.GetValuesCount(seriesID);
+        }
+        #endregion
     }
 }

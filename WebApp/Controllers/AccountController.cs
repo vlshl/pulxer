@@ -56,13 +56,6 @@ namespace WebApp.Controllers
         {
             return _accountBL.GetOrders(accountID, fromID);
         }
-
-        [HttpGet("orders/{ids}")]
-        [Authorize]
-        public IEnumerable<Order> GetOrders(string ids)
-        {
-            return _accountBL.GetOrders(Lib.Str2Ids(ids));
-        }
         #endregion
 
         #region StopOrder
@@ -71,13 +64,6 @@ namespace WebApp.Controllers
         public IEnumerable<StopOrder> GetStopOrders(int accountID, int? fromID)
         {
             return _accountBL.GetStopOrders(accountID, fromID);
-        }
-
-        [HttpGet("stoporders/{ids}")]
-        [Authorize]
-        public IEnumerable<StopOrder> GetStopOrders(string ids)
-        {
-            return _accountBL.GetStopOrders(Lib.Str2Ids(ids));
         }
         #endregion
 
@@ -124,30 +110,6 @@ namespace WebApp.Controllers
 
             return list;
         }
-
-        [HttpGet("positions/{ids}")]
-        [Authorize]
-        public IEnumerable<RemotePosition> GetPositions(string ids)
-        {
-            var posList = _positionBL.GetPositions(Lib.Str2Ids(ids));
-            var posTrades = _positionBL.GetPosTrades(posList.Select(r => r.PosID).ToList());
-
-            var list = posList.Select(r => new RemotePosition()
-            {
-                PosID = r.PosID,
-                InsID = r.InsID,
-                Count = r.Count,
-                OpenTime = r.OpenTime,
-                OpenPrice = r.OpenPrice,
-                CloseTime = r.CloseTime,
-                ClosePrice = r.ClosePrice,
-                PosType = (byte)r.PosType,
-                AccountID = r.AccountID,
-                TradeIDs = posTrades.Where(p => p.PosID == r.PosID).Select(p => p.TradeID).ToList()
-            }).ToList();
-
-            return list;
-        }
         #endregion
 
         #region Account metadata
@@ -158,6 +120,15 @@ namespace WebApp.Controllers
             var json = _reposBL.GetStringParam(TestRun.ACCOUNT_META + accountID.ToString());
             if (json == null) json = "";
             return json;
+        }
+        #endregion
+
+        #region Series
+        [HttpGet("{accountID}/series")]
+        [Authorize]
+        public IEnumerable<Series> GetSeries(int accountID)
+        {
+            return _accountBL.GetSeries(accountID);
         }
         #endregion
     }

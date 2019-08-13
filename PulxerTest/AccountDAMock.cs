@@ -262,7 +262,7 @@ namespace PulxerTest
             return series;
         }
 
-        public void CreateSeriesValues(IEnumerable<SeriesValue> values)
+        public void CreateValues(IEnumerable<SeriesValue> values)
         {
             foreach (var v in values)
             {
@@ -276,9 +276,17 @@ namespace PulxerTest
             return _series.Where(s => s.AccountID == accountID);
         }
 
-        public IEnumerable<SeriesValue> GetSeriesValues(int seriesID)
+        public IEnumerable<SeriesValue> GetValues(int seriesID, int skipCount = 0, int? takeCount = null)
         {
-            return _seriesvalue.Where(s => s.SeriesID == seriesID);
+            var list = _seriesvalue.Where(s => s.SeriesID == seriesID).OrderBy(r => r.SeriesValueID).Skip(skipCount);
+            if (takeCount != null) list = list.Take(takeCount.Value);
+
+            return list.ToList();
+        }
+
+        public int GetValuesCount(int seriesID)
+        {
+            return _seriesvalue.Where(s => s.SeriesID == seriesID).Count();
         }
         #endregion
     }

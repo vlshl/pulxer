@@ -59,9 +59,9 @@ namespace PulxerTest
             Assert.Equal(accID, s1_.AccountID);
             Assert.Equal(accID, s2_.AccountID);
 
-            var sv1_ = accDA.GetSeriesValues(s1_.SeriesID).ToList();
+            var sv1_ = accDA.GetValues(s1_.SeriesID).ToList();
             Assert.Equal(2, sv1_.Count);
-            var sv2_ = accDA.GetSeriesValues(s2_.SeriesID).ToList();
+            var sv2_ = accDA.GetValues(s2_.SeriesID).ToList();
             Assert.Single(sv2_);
         }
 
@@ -92,7 +92,7 @@ namespace PulxerTest
             var series = accDA.GetSeries(accID).ToList();
             Assert.Single(series); // серия одна
 
-            var vals = accDA.GetSeriesValues(series[0].SeriesID).ToList();
+            var vals = accDA.GetValues(series[0].SeriesID).ToList();
             Assert.True(vals.Count == 10); // в серии 10 значений
 
             // теперь отпишемся от потока
@@ -109,7 +109,7 @@ namespace PulxerTest
             // снова запишем данные
             sd.SaveData();
 
-            var vals1 = accDA.GetSeriesValues(series[0].SeriesID).ToList();
+            var vals1 = accDA.GetValues(series[0].SeriesID).ToList();
             Assert.True(vals1.Count == 10); // в серии по прежнему 10 значений
         }
     }

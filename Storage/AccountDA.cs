@@ -463,7 +463,7 @@ namespace Storage
             return series;
         }
 
-        public void CreateSeriesValues(IEnumerable<SeriesValue> values)
+        public void CreateValues(IEnumerable<SeriesValue> values)
         {
             using (var db = new DaContext(_options))
             {
@@ -483,11 +483,27 @@ namespace Storage
             }
         }
 
-        public IEnumerable<SeriesValue> GetSeriesValues(int seriesID)
+        public IEnumerable<SeriesValue> GetValues(int seriesID, int skipCount = 0, int? takeCount = null)
         {
             using (var db = new DaContext(_options))
             {
-                return db.SeriesValue.Where(r => r.SeriesID == seriesID).ToList();
+                var list = db.SeriesValue
+                    .Where(r => r.SeriesID == seriesID)
+                    .OrderBy(r => r.SeriesValueID)
+                    .Skip(skipCount);
+                if (takeCount != null) list = list.Take(takeCount.Value);
+
+                return list.ToList();
+            }
+        }
+
+        public int GetValuesCount(int seriesID)
+        {
+            using (var db = new DaContext(_options))
+            {
+                return db.SeriesValue
+                    .Where(r => r.SeriesID == seriesID)
+                    .Count();
             }
         }
         #endregion

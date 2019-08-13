@@ -136,17 +136,17 @@ namespace Storage.Test
 
             // create series values
 
-            accDA.CreateSeriesValues(new List<Platform.SeriesValue>()
+            accDA.CreateValues(new List<Platform.SeriesValue>()
             {
                 new Platform.SeriesValue() { SeriesID = s1.SeriesID, Time = new DateTime(2010, 1, 1, 10, 0, 0), EndTime = null, Value = 100, EndValue = null, Data = "d1" }
             });
-            accDA.CreateSeriesValues(new List<Platform.SeriesValue>()
+            accDA.CreateValues(new List<Platform.SeriesValue>()
             {
                 new Platform.SeriesValue() { SeriesID = s2.SeriesID, Time = new DateTime(2010, 1, 1, 10, 0, 0), EndTime = new DateTime(2010, 1, 1, 10, 0, 1), Value = 1000, EndValue = 2000, Data = "d2" }
             });
 
-            var vals1 = accDA.GetSeriesValues(s1.SeriesID).ToList();
-            var vals2 = accDA.GetSeriesValues(s2.SeriesID).ToList();
+            var vals1 = accDA.GetValues(s1.SeriesID).ToList();
+            var vals2 = accDA.GetValues(s2.SeriesID).ToList();
 
             Assert.Single(vals1);
             Assert.Single(vals2);

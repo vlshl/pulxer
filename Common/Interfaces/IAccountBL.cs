@@ -22,5 +22,8 @@ namespace Common.Interfaces
         IEnumerable<Order> GetOrders(IEnumerable<int> ids);
         IEnumerable<StopOrder> GetStopOrders(int accountID, int? fromID = null);
         IEnumerable<StopOrder> GetStopOrders(IEnumerable<int> ids);
+        IEnumerable<Series> GetSeries(int accountID);
+        IEnumerable<SeriesValue> GetValues(int seriesID, int skipCount = 0, int? takeCount = null);
+        int GetValuesCount(int seriesID);
     }
 }

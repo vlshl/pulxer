@@ -17,8 +17,8 @@ namespace Platform
     public enum SeriesAxis
     {
         AxisX = 0, // значение не привязано к оси Y
-        PriceAxis = 1, // значение привязано к ценовой оси
-        LeftAxis = 2 // значение привязано к левой оси (не ценовой)
+        PriceAxis = 1, // значение привязано к ценовой оси Y (правой)
+        LeftAxis = 2 // значение привязано к левой оси Y (не ценовой)
     }
 
     public class SeriesValue

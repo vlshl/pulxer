@@ -178,7 +178,7 @@ namespace Pulxer
                         {
                             v.SeriesID = series.SeriesID;
                         }
-                        _accountDA.CreateSeriesValues(newVals);
+                        _accountDA.CreateValues(newVals);
                     }
                 }
             }
@@ -198,7 +198,7 @@ namespace Pulxer
             _series_values.Clear();
             foreach (var series in _series)
             {
-                var list = _accountDA.GetSeriesValues(series.SeriesID).ToList();
+                var list = _accountDA.GetValues(series.SeriesID).ToList();
                 _series_values.Add(series, list);
             }
         }
