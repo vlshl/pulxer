@@ -216,7 +216,7 @@ namespace Cli
             _console.WriteLine("Download-All [Full] - Загрузка потоков данных (Full - последний день полный, иначе последний день помечается как Dirty)");
             _console.WriteLine("Download-All Progress|Cancel - Показать состояние фонового процесса загрузки | Прервать фоновый процесс");
             _console.WriteLine("Get-Bars Tf Ticker Date1, Date2 - Вывод исторических данных");
-            _console.WriteLine("Get-TickHistoryDates Ticker - Вывод списка дат тиковых исторических данных для инструмента");
+            _console.WriteLine("Get-TickHistoryDates Ticker [Year] - Вывод списка дат тиковых исторических данных для инструмента за указанный год или за весь период");
             _console.WriteLine("Get-TickHistoryInstrums Date - Вывод списка инструментов тиковых исторических данных для даты");
             _console.WriteLine("TestRun tickSourceID testConfigID [AccountID] - Выполнение тестового прогона (запуск фонового процесса), если указан счет, то используется он, иначе создается новый");
             _console.WriteLine("TestRun Stop - Остановка тестового прогона");

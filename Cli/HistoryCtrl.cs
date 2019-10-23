@@ -5,6 +5,7 @@ using Pulxer;
 using Pulxer.History;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -327,12 +328,66 @@ namespace Cli
                 return;
             }
 
+            int year = 0;
+            if (args.Count >= 2)
+            {
+                if (!int.TryParse(args[1], out year))
+                {
+                    year = 0;
+                    _console.WriteError("Год указан неверно, выводится информация за все годы.");
+                }
+            }
+
             var dates = _tickHistoryBL.GetDatesByInstrum(instrum.InsID);
+            if (year > 0)
+            {
+                dates = dates.Where(d => d.Year == year);
+            }
+
             if (dates.Any())
             {
+                Calendar calendar = CultureInfo.InvariantCulture.Calendar;
+                dates = dates.OrderBy(d => d).ToList();
+                int w = -1;
+                int y = 0;
+
+                string[] days = { "          ", "          ", "          ", "          ", "          ", "          ", "          " };
+
                 foreach (var date in dates)
                 {
-                    _console.WriteLine(date.ToString("dd.MM.yyyy"));
+                    int w1 = calendar.GetWeekOfYear(date, CalendarWeekRule.FirstDay, DayOfWeek.Monday);
+                    if (y != date.Year || w != w1)
+                    {
+                        if (days.Any(d => d.Trim().Length > 0))
+                        {
+                            _console.WriteLine(string.Format("{0}   {1}   {2}   {3}   {4}   {5}   {6}", days[0], days[1], days[2], days[3], days[4], days[5], days[6]));
+                            days[0] = days[1] = days[2] = days[3] = days[4] = days[5] = days[6] = "          ";
+                        }
+                    }
+
+                    if (y != date.Year)
+                    {
+                        _console.WriteLine("----Пн----   ----Вт----   ----Ср----   ----Чт----   ----Пт----   ---Сб-----   ----Вс----   [ " + date.Year + " ]");
+                    }
+
+                    w = w1;
+                    y = date.Year;
+
+                    string ds = date.ToString("dd.MM.yyyy");
+                    switch (date.DayOfWeek)
+                    {
+                        case DayOfWeek.Monday: days[0] = ds; break;
+                        case DayOfWeek.Tuesday: days[1] = ds; break;
+                        case DayOfWeek.Wednesday: days[2] = ds; break;
+                        case DayOfWeek.Thursday: days[3] = ds; break;
+                        case DayOfWeek.Friday: days[4] = ds; break;
+                        case DayOfWeek.Saturday: days[5] = ds; break;
+                        case DayOfWeek.Sunday: days[6] = ds; break;
+                    }
+                }
+                if (days.Any(d => d.Trim().Length > 0))
+                {
+                    _console.WriteLine(string.Format("{0}   {1}   {2}   {3}   {4}   {5}   {6}", days[0], days[1], days[2], days[3], days[4], days[5], days[6]));
                 }
             }
             else
@@ -340,6 +395,7 @@ namespace Cli
                 _console.WriteLine("Нет данных");
             }
         }
+
 
         /// <summary>
         /// Список инструментов по дате для тиковых исторических данных
