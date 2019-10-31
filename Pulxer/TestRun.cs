@@ -91,6 +91,15 @@ namespace Pulxer
                 _seriesData.LoadData(accountID.Value);
             }
 
+            var acc = _data.GetAccount();
+            acc.AccountType = AccountTypes.Test;
+            acc.CommPerc = testConfig.CommPerc;
+            acc.IsShortEnable = testConfig.IsShortEnable;
+            acc.Name = testConfig.Name + " - " + _tickSource.Name;
+            acc.Code = DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss");
+            var cash = _data.GetCash();
+            cash.Initial = cash.Current = testConfig.InitialSumma;
+
             var botConfigs = testConfig.GetBotConfigs();
             foreach (var conf in botConfigs)
             {
@@ -159,15 +168,6 @@ namespace Pulxer
                     throw new ApplicationException("Ошибка при инициализации ботов.", ex);
                 }
             }
-
-            var acc = _data.GetAccount();
-            var cash = _data.GetCash();
-            acc.AccountType = AccountTypes.Test;
-            acc.CommPerc = testConfig.CommPerc;
-            acc.IsShortEnable = testConfig.IsShortEnable;
-            acc.Name = testConfig.Name + " - " + _tickSource.Name;
-            acc.Code = DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss");
-            cash.Initial = cash.Current = testConfig.InitialSumma;
 
             return await _tickSource.LoadDataAsync();
         }

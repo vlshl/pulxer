@@ -28,7 +28,9 @@ namespace Bot
 
         public async override Task<IBotResult> Initialize(IBotParams botParams)
         {
-            _platform.AddLog("MyBot", "Initialize ...");
+            decimal summa = _platform.GetCurrentSumma();
+
+            _platform.AddLog("MyBot", "Initialize ..." + summa.ToString());
             _gazp = _platform.GetInstrum("GAZP");
             if (_gazp == null) return _platform.BotError("Не найдет тикер");
 
