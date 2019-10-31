@@ -7,15 +7,15 @@ namespace Platform
 {
     public interface IBot
     {
-        Task<bool> Initialize(IBotParams botParams);
+        Task<IBotResult> Initialize(IBotParams botParams);
         void Close();
     }
 
     public abstract class BotBase : IBot
     {
-        public virtual Task<bool> Initialize(IBotParams botParams)
+        public virtual Task<IBotResult> Initialize(IBotParams botParams)
         {
-            return Task.Factory.StartNew<bool>(() => { return true; });
+            return Task.Factory.StartNew<IBotResult>(() => { return null; });
         }
 
         public virtual void Close() { }

@@ -143,9 +143,9 @@ namespace Pulxer
 
                     try
                     {
-                        bool isSuccess = await bot.Initialize(botParams);
-                        if (!isSuccess)
-                            throw new ApplicationException("При инициализации бот вернул статус 'Ошибка'.");
+                        var botResult = await bot.Initialize(botParams);
+                        if (botResult != null && !botResult.IsSuccess)
+                            throw new ApplicationException("Ошибка при инициализации бота: " + botResult.Message);
 
                         _bot_platform.Add(bot, platform);
                     }

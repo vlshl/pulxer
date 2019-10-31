@@ -40,6 +40,9 @@ namespace Platform
         int OpenSeries(string key, string name, SeriesAxis axis);
         bool AddSeriesValue(int seriesID, DateTime time, decimal val);
         void SubscribeValueRow(int seriesID, ValueRow valueRow, Timeline timeline);
+
+        IBotResult BotSuccess(string msg = "");
+        IBotResult BotError(string msg);
     }
 }
 

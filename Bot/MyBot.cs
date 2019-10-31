@@ -26,23 +26,23 @@ namespace Bot
             _platform.AddLog("MyBot", "Closed");
         }
 
-        public async override Task<bool> Initialize(IBotParams botParams)
+        public async override Task<IBotResult> Initialize(IBotParams botParams)
         {
             _platform.AddLog("MyBot", "Initialize ...");
             _gazp = _platform.GetInstrum("GAZP");
-            if (_gazp == null) return false;
+            if (_gazp == null) return _platform.BotError("Не найдет тикер");
 
             _bars1 = await _platform.CreateBarRow(_gazp.InsID, Timeframes.Min5, 5);
             if (_bars1 == null)
             {
                 _platform.AddLog("MyBot", "Не создан BarRow");
-                return false;
+                return _platform.BotError("Не создан BarRow");
             }
             _bars2 = await _platform.CreateBarRow(_gazp.InsID, Timeframes.Hour, 5);
             if (_bars2 == null)
             {
                 _platform.AddLog("MyBot", "Не создан BarRow");
-                return false;
+                return _platform.BotError("Не создан BarRow");
             }
 
             _bars1_ma = new Ma(_bars1.Close, AverageMethod.Exponencial, 10);
@@ -56,7 +56,7 @@ namespace Bot
 
             _platform.AddLog("MyBot", "Initialized");
 
-            return true;
+            return _platform.BotSuccess();
         }
 
         private void _bars1_ma_Change(ValueRow vr, bool isReset)

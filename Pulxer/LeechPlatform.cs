@@ -269,6 +269,16 @@ namespace Pulxer
         {
             _seriesData.SubscribeValueRow(seriesID, valueRow, timeline);
         }
+
+        public IBotResult BotSuccess(string msg = "")
+        {
+            return new BotResult(true, msg);
+        }
+
+        public IBotResult BotError(string msg)
+        {
+            return new BotResult(false, msg);
+        }
         #endregion
 
         //public void OnTimer(OnTimerDelegate onTimer)
