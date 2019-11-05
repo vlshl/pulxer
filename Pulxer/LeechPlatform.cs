@@ -255,19 +255,19 @@ namespace Pulxer
         }
 
         #region Series
-        public int OpenSeries(string key, string name, SeriesAxis axis)
+        public int OpenSeries(string key, string name, SeriesAxis axis, ISeriesProps sp = null)
         {
-            return _seriesData.OpenSeries(key, name, axis);
+            return _seriesData.OpenSeries(key, name, axis, sp);
         }
 
-        public bool AddSeriesValue(int seriesID, DateTime time, decimal val)
+        public bool AddSeriesValue(int seriesID, DateTime time, decimal val, ISeriesProps sp = null)
         {
-            return _seriesData.AddSeriesValue(seriesID, time, val);
+            return _seriesData.AddSeriesValue(seriesID, time, val, sp);
         }
 
-        public void SubscribeValueRow(int seriesID, ValueRow valueRow, Timeline timeline)
+        public void SubscribeValueRow(int seriesID, ValueRow valueRow, Timeline timeline, Func<decimal, ISeriesProps> funcSp = null)
         {
-            _seriesData.SubscribeValueRow(seriesID, valueRow, timeline);
+            _seriesData.SubscribeValueRow(seriesID, valueRow, timeline, funcSp);
         }
 
         public IBotResult BotSuccess(string msg = "")

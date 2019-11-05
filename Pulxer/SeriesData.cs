@@ -13,7 +13,7 @@ namespace Pulxer
         private readonly IAccountDA _accountDA;
         private List<Series> _series;
         private Dictionary<Series, List<SeriesValue>> _series_values;
-        private Dictionary<Series, Tuple<ValueRow, Timeline>> _series_vrdata;
+        private Dictionary<Series, Tuple<ValueRow, Timeline, Func<decimal, ISeriesProps>>> _series_vrdata;
         private int _accountID = 0;
 
         public SeriesData(IAccountDA accountDA)
@@ -21,7 +21,7 @@ namespace Pulxer
             _accountDA = accountDA;
             _series = new List<Series>();
             _series_values = new Dictionary<Series, List<SeriesValue>>();
-            _series_vrdata = new Dictionary<Series, Tuple<ValueRow, Timeline>>();
+            _series_vrdata = new Dictionary<Series, Tuple<ValueRow, Timeline, Func<decimal, ISeriesProps>>>();
         }
 
         /// <summary>
@@ -32,8 +32,9 @@ namespace Pulxer
         /// <param name="key">Уникальный ключ (уникальность в пределах счета)</param>
         /// <param name="name">Наименование для показа на экране</param>
         /// <param name="axis">Ось, к которой относится серия</param>
+        /// <param name="sp">Объект параметров визуализации значения</param>
         /// <returns>Идентификатор серии (если меньше нуля, то временный)</returns>
-        public int OpenSeries(string key, string name = "", SeriesAxis axis = SeriesAxis.AxisX)
+        public int OpenSeries(string key, string name = "", SeriesAxis axis = SeriesAxis.AxisX, ISeriesProps sp = null)
         {
             var s = _series.FirstOrDefault(r => r.Key == key);
             if (s != null) return s.SeriesID;
@@ -51,7 +52,7 @@ namespace Pulxer
             series.AccountID = 0;
             series.Name = name;
             series.Axis = axis;
-            series.Data = "";
+            series.Data = SeriesPropsUtil.Serialize(sp);
             _series.Add(series);
 
             return series.SeriesID;
@@ -63,8 +64,9 @@ namespace Pulxer
         /// <param name="seriesID">Идентификатор серии (то значение, которое вернул вызов OpenSeries)</param>
         /// <param name="time">Дата и время значения</param>
         /// <param name="val">Десятичное значение</param>
+        /// <param name="sp">Объект параметров визуализации значения</param>
         /// <returns>true - успешно, false - не найден Series по указанному идентификатору</returns>
-        public bool AddSeriesValue(int seriesID, DateTime time, decimal val)
+        public bool AddSeriesValue(int seriesID, DateTime time, decimal val, ISeriesProps sp = null)
         {
             var series = _series.FirstOrDefault(r => r.SeriesID == seriesID);
             if (series == null) return false;
@@ -80,7 +82,7 @@ namespace Pulxer
             sv.SeriesID = series.SeriesID;
             sv.Time = time;
             sv.Value = val;
-            sv.Data = "";
+            sv.Data = SeriesPropsUtil.Serialize(sp);
             sv.EndTime = null;
             sv.EndValue = null;
             vals.Add(sv);
@@ -95,7 +97,8 @@ namespace Pulxer
         /// <param name="seriesID">Идентификатор серии</param>
         /// <param name="valueRow">Ряд значений</param>
         /// <param name="timeline">Временная ось</param>
-        public void SubscribeValueRow(int seriesID, ValueRow valueRow, Timeline timeline)
+        /// <param name="funcSp">Метод получения SeriesProps по значению</param>
+        public void SubscribeValueRow(int seriesID, ValueRow valueRow, Timeline timeline, Func<decimal, ISeriesProps> funcSp = null)
         {
             var ser = _series.FirstOrDefault(s => s.SeriesID == seriesID);
             if (ser == null) return;
@@ -109,7 +112,7 @@ namespace Pulxer
 
             if (valueRow != null && timeline != null)
             {
-                _series_vrdata.Add(ser, new Tuple<ValueRow, Timeline>(valueRow, timeline));
+                _series_vrdata.Add(ser, new Tuple<ValueRow, Timeline, Func<decimal, ISeriesProps>>(valueRow, timeline, funcSp));
                 valueRow.Change += valueRow_Change;
             }
         }
@@ -125,10 +128,12 @@ namespace Pulxer
             foreach (var s in sers)
             {
                 var tl = _series_vrdata[s].Item2;
+                var funcSp = _series_vrdata[s].Item3;
                 var time = tl.Start(valueRow.LastIndex);
                 if (time == null) continue; // не смогли определить время
 
-                AddSeriesValue(s.SeriesID, time.Value, val.Value);
+                var sp = funcSp?.Invoke(val.Value);
+                AddSeriesValue(s.SeriesID, time.Value, val.Value, sp);
             }
         }
 
