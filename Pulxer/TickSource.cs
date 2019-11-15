@@ -24,6 +24,9 @@ namespace Pulxer
 
         private List<Instrum> _instrums;
         private List<Tick> _ticks;
+        private int _synTicksCount;
+        private int _realDays;
+        private int _synDays;
         private DateTime? _curTime = null;
         private object _curTimeLock = new object();
 
@@ -38,6 +41,8 @@ namespace Pulxer
             Name = "";
             _instrums = new List<Instrum>();
             _ticks = new List<Tick>();
+            _synTicksCount = 0;
+            _realDays = _synDays = 0;
         }
 
         public int TickSourceID { get; set; }
@@ -151,13 +156,14 @@ namespace Pulxer
         /// <summary>
         /// Загрузка тиковых данных для всех инструментов
         /// </summary>
-        /// <returns>Кол-во загруженных тиков</returns>
+        /// <returns>Общее кол-во загруженных тиков</returns>
         public async Task<int> LoadDataAsync()
         {
             lock (_ticks)
             {
                 _ticks.Clear();
             }
+            _synTicksCount = _realDays = _synDays = 0;
 
             foreach (var instrum in _instrums)
             {
@@ -183,6 +189,14 @@ namespace Pulxer
                 }
                 else
                 {
+                    List<DateTime> freeDays = null;
+                    var minInsStore = _insStoreBL.GetInsStore(instrum.InsID, Timeframes.Min);
+                    if (minInsStore != null)
+                    {
+                        freeDays = _insStoreBL.GetInsStoreCalendar(minInsStore.InsStoreID).FreeDays
+                            .Where(d => d >= StartDate && d <= EndDate).ToList();
+                    }
+
                     DateTime date = StartDate;
                     while (date <= EndDate)
                     {
@@ -192,6 +206,25 @@ namespace Pulxer
                             lock (_ticks)
                             {
                                 _ticks.AddRange(ticks);
+                            }
+                            _realDays++;
+                        }
+                        else // тиковых данных нет, попробуем загрузить минутки и сделать из них тики
+                        {
+                            if (freeDays != null && !freeDays.Contains(date)) // дата не является выходным днем, значит должны быть минутки
+                            {
+                                BarRow barRow = new BarRow(Timeframes.Min, instrum.InsID);
+                                await _insStoreBL.LoadHistoryAsync(barRow, instrum.InsID, date, date, minInsStore.InsStoreID);
+                                if (barRow.Bars.Any())
+                                {
+                                    foreach (Bar bar in barRow.Bars)
+                                    {
+                                        var synTicks = SynTicks(bar, instrum); // синтезируем тики из минутного бара
+                                        _synTicksCount += synTicks.Count();
+                                        _ticks.AddRange(synTicks);
+                                    }
+                                    _synDays++;
+                                }
                             }
                         }
                         date = date.AddDays(1);
@@ -213,15 +246,148 @@ namespace Pulxer
                 }
             });
 
-            return GetTickCount();
+            return GetTicksCount();
         }
 
-        public int GetTickCount()
+        private IEnumerable<Tick> SynTicks(Bar bar, Instrum instrum)
+        {
+            decimal p1 = 0, p2 = 0, p3 = 0, q = 0;
+            int n1 = 0; int n2 = 0; int n3 = 0;
+            List<Tick> ticks = new List<Tick>();
+
+            DateTime time = bar.Time;
+            DateTime lastTime = bar.NextBarTime.AddSeconds(-1);
+            decimal price = bar.Open;
+            long ls = (long)(bar.Volume / instrum.LotSize);
+            int lots = (ls > int.MaxValue) ? int.MaxValue : (ls < int.MinValue) ? int.MinValue : (int)ls;
+            int lot_step = lots / 60;
+
+            if (bar.Open <= bar.Close) // while bar
+            {
+                p1 = bar.Open - bar.Low;
+                p2 = bar.High - bar.Low;
+                p3 = bar.High - bar.Close;
+                q = (p1 + p2 + p3) / 60m;
+                if (q != 0)
+                {
+                    n1 = (int)(p1 / q);
+                    n3 = (int)(p3 / q);
+                }
+                if (n1 <= 0) n1 = 1;
+                if (n3 <= 0) n3 = 1;
+
+                for (int i = 0; i < n1; i++)
+                {
+                    decimal pr = Math.Round(price, instrum.Decimals);
+                    if (pr > bar.High) pr = bar.High;
+                    if (pr < bar.Low) pr = bar.Low;
+                    ticks.Add(new Tick(0, time, instrum.InsID, lot_step, pr));
+                    price -= q;
+                    lots -= lot_step;
+                    if (time < lastTime) time = time.AddSeconds(1);
+                }
+
+                n2 = 60 - n1 - n3 - 1;
+                price = bar.Low;
+                for (int i = 0; i < n2; i++)
+                {
+                    decimal pr = Math.Round(price, instrum.Decimals);
+                    if (pr > bar.High) pr = bar.High;
+                    if (pr < bar.Low) pr = bar.Low;
+                    ticks.Add(new Tick(0, time, instrum.InsID, lot_step, pr));
+                    price += q;
+                    lots -= lot_step;
+                    if (time < lastTime) time = time.AddSeconds(1);
+                }
+
+                price = bar.High;
+                for (int i = 0; i < n3; i++)
+                {
+                    decimal pr = Math.Round(price, instrum.Decimals);
+                    if (pr > bar.High) pr = bar.High;
+                    if (pr < bar.Low) pr = bar.Low;
+                    ticks.Add(new Tick(0, time, instrum.InsID, lot_step, pr));
+                    price -= q;
+                    lots -= lot_step;
+                    if (time < lastTime) time = time.AddSeconds(1);
+                }
+            }
+            else // black bar
+            {
+                p1 = bar.High - bar.Open;
+                p2 = bar.High - bar.Low;
+                p3 = bar.Close - bar.Low;
+                q = (p1 + p2 + p3) / 60m;
+                if (q != 0)
+                {
+                    n1 = (int)(p1 / q);
+                    n3 = (int)(p3 / q);
+                }
+                if (n1 <= 0) n1 = 1;
+                if (n3 <= 0) n3 = 1;
+
+                for (int i = 0; i < n1; i++)
+                {
+                    decimal pr = Math.Round(price, instrum.Decimals);
+                    if (pr > bar.High) pr = bar.High;
+                    if (pr < bar.Low) pr = bar.Low;
+                    ticks.Add(new Tick(0, time, instrum.InsID, lot_step, pr));
+                    price += q;
+                    lots -= lot_step;
+                    if (time < lastTime) time = time.AddSeconds(1);
+                }
+
+                n2 = 60 - n1 - n3 - 1;
+                price = bar.High;
+                for (int i = 0; i < n2; i++)
+                {
+                    decimal pr = Math.Round(price, instrum.Decimals);
+                    if (pr > bar.High) pr = bar.High;
+                    if (pr < bar.Low) pr = bar.Low;
+                    ticks.Add(new Tick(0, time, instrum.InsID, lot_step, pr));
+                    price -= q;
+                    lots -= lot_step;
+                    if (time < lastTime) time = time.AddSeconds(1);
+                }
+
+                price = bar.Low;
+                for (int i = 0; i < n3; i++)
+                {
+                    decimal pr = Math.Round(price, instrum.Decimals);
+                    if (pr > bar.High) pr = bar.High;
+                    if (pr < bar.Low) pr = bar.Low;
+                    ticks.Add(new Tick(0, time, instrum.InsID, lot_step, pr));
+                    price += q;
+                    lots -= lot_step;
+                    if (time < lastTime) time = time.AddSeconds(1);
+                }
+            }
+            ticks.Add(new Tick(0, time, instrum.InsID, lots > 0 ? lots : 0, bar.Close));
+
+            return ticks;
+        }
+
+        private int GetTicksCount()
         {
             lock(_ticks)
             {
                 return _ticks.Count;
             }
+        }
+
+        /// <summary>
+        /// Получить статистику по загруженным и синтезированным тикам и датам.
+        /// </summary>
+        /// <returns>Статистика</returns>
+        public TickSourceStatistics GetStatistics()
+        {
+            return new TickSourceStatistics()
+            {
+                TotalTicksCount = GetTicksCount(),
+                SynTicksCount = _synTicksCount,
+                TotalDaysCount = _realDays + _synDays,
+                SynDaysCount = _synDays
+            };
         }
 
         #region Run thread
@@ -329,5 +495,31 @@ namespace Pulxer
         Running = 1,
         Stopped = 2,
         Completed = 3
+    }
+
+    /// <summary>
+    /// Статистика по источнику данных
+    /// </summary>
+    public class TickSourceStatistics
+    {
+        /// <summary>
+        /// Всего тиков загруженных или синтезированных, по всем инструментам суммарно
+        /// </summary>
+        public int TotalTicksCount { get; set; }
+
+        /// <summary>
+        /// Синтезировано тиков из минутных баров, по всем инструментам суммарно
+        /// </summary>
+        public int SynTicksCount { get; set; }
+
+        /// <summary>
+        /// Всего дней, в которые есть данные загруженные или синтезированные, по всем инструментам суммарно
+        /// </summary>
+        public int TotalDaysCount { get; set; }
+
+        /// <summary>
+        /// Кол-во дней, в которые тиковые данные были синтезированы из минуток, по всем инструментам суммарно
+        /// </summary>
+        public int SynDaysCount { get; set; }
     }
 }

@@ -37,6 +37,7 @@ namespace Pulxer
         private ILogger _logger;
         private IConfig _config;
         private TestRunFinished _finished;
+        private TickSourceStatistics _statistics;
 
         public TestRun(IAccountBL accountBL, IAccountDA accountDA, IInstrumBL instrumBL, IInsStoreBL insStoreBL,
             ITickSourceBL tickSourceBL, ITestConfigBL testConfigBL, ILogger logger, IConfig config, IPositionBL posBL, IRepositoryBL reposBL)
@@ -61,12 +62,12 @@ namespace Pulxer
         /// <param name="testConfigID">Тестовая конфигурация</param>
         /// <param name="accountID">Торговый счет, если не указан, то создается новый, иначе берется указанный, в нем очищаются все данные и он заполняется новыми данными</param>
         /// <param name="progress">Индикатор прогресса</param>
-        /// <returns>Количество загруженных тиков, на которых будет выполняться тестирование</returns>
-        public async Task<int> Initialize(int tickSourceID, int testConfigID, int? accountID, BgTaskProgress progress = null)
+        /// <returns>true-успешно, false-ошибка</returns>
+        public async Task<bool> Initialize(int tickSourceID, int testConfigID, int? accountID, BgTaskProgress progress = null)
         {
             _tickSource = _tickSourceBL.GetTickSourceByID(tickSourceID);
             var testConfig = _testConfigBL.GetTestConfig(testConfigID);
-            if (_tickSource == null || testConfig == null) return 0;
+            if (_tickSource == null || testConfig == null) return false;
 
             if (accountID != null)
             {
@@ -169,7 +170,16 @@ namespace Pulxer
                 }
             }
 
-            return await _tickSource.LoadDataAsync();
+            int count = await _tickSource.LoadDataAsync();
+
+            return count > 0;
+        }
+
+        public TickSourceStatistics GetTickSourceStatistics()
+        {
+            if (_tickSource == null) return null;
+
+            return _tickSource.GetStatistics();
         }
 
         private void _tickSource_OnStateChange(TestTickSourceState state, int countTicks, int totalTicks)

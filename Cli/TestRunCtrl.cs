@@ -118,10 +118,25 @@ namespace Cli
 
             try
             {
-                int count = await _testRun.Initialize(tickSourceID, testConfigID, accountID, _progress);
-                _console.WriteLine("Загружено: " + count.ToString());
-                _console.WriteLine("Тестовый прогон выполняется ... ");
-                _testRun.Start(TestRunFinished);
+                bool isSuccess = await _testRun.Initialize(tickSourceID, testConfigID, accountID, _progress);
+                if (isSuccess)
+                {
+                    var stat = _testRun.GetTickSourceStatistics();
+
+                    _console.WriteLine(string.Format("Всего загружено дней: {0}, тиков: {1}", stat.TotalDaysCount.ToString(), stat.TotalTicksCount.ToString()));
+                    _console.WriteLine(string.Format("Из них синтезировано дней: {0} ({1}%), тиков: {2} ({3}%)",
+                        stat.SynDaysCount.ToString(),
+                        (stat.TotalDaysCount != 0 ? (decimal)stat.SynDaysCount * 100 / stat.TotalDaysCount : 0).ToString("##0.0#"),
+                        stat.SynTicksCount,
+                        (stat.TotalTicksCount != 0 ? (decimal)stat.SynTicksCount * 100 / stat.TotalTicksCount : 0).ToString("##0.0#")));
+                    _console.WriteLine("Тестовый прогон выполняется ... ");
+
+                    _testRun.Start(TestRunFinished);
+                }
+                else
+                {
+                    _console.WriteLine("Ошибка при инициализации.");
+                }
             }
             catch (Exception ex)
             {
