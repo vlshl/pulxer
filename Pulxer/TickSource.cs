@@ -29,6 +29,7 @@ namespace Pulxer
         private int _synDays;
         private DateTime? _curTime = null;
         private object _curTimeLock = new object();
+        private Dictionary<int, Tick> _insID_lastTick;
 
         public TickSource(IInstrumBL instrumBL, IInsStoreBL insStoreBL, ITickHistoryBL tickHistoryBL, ISyncContext syncContext = null)
         {
@@ -43,6 +44,7 @@ namespace Pulxer
             _ticks = new List<Tick>();
             _synTicksCount = 0;
             _realDays = _synDays = 0;
+            _insID_lastTick = new Dictionary<int, Tick>();
         }
 
         public int TickSourceID { get; set; }
@@ -108,6 +110,17 @@ namespace Pulxer
             return _instrums.ToList();
         }
 
+        /// <summary>
+        /// Получить последний тик для инструмента для определения последней цены
+        /// </summary>
+        /// <param name="insID">Инструмент</param>
+        /// <returns>Последний тик. Если не найден, то возвращается null.</returns>
+        public Tick? GetLastTick(int insID)
+        {
+            if (!_insID_lastTick.ContainsKey(insID)) return null;
+            return _insID_lastTick[insID];
+        }
+
         public void Initialize(XDocument xDoc)
         {
             var xnRoot = xDoc.Element("TickSource");
@@ -164,6 +177,7 @@ namespace Pulxer
                 _ticks.Clear();
             }
             _synTicksCount = _realDays = _synDays = 0;
+            _insID_lastTick.Clear();
 
             foreach (var instrum in _instrums)
             {
@@ -228,6 +242,18 @@ namespace Pulxer
                             }
                         }
                         date = date.AddDays(1);
+                    }
+                }
+
+                if (_ticks.Any() && _ticks.Last().InsID == instrum.InsID) // тики внутри каждого инструмента отсортированы по времени, поэтому можно брать последний в списке и он будет последний по времени
+                {
+                    if (!_insID_lastTick.ContainsKey(instrum.InsID))
+                    {
+                        _insID_lastTick.Add(instrum.InsID, _ticks.Last());
+                    }
+                    else // перестраховка
+                    {
+                        _insID_lastTick[instrum.InsID] = _ticks.Last();
                     }
                 }
             }

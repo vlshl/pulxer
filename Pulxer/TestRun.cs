@@ -231,6 +231,17 @@ namespace Pulxer
 
         private void Complete()
         {
+            // закрытие открытых позиций
+            var instrums = _tickSource.GetInstrums();
+            foreach (var instrum in instrums)
+            {
+                var tick = _tickSource.GetLastTick(instrum.InsID);
+                if (tick == null) continue;
+
+                _engine.ClosePosition(tick.Value);
+            }
+
+            // сохранение данных
             _data.SaveData();
             var account = _data.GetAccount();
             _posBL.RefreshPositions(account.AccountID);
