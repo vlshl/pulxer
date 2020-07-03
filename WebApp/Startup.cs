@@ -1,30 +1,27 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Common;
-using Common.Interfaces;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
-using Pulxer;
+using System;
+using System.IO;
+using Common;
+using System.Net.WebSockets;
+using Pulxer.Leech;
 
 namespace WebApp
 {
     public class Startup
     {
         private IConfiguration _config;
-        private IHostingEnvironment _environment;
 
-        public Startup(IConfiguration config, IHostingEnvironment env)
+        public Startup(IConfiguration config)
         {
             _config = config;
-            _environment = env;
         }
 
         public void ConfigureServices(IServiceCollection services)
@@ -32,7 +29,11 @@ namespace WebApp
             var jwtConfig = _config.GetSection("JwtToken");
             string key = DataProtect.TryUnProtect(jwtConfig.GetValue("Key", AuthOptions.KEY));
 
-            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            services.AddAuthentication(opt =>
+            {
+                opt.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                opt.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
                 .AddJwtBearer(opt =>
                 {
                     //opt.RequireHttpsMetadata = _environment.IsProduction();
@@ -43,27 +44,95 @@ namespace WebApp
                         ValidateAudience = true,
                         ValidAudience = jwtConfig.GetValue("Audience", AuthOptions.AUDIENCE),
                         ValidateLifetime = true,
+                        ClockSkew = TimeSpan.Zero,
                         IssuerSigningKey = AuthOptions.GetSymmetricSecurityKey(key),
                         ValidateIssuerSigningKey = true
                     };
                 });
 
+            services.AddControllers();
+            
             string pulxerConnectionString = DataProtect.TryUnProtect(_config.GetConnectionString("Pulxer"));
             string leechConnectionString = DataProtect.TryUnProtect(_config.GetConnectionString("Leech"));
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
-            Pulxer.BL.ConfigureServices(services, pulxerConnectionString, leechConnectionString);
+            Pulxer.BL.ConfigureServices(services, _config, pulxerConnectionString, leechConnectionString);
         }
 
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
             }
 
+            // defaults
+            var fp = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "pxapp"));
+            var dfo = new DefaultFilesOptions();
+            dfo.DefaultFileNames.Clear();
+            dfo.DefaultFileNames.Add("index.html");
+            dfo.FileProvider = fp;
+            app.UseDefaultFiles(dfo);
+
+            // static
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                FileProvider = fp,
+                RequestPath = "",
+                OnPrepareResponse = ctx =>
+                {
+                    if (ctx.Context.Request.Path.Value == "/index.html")
+                    {
+                        ctx.Context.Response.Headers.Append("Cache-Control", "no-cache, no-store, must-revalidate");
+                    }
+                }
+            });
+
+            if (env.IsDevelopment())
+            {
+                app.UseCors(b =>
+                {
+                    b.AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .WithOrigins("http://localhost:4200")
+                    .AllowCredentials();
+                });
+            }
+
+            app.UseRouting();
             app.UseAuthentication();
-            app.UseMvc();
-            app.UseStaticFiles();
+            app.UseAuthorization();
+
+            app.UseWebSockets();
+            app.Use(async (context, next) =>
+            {
+                string path = context.Request.Path.ToString();
+                if (path.StartsWith("/ws/"))
+                {
+                    if (context.WebSockets.IsWebSocketRequest)
+                    {
+                        string acc = path.Remove(0, 4);
+
+                        WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync();
+                        var lsm = context.RequestServices.GetRequiredService<LeechServerManager>();
+                        var ls = lsm.CreateServer(acc);
+                        await ls.Run(webSocket);
+                        ls.Close();
+                        lsm.DeleteServer(acc);
+                    }
+                    else
+                    {
+                        context.Response.StatusCode = 400;
+                    }
+                }
+                else
+                {
+                    await next();
+                }
+            });
+
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapControllers();
+            });
         }
     }
 }

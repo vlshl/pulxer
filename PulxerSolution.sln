@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27004.2002
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30128.74
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Common", "Common\Common.csproj", "{B98A7876-1042-4628-A75D-666441A0A795}"
 EndProject
@@ -22,6 +22,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebApp", "WebApp\WebApp.csproj", "{C5582118-EDB9-4FDC-9367-43B08ABEFEF0}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Storage.Test", "Storage.Test\Storage.Test.csproj", "{A3199CF9-612E-46E9-9B2D-EAB706A31C05}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LeechPipe", "LeechPipe\LeechPipe.csproj", "{5F907D3C-5941-49B9-8096-E2678E72FE1D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -69,6 +71,10 @@ Global
 		{A3199CF9-612E-46E9-9B2D-EAB706A31C05}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A3199CF9-612E-46E9-9B2D-EAB706A31C05}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A3199CF9-612E-46E9-9B2D-EAB706A31C05}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5F907D3C-5941-49B9-8096-E2678E72FE1D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5F907D3C-5941-49B9-8096-E2678E72FE1D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5F907D3C-5941-49B9-8096-E2678E72FE1D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5F907D3C-5941-49B9-8096-E2678E72FE1D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
