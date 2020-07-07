@@ -1,6 +1,7 @@
 ﻿using Common.Data;
 using Common.Interfaces;
 using Platform;
+using Pulxer.Leech;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -13,7 +14,6 @@ namespace Pulxer
     {
         private readonly IInstrumDA _instrumDA;
         private readonly IAccountDA _accountDA;
-        private readonly ILeechDA _leechDA;
         private readonly IConfig _config = null;
         private readonly ITickHistoryDA _tickHistoryDA = null;
         private Dictionary<int, int> _instrum_rid_lid;
@@ -23,12 +23,11 @@ namespace Pulxer
         private Dictionary<int, int> _trade_rid_lid;
         private readonly IReplicationBL _replBL = null;
 
-        public ImportLeech(IInstrumDA instrumDA, IAccountDA accountDA, ILeechDA leechDA, IConfig config, ITickHistoryDA tickHistoryDA,
+        public ImportLeech(IInstrumDA instrumDA, IAccountDA accountDA, IConfig config, ITickHistoryDA tickHistoryDA,
             IReplicationBL replBL)
         {
             _instrumDA = instrumDA;
             _accountDA = accountDA;
-            _leechDA = leechDA;
             _config = config;
             _tickHistoryDA = tickHistoryDA;
             _replBL = replBL;
@@ -40,9 +39,9 @@ namespace Pulxer
             _trade_rid_lid = new Dictionary<int, int>();
         }
 
-        public async Task SyncAccountDataAsync()
+        public async Task SyncAccountDataAsync(ISyncPipeServer sps)
         {
-            await Task.Run(() =>
+            await Task.Run(async () =>
             {
                 _instrum_rid_lid = _replBL.GetReplications(ReplObjects.Instrum);
                 _account_rid_lid = _replBL.GetReplications(ReplObjects.Account);
@@ -50,17 +49,17 @@ namespace Pulxer
                 _order_rid_lid = _replBL.GetReplications(ReplObjects.Order);
                 _trade_rid_lid = _replBL.GetReplications(ReplObjects.Trade);
 
-                SyncInstrums();
-                SyncAccounts();
+                await SyncInstrums(sps);
+                await SyncAccounts(sps);
 
                 foreach (var rAccID in _account_rid_lid.Keys)
                 {
                     int lAccID = _account_rid_lid[rAccID];
-                    SyncStopOrders(lAccID, rAccID);
-                    SyncOrders(lAccID, rAccID);
-                    SyncTrades(lAccID, rAccID);
-                    SyncHoldings(lAccID, rAccID);
-                    SyncCash(lAccID, rAccID);
+                    await SyncStopOrders(sps, lAccID, rAccID);
+                    await SyncOrders(sps, lAccID, rAccID);
+                    await SyncTrades(sps, lAccID, rAccID);
+                    await SyncHoldings(sps, lAccID, rAccID);
+                    await SyncCash(sps, lAccID, rAccID);
                 }
 
                 _replBL.UpdateReplications(ReplObjects.Instrum, _instrum_rid_lid);
@@ -74,9 +73,11 @@ namespace Pulxer
         /// <summary>
         /// Синхронизация фин инструментов
         /// </summary>
-        private void SyncInstrums()
+        private async Task SyncInstrums(ISyncPipeServer sps)
         {
-            var remInstrums = _leechDA.GetInstrumList();
+            var remInstrums = await sps.GetInstrumList();
+            if (remInstrums == null) return;
+
             var instrums = _instrumDA.GetInstrums();
 
             foreach (var rIns in remInstrums)
@@ -146,9 +147,11 @@ namespace Pulxer
         /// <summary>
         /// Синхронизация счетов
         /// </summary>
-        private void SyncAccounts()
+        private async Task SyncAccounts(ISyncPipeServer sps)
         {
-            var remAccounts = _leechDA.GetAccountList();
+            var remAccounts = await sps.GetAccountList();
+            if (remAccounts == null) return;
+
             var accounts = _accountDA.GetAccounts();
 
             foreach (var racc in remAccounts)
@@ -188,9 +191,11 @@ namespace Pulxer
         /// <summary>
         /// Синхронизация стоп-заявок
         /// </summary>
-        private void SyncStopOrders(int localAccountID, int remoteAccountID)
+        private async Task SyncStopOrders(ISyncPipeServer sps, int localAccountID, int remoteAccountID)
         {
-            var remStopOrders = _leechDA.GetStopOrderList(remoteAccountID);
+            var remStopOrders = await sps.GetStopOrderList(remoteAccountID);
+            if (remStopOrders == null) return;
+
             var stopOrders = _accountDA.GetStopOrders(localAccountID);
 
             foreach (var rso in remStopOrders)
@@ -244,9 +249,11 @@ namespace Pulxer
         /// <summary>
         /// Синхронизация заявок
         /// </summary>
-        private void SyncOrders(int localAccountID, int remoteAccountID)
+        private async Task SyncOrders(ISyncPipeServer sps, int localAccountID, int remoteAccountID)
         {
-            var remOrders = _leechDA.GetOrderList(remoteAccountID);
+            var remOrders = await sps.GetOrderList(remoteAccountID);
+            if (remOrders == null) return;
+
             var orders = _accountDA.GetOrders(localAccountID);
 
             foreach (var rOrd in remOrders)
@@ -302,9 +309,11 @@ namespace Pulxer
         /// <summary>
         /// Синхронизация сделок
         /// </summary>
-        private void SyncTrades(int localAccountID, int remoteAccountID)
+        private async Task SyncTrades(ISyncPipeServer sps, int localAccountID, int remoteAccountID)
         {
-            var remTrades = _leechDA.GetTradeList(remoteAccountID);
+            var remTrades = await sps.GetTradeList(remoteAccountID);
+            if (remTrades == null) return;
+
             var trades = _accountDA.GetTrades(localAccountID);
 
             foreach (var rtrd in remTrades)
@@ -341,9 +350,11 @@ namespace Pulxer
         /// </summary>
         /// <param name="localAccountID">Локальный AccountID</param>
         /// <param name="remoteAccountID">Удаленный AccountID</param>
-        private void SyncHoldings(int localAccountID, int remoteAccountID)
+        private async Task SyncHoldings(ISyncPipeServer sps, int localAccountID, int remoteAccountID)
         {
-            var remHoldings = _leechDA.GetHoldingList(remoteAccountID);
+            var remHoldings = await sps.GetHoldingList(remoteAccountID);
+            if (remHoldings == null) return;
+
             var holdings = _accountDA.GetHoldings(localAccountID);
 
             foreach (var r_hold in remHoldings)
@@ -380,9 +391,11 @@ namespace Pulxer
         /// </summary>
         /// <param name="localAccountID">Локальный AccountID</param>
         /// <param name="remoteAccountID">Удаленный AccountID</param>
-        private void SyncCash(int localAccountID, int remoteAccountID)
+        private async Task SyncCash(ISyncPipeServer sps, int localAccountID, int remoteAccountID)
         {
-            var remCash = _leechDA.GetCash(remoteAccountID);
+            var remCash = await sps.GetCash(remoteAccountID);
+            if (remCash == null) return;
+
             if (remCash == null) return;
 
             var cash = _accountDA.GetCash(localAccountID);

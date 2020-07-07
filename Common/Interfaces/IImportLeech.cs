@@ -7,7 +7,7 @@ namespace Common.Interfaces
 {
     public interface IImportLeech
     {
-        Task SyncAccountDataAsync();
+        Task SyncAccountDataAsync(ISyncPipeServer sps);
         Task SyncAllTradesAsync();
     }
 }

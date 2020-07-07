@@ -18,9 +18,20 @@ namespace Pulxer.Leech
         {
             lock (_acc_servers)
             {
+                if (_acc_servers.ContainsKey(account)) return null;
+
                 var ls = new LeechServer(account);
                 _acc_servers.Add(account, ls);
                 return ls;
+            }
+        }
+
+        public LeechServer GetLeechServer(string account)
+        {
+            lock (_acc_servers)
+            {
+                if (!_acc_servers.ContainsKey(account)) return null;
+                return _acc_servers[account];
             }
         }
 

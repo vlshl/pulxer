@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.WebSockets;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -45,7 +46,7 @@ namespace Pulxer.Leech
 
         public async Task<SyncPipeServer> CreateSyncPipe()
         {
-            _syncPipe = await _sysPipe.CreatePipeAsync(new byte[] { 0x0 });
+            _syncPipe = await _sysPipe.CreatePipeAsync(Encoding.UTF8.GetBytes("sync"));
             if (_syncPipe == 0) return null;
 
             return new SyncPipeServer(_core, _syncPipe);

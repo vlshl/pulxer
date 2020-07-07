@@ -14,14 +14,14 @@ namespace PulxerTest
         public void SyncAccountDataAsync_accounts_sameAccount()
         {
             IAccountDA accountDA = new AccountDAMock();
-            LeechDAMock leechDA = new LeechDAMock();
+            SyncPipeServerMock sps = new SyncPipeServerMock();
             IInstrumDA instrumDA = new InstrumDAMock();
             IReplicationBL replBL = new ReplicationBLMock();
 
-            ImportLeech import = new ImportLeech(instrumDA, accountDA, leechDA, null, null, replBL);
-            import.SyncAccountDataAsync().Wait();
+            ImportLeech import = new ImportLeech(instrumDA, accountDA, null, null, replBL);
+            import.SyncAccountDataAsync(sps).Wait();
 
-            var r_accounts = leechDA.GetAccountList().ToList();
+            var r_accounts = sps.GetAccountList().Result;
             CompareAccounts(r_accounts, accountDA.GetAccounts(), replBL);
 
             // изменим account
@@ -30,16 +30,16 @@ namespace PulxerTest
             r_accounts[0].IsShortEnable = !r_accounts[0].IsShortEnable;
             r_accounts[0].CommPerc += 0.5m;
 
-            import.SyncAccountDataAsync().Wait();
+            import.SyncAccountDataAsync(sps).Wait();
 
             CompareAccounts(r_accounts, accountDA.GetAccounts(), replBL);
 
             // добавим еще account
-            leechDA.AddAccount(Common.Data.AccountTypes.Test, "ccc", "nnn", 0, false);
+            sps.AddAccount(Common.Data.AccountTypes.Test, "ccc", "nnn", 0, false);
 
-            import.SyncAccountDataAsync().Wait();
+            import.SyncAccountDataAsync(sps).Wait();
 
-            CompareAccounts(leechDA.GetAccountList(), accountDA.GetAccounts(), replBL);
+            CompareAccounts(sps.GetAccountList().Result, accountDA.GetAccounts(), replBL);
 
             // удаление account не тестируем
         }
@@ -49,13 +49,13 @@ namespace PulxerTest
         {
             IAccountDA accountDA = new AccountDAMock();
             IInstrumDA instrumDA = new InstrumDAMock();
-            LeechDAMock leechDA = new LeechDAMock();
+            SyncPipeServerMock sps = new SyncPipeServerMock();
             IReplicationBL replBL = new ReplicationBLMock();
 
-            ImportLeech import = new ImportLeech(instrumDA, accountDA, leechDA, null, null, replBL);
-            import.SyncAccountDataAsync().Wait();
+            ImportLeech import = new ImportLeech(instrumDA, accountDA, null, null, replBL);
+            import.SyncAccountDataAsync(sps).Wait();
 
-            var r_instrums = leechDA.GetInstrumList().ToList();
+            var r_instrums = sps.GetInstrumList().Result;
             CompareInstrums(r_instrums, instrumDA.GetInstrums(), replBL);
 
             // изменим instrum
@@ -64,21 +64,21 @@ namespace PulxerTest
             r_instrums[0].LotSize = 10;
             r_instrums[0].Decimals = 3;
 
-            import.SyncAccountDataAsync().Wait();
+            import.SyncAccountDataAsync(sps).Wait();
 
             CompareInstrums(r_instrums, instrumDA.GetInstrums(), replBL);
 
             // новый инструмент
-            var newIns = leechDA.AddInstrum("ttt", "sn");
+            var newIns = sps.AddInstrum("ttt", "sn");
 
-            import.SyncAccountDataAsync().Wait();
+            import.SyncAccountDataAsync(sps).Wait();
 
-            CompareInstrums(leechDA.GetInstrumList(), instrumDA.GetInstrums(), replBL);
+            CompareInstrums(sps.GetInstrumList().Result, instrumDA.GetInstrums(), replBL);
 
             // удалим инструмент
-            leechDA.RemoveInstrum(newIns.InsID);
+            sps.RemoveInstrum(newIns.InsID);
 
-            import.SyncAccountDataAsync().Wait();
+            import.SyncAccountDataAsync(sps).Wait();
 
             // при удалении инструмента в удаленной базе,
             // в локальной базе мы его не удаляем, 
@@ -87,7 +87,7 @@ namespace PulxerTest
             Assert.False(isReplFound);
 
             // в удаленной базе должно быть на 1 меньше
-            Assert.Equal(leechDA.GetInstrumList().Count(), instrumDA.GetInstrums().Count() - 1);
+            Assert.Equal(sps.GetInstrumList().Result.Count(), instrumDA.GetInstrums().Count() - 1);
         }
 
         [Fact]
@@ -95,73 +95,73 @@ namespace PulxerTest
         {
             IInstrumDA instrumDA = new InstrumDAMock();
             IAccountDA accountDA = new AccountDAMock();
-            LeechDAMock leechDA = new LeechDAMock();
+            SyncPipeServerMock sps = new SyncPipeServerMock();
             IReplicationBL replBL = new ReplicationBLMock();
 
-            var r_accounts = leechDA.GetAccountList().ToList();
-            var r_instrums = leechDA.GetInstrumList().ToList();
+            var r_accounts = sps.GetAccountList().Result;
+            var r_instrums = sps.GetInstrumList().Result;
 
-            var so1 = leechDA.AddStopOrder(r_accounts[0].AccountID, r_instrums[0].InsID, Platform.BuySell.Buy, Platform.StopOrderType.StopLoss, 1000, 1);
-            var ord1 = leechDA.AddOrder(so1);
-            var trd1 = leechDA.AddTrade(ord1);
-            var ord2 = leechDA.AddOrder(r_accounts[1].AccountID, r_instrums[1].InsID, Platform.BuySell.Sell, 1000, 1);
-            var trd2 = leechDA.AddTrade(ord2);
+            var so1 = sps.AddStopOrder(r_accounts[0].AccountID, r_instrums[0].InsID, Platform.BuySell.Buy, Platform.StopOrderType.StopLoss, 1000, 1);
+            var ord1 = sps.AddOrder(so1);
+            var trd1 = sps.AddTrade(ord1);
+            var ord2 = sps.AddOrder(r_accounts[1].AccountID, r_instrums[1].InsID, Platform.BuySell.Sell, 1000, 1);
+            var trd2 = sps.AddTrade(ord2);
 
             // действительно добавили записи
-            Assert.True(leechDA.GetStopOrderList(r_accounts[0].AccountID).Count() == 1);
-            Assert.True(leechDA.GetOrderList(r_accounts[0].AccountID).Count() == 1);
-            Assert.True(leechDA.GetTradeList(r_accounts[0].AccountID).Count() == 1);
-            Assert.True(leechDA.GetStopOrderList(r_accounts[1].AccountID).Count() == 0);
-            Assert.True(leechDA.GetOrderList(r_accounts[1].AccountID).Count() == 1);
-            Assert.True(leechDA.GetTradeList(r_accounts[1].AccountID).Count() == 1);
+            Assert.True(sps.GetStopOrderList(r_accounts[0].AccountID).Result.Count() == 1);
+            Assert.True(sps.GetOrderList(r_accounts[0].AccountID).Result.Count() == 1);
+            Assert.True(sps.GetTradeList(r_accounts[0].AccountID).Result.Count() == 1);
+            Assert.True(sps.GetStopOrderList(r_accounts[1].AccountID).Result.Count() == 0);
+            Assert.True(sps.GetOrderList(r_accounts[1].AccountID).Result.Count() == 1);
+            Assert.True(sps.GetTradeList(r_accounts[1].AccountID).Result.Count() == 1);
 
-            ImportLeech import = new ImportLeech(instrumDA, accountDA, leechDA, null, null, replBL);
-            import.SyncAccountDataAsync().Wait();
+            ImportLeech import = new ImportLeech(instrumDA, accountDA, null, null, replBL);
+            import.SyncAccountDataAsync(sps).Wait();
 
             // узнаем локальные accountID 
             var repl_acc = replBL.GetReplications(Common.Data.ReplObjects.Account);
             int l_acc0ID = repl_acc[r_accounts[0].AccountID];
             int l_acc1ID = repl_acc[r_accounts[1].AccountID];
 
-            CompareStopOrders(leechDA.GetStopOrderList(r_accounts[0].AccountID), accountDA.GetStopOrders(l_acc0ID), replBL);
-            CompareStopOrders(leechDA.GetStopOrderList(r_accounts[1].AccountID), accountDA.GetStopOrders(l_acc1ID), replBL);
-            CompareOrders(leechDA.GetOrderList(r_accounts[0].AccountID), accountDA.GetOrders(l_acc0ID), replBL);
-            CompareOrders(leechDA.GetOrderList(r_accounts[1].AccountID), accountDA.GetOrders(l_acc1ID), replBL);
-            CompareTrades(leechDA.GetTradeList(r_accounts[0].AccountID), accountDA.GetTrades(l_acc0ID), replBL);
-            CompareTrades(leechDA.GetTradeList(r_accounts[1].AccountID), accountDA.GetTrades(l_acc1ID), replBL);
+            CompareStopOrders(sps.GetStopOrderList(r_accounts[0].AccountID).Result, accountDA.GetStopOrders(l_acc0ID), replBL);
+            CompareStopOrders(sps.GetStopOrderList(r_accounts[1].AccountID).Result, accountDA.GetStopOrders(l_acc1ID), replBL);
+            CompareOrders(sps.GetOrderList(r_accounts[0].AccountID).Result, accountDA.GetOrders(l_acc0ID), replBL);
+            CompareOrders(sps.GetOrderList(r_accounts[1].AccountID).Result, accountDA.GetOrders(l_acc1ID), replBL);
+            CompareTrades(sps.GetTradeList(r_accounts[0].AccountID).Result, accountDA.GetTrades(l_acc0ID), replBL);
+            CompareTrades(sps.GetTradeList(r_accounts[1].AccountID).Result, accountDA.GetTrades(l_acc1ID), replBL);
 
             // еще добавили данных
-            var so3 = leechDA.AddStopOrder(r_accounts[0].AccountID, r_instrums[0].InsID, Platform.BuySell.Sell, Platform.StopOrderType.TakeProfit, 2000, 2);
-            var ord3 = leechDA.AddOrder(so3);
-            var trd3 = leechDA.AddTrade(ord3);
-            var ord4 = leechDA.AddOrder(r_accounts[1].AccountID, r_instrums[1].InsID, Platform.BuySell.Buy, 3000, 3);
-            var trd4 = leechDA.AddTrade(ord4);
+            var so3 = sps.AddStopOrder(r_accounts[0].AccountID, r_instrums[0].InsID, Platform.BuySell.Sell, Platform.StopOrderType.TakeProfit, 2000, 2);
+            var ord3 = sps.AddOrder(so3);
+            var trd3 = sps.AddTrade(ord3);
+            var ord4 = sps.AddOrder(r_accounts[1].AccountID, r_instrums[1].InsID, Platform.BuySell.Buy, 3000, 3);
+            var trd4 = sps.AddTrade(ord4);
 
             // снова синхронизировали
-            import.SyncAccountDataAsync().Wait();
+            import.SyncAccountDataAsync(sps).Wait();
 
             // и снова сравнили
-            CompareStopOrders(leechDA.GetStopOrderList(r_accounts[0].AccountID), accountDA.GetStopOrders(l_acc0ID), replBL);
-            CompareStopOrders(leechDA.GetStopOrderList(r_accounts[1].AccountID), accountDA.GetStopOrders(l_acc1ID), replBL);
-            CompareOrders(leechDA.GetOrderList(r_accounts[0].AccountID), accountDA.GetOrders(l_acc0ID), replBL);
-            CompareOrders(leechDA.GetOrderList(r_accounts[1].AccountID), accountDA.GetOrders(l_acc1ID), replBL);
-            CompareTrades(leechDA.GetTradeList(r_accounts[0].AccountID), accountDA.GetTrades(l_acc0ID), replBL);
-            CompareTrades(leechDA.GetTradeList(r_accounts[1].AccountID), accountDA.GetTrades(l_acc1ID), replBL);
+            CompareStopOrders(sps.GetStopOrderList(r_accounts[0].AccountID).Result, accountDA.GetStopOrders(l_acc0ID), replBL);
+            CompareStopOrders(sps.GetStopOrderList(r_accounts[1].AccountID).Result, accountDA.GetStopOrders(l_acc1ID), replBL);
+            CompareOrders(sps.GetOrderList(r_accounts[0].AccountID).Result, accountDA.GetOrders(l_acc0ID), replBL);
+            CompareOrders(sps.GetOrderList(r_accounts[1].AccountID).Result, accountDA.GetOrders(l_acc1ID), replBL);
+            CompareTrades(sps.GetTradeList(r_accounts[0].AccountID).Result, accountDA.GetTrades(l_acc0ID), replBL);
+            CompareTrades(sps.GetTradeList(r_accounts[1].AccountID).Result, accountDA.GetTrades(l_acc1ID), replBL);
 
             // изменили записи
             so3.Status = StopOrderStatus.Reject;
             ord3.Status = OrderStatus.Reject;
 
             // снова синхронизировали
-            import.SyncAccountDataAsync().Wait();
+            import.SyncAccountDataAsync(sps).Wait();
 
             // и снова сравнили
-            CompareStopOrders(leechDA.GetStopOrderList(r_accounts[0].AccountID), accountDA.GetStopOrders(l_acc0ID), replBL);
-            CompareStopOrders(leechDA.GetStopOrderList(r_accounts[1].AccountID), accountDA.GetStopOrders(l_acc1ID), replBL);
-            CompareOrders(leechDA.GetOrderList(r_accounts[0].AccountID), accountDA.GetOrders(l_acc0ID), replBL);
-            CompareOrders(leechDA.GetOrderList(r_accounts[1].AccountID), accountDA.GetOrders(l_acc1ID), replBL);
-            CompareTrades(leechDA.GetTradeList(r_accounts[0].AccountID), accountDA.GetTrades(l_acc0ID), replBL);
-            CompareTrades(leechDA.GetTradeList(r_accounts[1].AccountID), accountDA.GetTrades(l_acc1ID), replBL);
+            CompareStopOrders(sps.GetStopOrderList(r_accounts[0].AccountID).Result, accountDA.GetStopOrders(l_acc0ID), replBL);
+            CompareStopOrders(sps.GetStopOrderList(r_accounts[1].AccountID).Result, accountDA.GetStopOrders(l_acc1ID), replBL);
+            CompareOrders(sps.GetOrderList(r_accounts[0].AccountID).Result, accountDA.GetOrders(l_acc0ID), replBL);
+            CompareOrders(sps.GetOrderList(r_accounts[1].AccountID).Result, accountDA.GetOrders(l_acc1ID), replBL);
+            CompareTrades(sps.GetTradeList(r_accounts[0].AccountID).Result, accountDA.GetTrades(l_acc0ID), replBL);
+            CompareTrades(sps.GetTradeList(r_accounts[1].AccountID).Result, accountDA.GetTrades(l_acc1ID), replBL);
         }
 
         [Fact]
@@ -169,19 +169,19 @@ namespace PulxerTest
         {
             IInstrumDA instrumDA = new InstrumDAMock();
             IAccountDA accountDA = new AccountDAMock();
-            LeechDAMock leechDA = new LeechDAMock();
+            SyncPipeServerMock sps = new SyncPipeServerMock();
             IReplicationBL replBL = new ReplicationBLMock();
-            ImportLeech import = new ImportLeech(instrumDA, accountDA, leechDA, null, null, replBL);
+            ImportLeech import = new ImportLeech(instrumDA, accountDA, null, null, replBL);
 
-            var r_accounts = leechDA.GetAccountList().ToList();
-            var r_instrums = leechDA.GetInstrumList().ToList();
+            var r_accounts = sps.GetAccountList().Result;
+            var r_instrums = sps.GetInstrumList().Result;
 
             // добавили две записи в разные accounts
-            var r_h1 = leechDA.AddHolding(r_accounts[0].AccountID, r_instrums[0].InsID, 100);
-            var r_h2 = leechDA.AddHolding(r_accounts[1].AccountID, r_instrums[1].InsID, 200);
+            var r_h1 = sps.AddHolding(r_accounts[0].AccountID, r_instrums[0].InsID, 100);
+            var r_h2 = sps.AddHolding(r_accounts[1].AccountID, r_instrums[1].InsID, 200);
 
             // синхронизировали
-            import.SyncAccountDataAsync().Wait();
+            import.SyncAccountDataAsync(sps).Wait();
 
             // узнаем локальные accountID 
             var repl_acc = replBL.GetReplications(Common.Data.ReplObjects.Account);
@@ -189,40 +189,40 @@ namespace PulxerTest
             int l_acc1ID = repl_acc[r_accounts[1].AccountID];
 
             // сравниваем
-            CompareHoldings(leechDA.GetHoldingList(r_accounts[0].AccountID), accountDA.GetHoldings(l_acc0ID), replBL);
-            CompareHoldings(leechDA.GetHoldingList(r_accounts[1].AccountID), accountDA.GetHoldings(l_acc1ID), replBL);
+            CompareHoldings(sps.GetHoldingList(r_accounts[0].AccountID).Result, accountDA.GetHoldings(l_acc0ID), replBL);
+            CompareHoldings(sps.GetHoldingList(r_accounts[1].AccountID).Result, accountDA.GetHoldings(l_acc1ID), replBL);
 
             // поменяем записи
             r_h1.LotCount = 1000;
             r_h2.LotCount = 2000;
 
             // синхронизировали
-            import.SyncAccountDataAsync().Wait();
+            import.SyncAccountDataAsync(sps).Wait();
 
             // сравниваем
-            CompareHoldings(leechDA.GetHoldingList(r_accounts[0].AccountID), accountDA.GetHoldings(l_acc0ID), replBL);
-            CompareHoldings(leechDA.GetHoldingList(r_accounts[1].AccountID), accountDA.GetHoldings(l_acc1ID), replBL);
+            CompareHoldings(sps.GetHoldingList(r_accounts[0].AccountID).Result, accountDA.GetHoldings(l_acc0ID), replBL);
+            CompareHoldings(sps.GetHoldingList(r_accounts[1].AccountID).Result, accountDA.GetHoldings(l_acc1ID), replBL);
 
             // еще добавили запись
-            var r_h3 = leechDA.AddHolding(r_accounts[1].AccountID, r_instrums[2].InsID, 300);
+            var r_h3 = sps.AddHolding(r_accounts[1].AccountID, r_instrums[2].InsID, 300);
 
             // синхронизировали
-            import.SyncAccountDataAsync().Wait();
+            import.SyncAccountDataAsync(sps).Wait();
 
             // сравниваем
-            CompareHoldings(leechDA.GetHoldingList(r_accounts[0].AccountID), accountDA.GetHoldings(l_acc0ID), replBL);
-            CompareHoldings(leechDA.GetHoldingList(r_accounts[1].AccountID), accountDA.GetHoldings(l_acc1ID), replBL);
+            CompareHoldings(sps.GetHoldingList(r_accounts[0].AccountID).Result, accountDA.GetHoldings(l_acc0ID), replBL);
+            CompareHoldings(sps.GetHoldingList(r_accounts[1].AccountID).Result, accountDA.GetHoldings(l_acc1ID), replBL);
 
             // удалили записи
-            leechDA.RemoveHolding(r_h1);
-            leechDA.RemoveHolding(r_h2);
+            sps.RemoveHolding(r_h1);
+            sps.RemoveHolding(r_h2);
 
             // синхронизировали
-            import.SyncAccountDataAsync().Wait();
+            import.SyncAccountDataAsync(sps).Wait();
 
             // сравниваем
-            CompareHoldings(leechDA.GetHoldingList(r_accounts[0].AccountID), accountDA.GetHoldings(l_acc0ID), replBL);
-            CompareHoldings(leechDA.GetHoldingList(r_accounts[1].AccountID), accountDA.GetHoldings(l_acc1ID), replBL);
+            CompareHoldings(sps.GetHoldingList(r_accounts[0].AccountID).Result, accountDA.GetHoldings(l_acc0ID), replBL);
+            CompareHoldings(sps.GetHoldingList(r_accounts[1].AccountID).Result, accountDA.GetHoldings(l_acc1ID), replBL);
         }
 
         [Fact]
@@ -230,19 +230,19 @@ namespace PulxerTest
         {
             IInstrumDA instrumDA = new InstrumDAMock();
             IAccountDA accountDA = new AccountDAMock();
-            LeechDAMock leechDA = new LeechDAMock();
+            SyncPipeServerMock sps = new SyncPipeServerMock();
             IReplicationBL replBL = new ReplicationBLMock();
-            ImportLeech import = new ImportLeech(instrumDA, accountDA, leechDA, null, null, replBL);
+            ImportLeech import = new ImportLeech(instrumDA, accountDA, null, null, replBL);
 
-            var r_accounts = leechDA.GetAccountList().ToList();
-            var r_instrums = leechDA.GetInstrumList().ToList();
+            var r_accounts = sps.GetAccountList().Result;
+            var r_instrums = sps.GetInstrumList().Result;
 
             // добавили две записи в разные accounts
-            var r_h1 = leechDA.AddCash(r_accounts[0].AccountID, 100);
-            var r_h2 = leechDA.AddCash(r_accounts[1].AccountID, 200);
+            var r_h1 = sps.AddCash(r_accounts[0].AccountID, 100);
+            var r_h2 = sps.AddCash(r_accounts[1].AccountID, 200);
 
             // синхронизировали
-            import.SyncAccountDataAsync().Wait();
+            import.SyncAccountDataAsync(sps).Wait();
 
             // узнаем локальные accountID 
             var repl_acc = replBL.GetReplications(Common.Data.ReplObjects.Account);
@@ -250,7 +250,7 @@ namespace PulxerTest
             int l_acc1ID = repl_acc[r_accounts[1].AccountID];
 
             // сравниваем
-            var rCash = leechDA.GetCash(r_accounts[0].AccountID);
+            var rCash = sps.GetCash(r_accounts[0].AccountID).Result;
             var lCash = accountDA.GetCash(l_acc0ID);
             CompareCash(rCash, lCash);
 
@@ -263,10 +263,10 @@ namespace PulxerTest
             rCash.SellComm += 60.0m;
 
             // синхронизировали
-            import.SyncAccountDataAsync().Wait();
+            import.SyncAccountDataAsync(sps).Wait();
 
             // сравниваем
-            var rCash1 = leechDA.GetCash(r_accounts[0].AccountID);
+            var rCash1 = sps.GetCash(r_accounts[0].AccountID).Result;
             var lCash1 = accountDA.GetCash(l_acc0ID);
             CompareCash(rCash1, lCash1);
         }

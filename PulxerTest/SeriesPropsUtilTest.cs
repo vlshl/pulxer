@@ -1,6 +1,7 @@
-﻿using Xunit;
+﻿using Pulxer;
+using Xunit;
 
-namespace Pulxer.Test
+namespace PulxerTest
 {
     public class SeriesPropsUtilTest
     {

@@ -5,10 +5,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace PulxerTest
 {
-    public class LeechDAMock : ILeechDA
+    public class SyncPipeServerMock : ISyncPipeServer
     {
         private List<Account> _accounts;
         private List<Instrum> _instrums;
@@ -20,7 +21,7 @@ namespace PulxerTest
         private int _cashID = 1;
         private int _holdingID = 1;
 
-        public LeechDAMock()
+        public SyncPipeServerMock()
         {
             _accounts = new List<Account>()
             {
@@ -43,9 +44,9 @@ namespace PulxerTest
         }
 
         #region Account
-        public IEnumerable<Account> GetAccountList()
+        public Task<Account[]> GetAccountList()
         {
-            return _accounts.ToList();
+            return Task.Run(() => { return _accounts.ToArray(); });
         }
 
         public Account AddAccount(AccountTypes at, string code, string name, decimal commperc, bool isShortEnable)
@@ -66,9 +67,9 @@ namespace PulxerTest
         #endregion
 
         #region Instrum
-        public IEnumerable<Instrum> GetInstrumList()
+        public Task<Instrum[]> GetInstrumList()
         {
-            return _instrums.ToList();
+            return Task.Run(() => { return _instrums.ToArray(); });
         }
 
         public Instrum AddInstrum(string ticker, string shortName)
@@ -96,9 +97,9 @@ namespace PulxerTest
         #endregion
 
         #region StopOrder
-        public IEnumerable<StopOrder> GetStopOrderList(int accountID)
+        public Task<StopOrder[]> GetStopOrderList(int accountID)
         {
-            return _stopOrders.Where(r => r.AccountID == accountID).ToList();
+            return Task.Run(() => { return _stopOrders.Where(r => r.AccountID == accountID).ToArray(); });
         }
 
         public StopOrder AddStopOrder(int accountID, int insID, BuySell bs, StopOrderType st, decimal price, int lots)
@@ -126,9 +127,9 @@ namespace PulxerTest
         #endregion
 
         #region Order
-        public IEnumerable<Order> GetOrderList(int accountID)
+        public Task<Order[]> GetOrderList(int accountID)
         {
-            return _orders.Where(r => r.AccountID == accountID).ToList();
+            return Task.Run(() => { return _orders.Where(r => r.AccountID == accountID).ToArray(); });
         }
 
         public Order AddOrder(int accountID, int insID, BuySell bs, decimal price, int lots)
@@ -173,9 +174,9 @@ namespace PulxerTest
         #endregion
 
         #region Trade
-        public IEnumerable<Trade> GetTradeList(int accountID)
+        public Task<Trade[]> GetTradeList(int accountID)
         {
-            return _trades.Where(r => r.AccountID == accountID).ToList();
+            return Task.Run(() => { return _trades.Where(r => r.AccountID == accountID).ToArray(); });
         }
 
         public Trade AddTrade(Order ord)
@@ -200,9 +201,9 @@ namespace PulxerTest
         #endregion
 
         #region Holding
-        public IEnumerable<Holding> GetHoldingList(int accountID)
+        public Task<Holding[]> GetHoldingList(int accountID)
         {
-            return _holdings.Where(r => r.AccountID == accountID).ToList();
+            return Task.Run(() => { return _holdings.Where(r => r.AccountID == accountID).ToArray(); });
         }
 
         public Holding AddHolding(int accountID, int insID, int lotCount)
@@ -226,9 +227,9 @@ namespace PulxerTest
         #endregion
 
         #region Cash
-        public Cash GetCash(int accountID)
+        public Task<Cash> GetCash(int accountID)
         {
-            return _cashes.FirstOrDefault(r => r.AccountID == accountID);
+            return Task.Run(() => { return _cashes.FirstOrDefault(r => r.AccountID == accountID); });
         }
 
         public Cash AddCash(int accountID, decimal init)

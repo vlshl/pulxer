@@ -114,8 +114,11 @@ namespace WebApp
                         WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync();
                         var lsm = context.RequestServices.GetRequiredService<LeechServerManager>();
                         var ls = lsm.CreateServer(acc);
-                        await ls.Run(webSocket);
-                        ls.Close();
+                        if (ls != null)
+                        {
+                            await ls.Run(webSocket);
+                            ls.Close();
+                        }
                         lsm.DeleteServer(acc);
                     }
                     else

@@ -2,7 +2,7 @@
 using System.Xml;
 using Xunit;
 
-namespace Pulxer.Test
+namespace PulxerTest
 {
     public class PenSeriesPropsTest
     {

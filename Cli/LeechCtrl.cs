@@ -4,6 +4,7 @@ using System.Linq;
 
 namespace Cli
 {
+    // этот объект будет удален вместе с LeechDA
     public class LeechCtrl
     {
         private readonly IConsole _console;
@@ -37,7 +38,7 @@ namespace Cli
         {
             try
             {
-                await _importLeech.SyncAccountDataAsync();
+                //await _importLeech.SyncAccountDataAsync();
                 await _importLeech.SyncAllTradesAsync();
             }
             catch (AggregateException ex)
