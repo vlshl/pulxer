@@ -16,12 +16,11 @@ namespace LeechPipe
     /// </summary>
     public class LpCore : ILpCore
     {
-        private const int TIMEOUT = 5000;
+        public static int SEGMENT_SIZE = 1024 * 4;
+        private const int TIMEOUT = 30000;
         private ILpTransport _transport;
         private bool _isWorking;
-        private const int BUFFER_SIZE = 4 * 1024;
-        private byte[] _recvBuffer;
-        private Dictionary<ushort, ConcurrentQueue<byte[]>> _recvMessages; // очереди принятых сообщений по потокам
+        private ConcurrentDictionary<ushort, ConcurrentQueue<byte[]>> _recvMessages; // очереди принятых сообщений по потокам
         private AutoResetEvent _recvAre;
         private Thread _recvThread;
         private Thread _recvThread1;
@@ -34,9 +33,7 @@ namespace LeechPipe
         public LpCore(ILpTransport transport, bool isServer)
         {
             _transport = transport;
-            _isWorking = true;
-            _recvBuffer = new byte[BUFFER_SIZE];
-            _recvMessages = new Dictionary<ushort, ConcurrentQueue<byte[]>>();
+            _recvMessages = new ConcurrentDictionary<ushort, ConcurrentQueue<byte[]>>();
             _recvAre = new AutoResetEvent(false);
             _pipe_recvs = new Dictionary<ushort, ILpReceiver>();
             _isServer = isServer;
@@ -52,9 +49,11 @@ namespace LeechPipe
                 _pipe_recvs.Add(0, sysPipe);
 
                 _recvMessages.Clear();
-                _recvMessages.Add(0, new ConcurrentQueue<byte[]>()); // нулевой пайп
+                _recvMessages.TryAdd(0, new ConcurrentQueue<byte[]>()); // нулевой пайп
 
                 _waitItems.Clear();
+
+                _isWorking = true;
 
                 if (createRecvThread)
                 {
@@ -64,6 +63,14 @@ namespace LeechPipe
 
                 _recvThread1 = new Thread(new ThreadStart(DoRecv1));
                 _recvThread1.Start();
+            }
+        }
+
+        public bool IsWorking
+        {
+            get
+            {
+                return _isWorking;
             }
         }
 
@@ -85,7 +92,6 @@ namespace LeechPipe
                 if (pipe == 0) return 0; // нет свободного номера
 
                 _pipe_recvs.Add(pipe, pipeHandler);
-                _recvMessages.Add(pipe, new ConcurrentQueue<byte[]>());
 
                 return pipe;
             }
@@ -102,7 +108,6 @@ namespace LeechPipe
             lock (this)
             {
                 _pipe_recvs.Remove(pipe);
-                _recvMessages.Remove(pipe);
             }
         }
 
@@ -139,6 +144,8 @@ namespace LeechPipe
 
         public Task<byte[]> SendMessageAsync(ushort pipe, byte[] data)
         {
+            if (data == null) data = new byte[0];
+
             return Task.Run<byte[]>(() =>
             {
                 if (_waitItems.ContainsKey(pipe)) return null;
@@ -152,8 +159,15 @@ namespace LeechPipe
                 var waitItem = new WaitRecvItem() { Mre = mre, Data = null };
                 _waitItems.Add(pipe, waitItem);
 
-                _transport.SendMessageAsync(sendBuffer, 0, sendBuffer.Length).Wait();
-                if (!mre.WaitOne(TIMEOUT)) return null; // по таймауту
+                _transport.SendMessageAsync(sendBuffer).Wait();
+                if (!mre.WaitOne(TIMEOUT))
+                {
+                    lock (_waitItems)
+                    {
+                        _waitItems.Remove(pipe);
+                    }
+                    return null; // по таймауту
+                }
 
                 return waitItem.Data;
             });
@@ -161,6 +175,8 @@ namespace LeechPipe
 
         public Task SendResponseAsync(ILpReceiver handler, byte[] data)
         {
+            if (data == null) data = new byte[0];
+
             return Task.Run(() =>
             {
                 if (!_pipe_recvs.Values.Contains(handler)) return;
@@ -171,7 +187,7 @@ namespace LeechPipe
                 sendBuffer[1] = (byte)(pipe >> 8);
                 Array.Copy(data, 0, sendBuffer, 2, data.Length);
 
-                _transport.SendMessageAsync(sendBuffer, 0, sendBuffer.Length).Wait();
+                _transport.SendMessageAsync(sendBuffer).Wait();
             });
         }
 
@@ -182,20 +198,24 @@ namespace LeechPipe
         {
             while (_isWorking)
             {
-                int count = await _transport.RecvMessageAsync(_recvBuffer);
-                if (count <= 2)
+                var recvBuffer = await _transport.RecvMessageAsync();
+                int count = recvBuffer.Length;
+                if (count < 2)
                 {
                     Close(); break;
                 }
 
-                ushort pipe = (ushort)((_recvBuffer[1] >> 8) + _recvBuffer[0]);
+                ushort pipe = (ushort)((recvBuffer[1] >> 8) + recvBuffer[0]);
                 byte[] data = new byte[count - 2];
-                Array.Copy(_recvBuffer, 2, data, 0, count - 2);
-                if (_recvMessages.ContainsKey(pipe))
+                Array.Copy(recvBuffer, 2, data, 0, count - 2);
+
+                if (!_recvMessages.ContainsKey(pipe))
                 {
-                    _recvMessages[pipe].Enqueue(data);
-                    _recvAre.Set();
+                    _recvMessages.TryAdd(pipe, new ConcurrentQueue<byte[]>());
                 }
+
+                _recvMessages[pipe].Enqueue(data);
+                _recvAre.Set();
             }
         }
 

@@ -12,6 +12,8 @@ using System.IO;
 using Common;
 using System.Net.WebSockets;
 using Pulxer.Leech;
+using System.Text;
+using Microsoft.AspNetCore.Authentication;
 
 namespace WebApp
 {
@@ -98,6 +100,7 @@ namespace WebApp
             }
 
             app.UseRouting();
+
             app.UseAuthentication();
             app.UseAuthorization();
 
@@ -109,17 +112,38 @@ namespace WebApp
                 {
                     if (context.WebSockets.IsWebSocketRequest)
                     {
-                        string acc = path.Remove(0, 4);
-
-                        WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync();
-                        var lsm = context.RequestServices.GetRequiredService<LeechServerManager>();
-                        var ls = lsm.CreateServer(acc);
-                        if (ls != null)
+                        var authRes = await context.AuthenticateAsync();
+                        if (!authRes.Succeeded)
                         {
-                            await ls.Run(webSocket);
-                            ls.Close();
+                            context.Response.StatusCode = 401;
+                            return;
                         }
-                        lsm.DeleteServer(acc);
+
+                        string acc = "";
+                        try
+                        {
+                            acc = Encoding.UTF8.GetString(Convert.FromBase64String(path.Remove(0, 4)));
+                        }
+                        catch
+                        {
+                            acc = "";
+                        }
+                        if (string.IsNullOrEmpty(acc))
+                        {
+                            context.Response.StatusCode = 400;
+                        }
+                        else
+                        {
+                            WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync();
+                            var lsm = context.RequestServices.GetRequiredService<LeechServerManager>();
+                            var ls = lsm.CreateServer(acc);
+                            if (ls != null)
+                            {
+                                await ls.Run(webSocket);
+                                ls.Close();
+                            }
+                            lsm.DeleteServer(acc);
+                        }
                     }
                     else
                     {

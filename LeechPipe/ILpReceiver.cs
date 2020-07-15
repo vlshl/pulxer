@@ -6,6 +6,6 @@ namespace LeechPipe
 {
     public interface ILpReceiver
     {
-        public void OnRecv(byte[] data);
+        void OnRecv(byte[] data);
     }
 }

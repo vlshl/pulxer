@@ -1,6 +1,7 @@
 ﻿using LeechPipe;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.WebSockets;
 using System.Threading;
@@ -32,36 +33,38 @@ namespace Pulxer.Leech
             }
         }
 
-        public async Task<int> RecvMessageAsync(byte[] buffer)
+        public async Task<byte[]> RecvMessageAsync()
         {
+            byte[] buffer = new byte[LpCore.SEGMENT_SIZE];
             WebSocketReceiveResult res;
-            int offset = 0; int count = 0;
 
-            try
+            using (var ms = new MemoryStream())
             {
                 do
                 {
-                    ArraySegment<byte> segm = new ArraySegment<byte>(buffer, offset, buffer.Length - offset);
+                    ArraySegment<byte> segm = new ArraySegment<byte>(buffer, 0, buffer.Length);
                     res = await _socket.ReceiveAsync(segm, _cts.Token);
-                    offset += res.Count;
-                    count += res.Count;
-                    if (offset >= buffer.Length) offset = 0;
+                    ms.Write(buffer, 0, res.Count);
                 } while (!res.EndOfMessage);
-            }
-            catch(Exception ex)
-            {
-                return 0;
-            }
 
-            if (count > buffer.Length) return 0;
-
-            return count;
+                return ms.ToArray();
+            }
         }
 
-        public async Task SendMessageAsync(byte[] buffer, int offset, int count)
+        public async Task SendMessageAsync(byte[] buffer)
         {
-            await _socket.SendAsync(new ArraySegment<byte>(buffer, offset, count),
-                WebSocketMessageType.Binary, true, _cts.Token);
+            int offset = 0;
+            while (offset < buffer.Length)
+            {
+                int restLen = buffer.Length - offset;
+                bool endOfMessage = restLen <= LpCore.SEGMENT_SIZE;
+                int count = endOfMessage ? restLen : LpCore.SEGMENT_SIZE;
+
+                await _socket.SendAsync(new ArraySegment<byte>(buffer, offset, count),
+                    WebSocketMessageType.Binary, endOfMessage, _cts.Token);
+
+                offset += count;
+            }
         }
     }
 }

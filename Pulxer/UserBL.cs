@@ -1,8 +1,13 @@
-﻿using Common.Data;
+﻿using Common;
+using Common.Data;
 using Common.Interfaces;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -88,6 +93,44 @@ namespace Pulxer
             var hash = md5.ComputeHash(bytes);
 
             return Convert.ToBase64String(hash);
+        }
+
+        public User AuthUser(string login, string password)
+        {
+            if (string.IsNullOrEmpty(login)) return null;
+            if (password == null) password = "";
+
+            var user = _userDA.GetUsers().FirstOrDefault(r => r.Login == login);
+            if (user == null || user.PasswordHash != CalcHash(password)) return null;
+
+            return user;
+        }
+
+        public string BuildJwtToken(IConfiguration config, User user, out DateTime expTime)
+        {
+            var jwtConfig = config.GetSection("JwtToken");
+            string key = DataProtect.TryUnProtect(jwtConfig.GetValue("Key", AuthOptions.KEY));
+            string issuer = jwtConfig.GetValue("Issuer", AuthOptions.ISSUER);
+            string audience = jwtConfig.GetValue("Audience", AuthOptions.AUDIENCE);
+            int lifetime = jwtConfig.GetValue("Lifetime", AuthOptions.LIFETIME);
+            var now = DateTime.UtcNow;
+            expTime = now.Add(TimeSpan.FromMinutes(lifetime));
+
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimsIdentity.DefaultNameClaimType, user.UserID.ToString()),
+                new Claim(ClaimsIdentity.DefaultRoleClaimType, user.Role)
+            }; 
+
+            var jwt = new JwtSecurityToken(
+                    issuer: issuer,
+                    audience: audience,
+                    notBefore: now,
+                    claims: claims,
+                    expires: expTime,
+                    signingCredentials: new SigningCredentials(AuthOptions.GetSymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256));
+
+            return new JwtSecurityTokenHandler().WriteToken(jwt);
         }
     }
 }
