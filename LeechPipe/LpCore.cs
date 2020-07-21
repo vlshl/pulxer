@@ -98,16 +98,17 @@ namespace LeechPipe
         }
 
         /// <summary>
-        /// Удаление созданного или зарегистрированного ранее пайпа по номеру
+        /// Удаление созданного ранее пайпа по номеру
         /// </summary>
         /// <param name="pipe"></param>
-        public void DeletePipe(ushort pipe)
+        /// <returns>true - успешно удален, false - не найден или нулевой пайп</returns>
+        public bool DeletePipe(ushort pipe)
         {
-            if (pipe == 0) return;
+            if (pipe == 0) return false;
 
             lock (this)
             {
-                _pipe_recvs.Remove(pipe);
+                return _pipe_recvs.Remove(pipe);
             }
         }
 

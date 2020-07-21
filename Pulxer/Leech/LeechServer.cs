@@ -51,5 +51,12 @@ namespace Pulxer.Leech
 
             return new SyncPipeServer(_core, _syncPipe);
         }
+
+        public async Task<bool> DeleteSyncPipe()
+        {
+            if (_syncPipe == 0) return false;
+
+            return await _sysPipe.DeletePipeAsync(_syncPipe);
+        }
     }
 }

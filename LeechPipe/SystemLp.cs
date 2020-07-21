@@ -39,7 +39,7 @@ namespace LeechPipe
         {
             return Task.Run<ushort>(async () =>
             {
-                if (_mre != null) return 0; // ждем выполнение пред операции
+                if (_mre != null) return 0; // ждем выполнение пред. операции
                 if (pipeInitData == null) return 0;
 
                 byte[] fullData = new byte[pipeInitData.Length + 1];
@@ -53,6 +53,24 @@ namespace LeechPipe
                 }
 
                 return 0;
+            });
+        }
+
+        /// <summary>
+        /// Отправляет запрос на удаление пайпа другой стороне.
+        /// </summary>
+        /// <param name="pipe">Номер удаляемого пайпа</param>
+        /// <returns>true-успешно удален, false - ошибка</returns>
+        public Task<bool> DeletePipeAsync(ushort pipe)
+        {
+            return Task.Run<bool>(async () =>
+            {
+                if (_mre != null || pipe == 0) return false;
+
+                var pipeBytes = BitConverter.GetBytes(pipe);
+                var resp = await _core.SendMessageAsync(0, new byte[] { CMD_DELETE_PIPE, pipeBytes[0], pipeBytes[1] });
+
+                return (resp != null) && (resp.Length == 2) && (resp[0] == CMD_DELETE_PIPE_ACK) && (resp[1] == 0x0);
             });
         }
 
@@ -82,6 +100,20 @@ namespace LeechPipe
                     }
                 }
             }
+            else if (code == CMD_DELETE_PIPE)
+            {
+                if (data.Length != 3)
+                {
+                    _core.SendResponseAsync(this, new byte[] { CMD_DELETE_PIPE_ACK, 0xff }); // ошибка - неправильный запрос
+                    return;
+                }
+
+                ushort pipe = BitConverter.ToUInt16(data, 1);
+                bool isSuccess = _core.DeletePipe(pipe);
+                byte status = isSuccess ? (byte)0x0 : (byte)0xfe; // успешно или неверный номер пайпа
+                _core.SendResponseAsync(this, new byte[] { CMD_DELETE_PIPE_ACK, status });
+            }
+
             else if (code == IDENT)
             {
                 var identBytes = Encoding.UTF8.GetBytes(_core.GetIdentity());

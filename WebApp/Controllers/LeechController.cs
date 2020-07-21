@@ -34,8 +34,7 @@ namespace WebApp.Controllers
             if (sps == null) return BadRequest();
 
             _importLeech.SyncAccountDataAsync(sps).Wait();
-
-            // ls.DeleteSyncPipe(); // еще не реализовано
+            ls.DeleteSyncPipe().Wait();
 
             return Ok();
         }
