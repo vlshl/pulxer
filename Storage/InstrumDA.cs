@@ -104,12 +104,13 @@ namespace Storage
         /// Update instrum
         /// </summary>
         /// <param name="insID">ID</param>
+        /// <param name="ticker">Ticker</param>
         /// <param name="shortName">Short name</param>
         /// <param name="name">Full name</param>
         /// <param name="lotSize">Lot size</param>
         /// <param name="decimals">Decimals</param>
         /// <param name="priceStep">Price step</param>
-        public void UpdateInstrum(int insID, string shortName, string name, int lotSize, int decimals,
+        public void UpdateInstrum(int insID, string ticker, string shortName, string name, int lotSize, int decimals,
             decimal priceStep)
         {
             using (var db = new DaContext(_options))
@@ -117,6 +118,7 @@ namespace Storage
                 var instrum = db.Instrum.Find(insID);
                 if (instrum != null)
                 {
+                    instrum.Ticker = ticker;
                     instrum.ShortName = shortName;
                     instrum.Name = name;
                     instrum.LotSize = lotSize;

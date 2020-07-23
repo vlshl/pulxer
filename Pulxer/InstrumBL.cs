@@ -93,7 +93,7 @@ namespace Pulxer
         {
             if (ins.InsID > 0)
             {
-                _instrumDA.UpdateInstrum(ins.InsID, ins.ShortName, ins.Name, ins.LotSize, ins.Decimals, ins.PriceStep);
+                _instrumDA.UpdateInstrum(ins.InsID, ins.Ticker, ins.ShortName, ins.Name, ins.LotSize, ins.Decimals, ins.PriceStep);
             }
             else
             {

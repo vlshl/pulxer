@@ -88,13 +88,14 @@ namespace Pulxer
                     var ins = instrums.FirstOrDefault(r => r.InsID == lid);
                     if (ins != null) // локальный найден
                     {
-                        if (ins.ShortName != rIns.ShortName ||
+                        if (ins.Ticker != rIns.Ticker ||
+                            ins.ShortName != rIns.ShortName ||
                             ins.Name != rIns.Name ||
                             ins.LotSize != rIns.LotSize ||
                             ins.Decimals != rIns.Decimals ||
                             ins.PriceStep != rIns.PriceStep)
                         {
-                            _instrumDA.UpdateInstrum(ins.InsID, rIns.ShortName, rIns.Name,
+                            _instrumDA.UpdateInstrum(ins.InsID, rIns.Ticker, rIns.ShortName, rIns.Name,
                                 rIns.LotSize, rIns.Decimals, rIns.PriceStep);
                         }
                     }

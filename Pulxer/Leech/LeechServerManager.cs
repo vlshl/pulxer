@@ -26,7 +26,7 @@ namespace Pulxer.Leech
             }
         }
 
-        public LeechServer GetLeechServer(string account)
+        public LeechServer GetServer(string account)
         {
             lock (_acc_servers)
             {

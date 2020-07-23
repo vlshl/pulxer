@@ -16,11 +16,14 @@ namespace Pulxer.Leech
         private ILpFactory _pipeFactory;
         private LeechPipeServerSocket _serverSocket;
         private ushort _syncPipe;
+        private ushort _tickPipe;
         private string _account;
+        private TickPipeServer _tickPipeServer;
 
         public LeechServer(string account)
         {
             _account = account;
+            _tickPipeServer = null;
         }
 
         public async Task Run(WebSocket socket)
@@ -57,6 +60,25 @@ namespace Pulxer.Leech
             if (_syncPipe == 0) return false;
 
             return await _sysPipe.DeletePipeAsync(_syncPipe);
+        }
+
+        public async Task<TickPipeServer> GetTickPipe()
+        {
+            if (_tickPipeServer != null) return _tickPipeServer;
+
+            _tickPipe = await _sysPipe.CreatePipeAsync(Encoding.UTF8.GetBytes("tick"));
+            if (_tickPipe == 0) return null;
+
+            _tickPipeServer = new TickPipeServer(_core, _tickPipe);
+            return _tickPipeServer;
+        }
+
+        // не вызывается никогда
+        public async Task<bool> DeleteTickPipe()
+        {
+            if (_tickPipe == 0) return false;
+
+            return await _sysPipe.DeletePipeAsync(_tickPipe);
         }
     }
 }

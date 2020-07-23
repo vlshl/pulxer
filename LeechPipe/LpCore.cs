@@ -197,26 +197,33 @@ namespace LeechPipe
         /// </summary>
         public async Task DoRecv()
         {
-            while (_isWorking)
+            try
             {
-                var recvBuffer = await _transport.RecvMessageAsync();
-                int count = recvBuffer.Length;
-                if (count < 2)
+                while (_isWorking)
                 {
-                    Close(); break;
+                    var recvBuffer = await _transport.RecvMessageAsync();
+                    int count = recvBuffer.Length;
+                    if (count < 2)
+                    {
+                        Close(); break;
+                    }
+
+                    ushort pipe = (ushort)((recvBuffer[1] >> 8) + recvBuffer[0]);
+                    byte[] data = new byte[count - 2];
+                    Array.Copy(recvBuffer, 2, data, 0, count - 2);
+
+                    if (!_recvMessages.ContainsKey(pipe))
+                    {
+                        _recvMessages.TryAdd(pipe, new ConcurrentQueue<byte[]>());
+                    }
+
+                    _recvMessages[pipe].Enqueue(data);
+                    _recvAre.Set();
                 }
-
-                ushort pipe = (ushort)((recvBuffer[1] >> 8) + recvBuffer[0]);
-                byte[] data = new byte[count - 2];
-                Array.Copy(recvBuffer, 2, data, 0, count - 2);
-
-                if (!_recvMessages.ContainsKey(pipe))
-                {
-                    _recvMessages.TryAdd(pipe, new ConcurrentQueue<byte[]>());
-                }
-
-                _recvMessages[pipe].Enqueue(data);
-                _recvAre.Set();
+            }
+            catch
+            {
+                Close();
             }
         }
 

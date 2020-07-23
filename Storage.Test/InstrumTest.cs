@@ -71,10 +71,10 @@ namespace Storage.Test
         public void UpdateDeleteInstrum_()
         {
             int id = _instrumDA.InsertInstrum("TICKER1", "Тикер1", "Тикер 1", 10, 2, 0.1m);
-            _instrumDA.UpdateInstrum(id, "sn", "name", 20, 100, 0.001m);
+            _instrumDA.UpdateInstrum(id, "t", "sn", "name", 20, 100, 0.001m);
             var ins1 = _instrumDA.GetInstrum(id);
 
-            Assert.Equal("TICKER1", ins1.Ticker);
+            Assert.Equal("t", ins1.Ticker);
             Assert.Equal("sn", ins1.ShortName);
             Assert.Equal("name", ins1.Name);
             Assert.Equal(100, ins1.Decimals);
