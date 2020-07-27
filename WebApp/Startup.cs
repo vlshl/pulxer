@@ -108,41 +108,25 @@ namespace WebApp
             app.Use(async (context, next) =>
             {
                 string path = context.Request.Path.ToString();
-                if (path.StartsWith("/ws/"))
+                if (path.StartsWith("/ws"))
                 {
                     if (context.WebSockets.IsWebSocketRequest)
                     {
                         var authRes = await context.AuthenticateAsync();
-                        if (!authRes.Succeeded)
+                        if (!authRes.Succeeded || !context.User.IsInRole("leech"))
                         {
                             context.Response.StatusCode = 401;
                             return;
                         }
 
-                        string acc = "";
-                        try
+                        WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync();
+                        var lsm = context.RequestServices.GetRequiredService<LeechServerManager>();
+                        var ls = lsm.CreateServer(new LeechPipeServerSocket(webSocket));
+                        if (ls != null)
                         {
-                            acc = Encoding.UTF8.GetString(Convert.FromBase64String(path.Remove(0, 4)));
-                        }
-                        catch
-                        {
-                            acc = "";
-                        }
-                        if (string.IsNullOrEmpty(acc))
-                        {
-                            context.Response.StatusCode = 400;
-                        }
-                        else
-                        {
-                            WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync();
-                            var lsm = context.RequestServices.GetRequiredService<LeechServerManager>();
-                            var ls = lsm.CreateServer(acc);
-                            if (ls != null)
-                            {
-                                await ls.Run(webSocket);
-                                ls.Close();
-                            }
-                            lsm.DeleteServer(acc);
+                            await ls.Run();
+                            ls.Close();
+                            lsm.DeleteServer();
                         }
                     }
                     else

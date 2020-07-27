@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Common;
 using Common.Interfaces;
@@ -24,12 +25,12 @@ namespace WebApp.Controllers
             _importLeech = importLeech;
         }
 
-        [HttpPost("sync/{account}")]
+        [HttpPost("sync")]
         [Authorize]
-        public IActionResult Sync(string account)
+        public IActionResult Sync()
         {
-            var ls = _lsm.GetServer(account);
-            if (ls == null) return NotFound();
+            var ls = _lsm.GetServer();
+            if (ls == null) return BadRequest();
 
             var sps = ls.CreateSyncPipe().Result;
             if (sps == null) return BadRequest();
@@ -40,37 +41,18 @@ namespace WebApp.Controllers
             return Ok();
         }
 
-        [HttpGet("tick/{account}/{insIds}")]
+        [HttpGet("lastprice/{tickers}")]
         [Authorize]
-        public PriceData[] GetLastTicks(string account, string insIds)
+        public LastPrice[] GetLastPrices(string tickers)
         {
-            var ls = _lsm.GetServer(account);
+            var ls = _lsm.GetServer();
             if (ls == null) return null;
 
+            var tickerList = Regex.Split(tickers, @"\s*,\s*");
             var tps = ls.GetTickPipe().Result;
             if (tps == null) return null;
 
-            var ticks = tps.GetLastTicks(insIds).Result;
-
-            return ticks.Select(t => new PriceData(t)).ToArray();
-        }
-    }
-
-    public struct PriceData
-    {
-        public int InsId { get; set; }
-        public int Date { get; set; }
-        public int Time { get; set; }
-        public decimal Price { get; set; }
-        public int Lots { get; set; }
-
-        public PriceData(Tick tick)
-        {
-            this.InsId = tick.InsID;
-            this.Date = tick.Time.Year * 10000 + tick.Time.Month * 100 + tick.Time.Day;
-            this.Time = tick.Time.Hour * 10000 + tick.Time.Minute * 100 + tick.Time.Second;
-            this.Price = tick.Price;
-            this.Lots = tick.Lots;
+            return tps.GetLastPrices(tickerList).Result;
         }
     }
 }

@@ -14,26 +14,21 @@ namespace Pulxer.Leech
         private LpCore _core;
         private SystemLp _sysPipe;
         private ILpFactory _pipeFactory;
-        private LeechPipeServerSocket _serverSocket;
         private ushort _syncPipe;
         private ushort _tickPipe;
-        private string _account;
         private TickPipeServer _tickPipeServer;
 
-        public LeechServer(string account)
+        public LeechServer(LeechPipeServerSocket socket)
         {
-            _account = account;
             _tickPipeServer = null;
-        }
-
-        public async Task Run(WebSocket socket)
-        {
-            _serverSocket = new LeechPipeServerSocket(socket);
-            _core = new LpCore(_serverSocket, true); // сервер
+            _core = new LpCore(socket, true); // сервер
             _pipeFactory = new LeechServerPipeFactory(_core);
             _sysPipe = new SystemLp(_pipeFactory, _core);
             _core.Initialize(_sysPipe, "Pulxer", false);
+        }
 
+        public async Task Run()
+        {
             await _core.DoRecv();
         }
 

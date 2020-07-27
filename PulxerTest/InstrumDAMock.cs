@@ -63,11 +63,12 @@ namespace PulxerTest
             return instrum.InsID;
         }
 
-        public void UpdateInstrum(int insID, string shortName, string name, int lotSize, int decimals, decimal priceStep)
+        public void UpdateInstrum(int insID, string ticker, string shortName, string name, int lotSize, int decimals, decimal priceStep)
         {
             if (!_id_instrum.ContainsKey(insID)) return;
 
             var instrum = _id_instrum[insID];
+            instrum.Ticker = ticker;
             instrum.ShortName = shortName;
             instrum.Name = name;
             instrum.LotSize = lotSize;

@@ -1,5 +1,6 @@
 ﻿using Common;
 using LeechPipe;
+using Microsoft.EntityFrameworkCore.Internal;
 using Newtonsoft.Json;
 using System.Text;
 using System.Threading.Tasks;
@@ -20,18 +21,17 @@ namespace Pulxer.Leech
         /// <summary>
         /// Получить последние сделки в текущей сессии по указанным инструментам
         /// </summary>
-        /// <param name="insIDs">Список идентификаторов инструментов через запятую</param>
+        /// <param name="tickerList">Список тикеров инструментов через запятую</param>
         /// <returns>Список последних сделок</returns>
-        public async Task<Tick[]> GetLastTicks(string insIDs)
+        public async Task<LastPrice[]> GetLastPrices(string[] tickerList)
         {
-            var res = await _core.SendMessageAsync(_pipe, Encoding.UTF8.GetBytes("GetLastTicks " + insIDs));
+            var res = await _core.SendMessageAsync(_pipe, Encoding.UTF8.GetBytes("GetLastPrices " + tickerList.Join(",")));
             if (res == null) return null;
 
             try
             {
                 var data = Encoding.UTF8.GetString(res);
-                var ticks = JsonConvert.DeserializeObject<Tick[]>(data);
-                return ticks;
+                return JsonConvert.DeserializeObject<LastPrice[]>(data);
             }
             catch
             {

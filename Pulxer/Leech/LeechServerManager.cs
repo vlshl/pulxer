@@ -7,48 +7,34 @@ namespace Pulxer.Leech
 {
     public class LeechServerManager
     {
-        private Dictionary<string, LeechServer> _acc_servers;
+        private LeechServer _leechServer = null;
 
         public LeechServerManager()
         {
-            _acc_servers = new Dictionary<string, LeechServer>();
         }
 
-        public LeechServer CreateServer(string account)
+        public LeechServer CreateServer(LeechPipeServerSocket socket)
         {
-            lock (_acc_servers)
+            lock (this)
             {
-                if (_acc_servers.ContainsKey(account)) return null;
+                if (_leechServer != null) return null;
 
-                var ls = new LeechServer(account);
-                _acc_servers.Add(account, ls);
-                return ls;
+                _leechServer = new LeechServer(socket);
+                return _leechServer;
             }
         }
 
-        public LeechServer GetServer(string account)
+        public void DeleteServer()
         {
-            lock (_acc_servers)
-            {
-                if (!_acc_servers.ContainsKey(account)) return null;
-                return _acc_servers[account];
-            }
+            _leechServer = null;
         }
 
-        public void DeleteServer(string account)
+        public LeechServer GetServer()
         {
-            lock (_acc_servers)
+            lock (this)
             {
-                _acc_servers.Remove(account);
+                return _leechServer;
             }
         }
-
-        //public LeechServer[] GetLeechServers()
-        //{
-        //    lock (_acc_servers)
-        //    {
-        //        return _acc_servers.ToArray();
-        //    }
-        //}
     }
 }
