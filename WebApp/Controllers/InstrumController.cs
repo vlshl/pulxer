@@ -1,6 +1,8 @@
-﻿using Common.Interfaces;
+﻿using Common.Data;
+using Common.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
 
 namespace WebApp
 {
@@ -23,6 +25,13 @@ namespace WebApp
         {
             if (hash == null) hash = "";
             return _syncBL.GetInstrums(hash);
+        }
+
+        [HttpGet("list")]
+        [Authorize]
+        public IEnumerable<Instrum> GetList()
+        {
+            return _instrumBL.GetInstrums();
         }
     }
 }

@@ -54,5 +54,18 @@ namespace WebApp.Controllers
 
             return tps.GetLastPrices(tickerList).Result;
         }
+
+        [HttpGet("ident")]
+        [Authorize]
+        public string GetLeechIdentity()
+        {
+            var ls = _lsm.GetServer();
+            if (ls == null) return "";
+
+            var ident = ls.GetRemoteIdentity().Result;
+            if (ident == null) return "";
+
+            return ident;
+        }
     }
 }

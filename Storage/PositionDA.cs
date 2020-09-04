@@ -24,14 +24,17 @@ namespace Storage
         /// Get positions by account
         /// </summary>
         /// <param name="accountID">Account id</param>
-        /// <param name="isOpenOnly">true-open positions only, false - all positions</param>
+        /// <param name="isOpened">true-opened positions only, false - close positions only, null - all positions</param>
         /// <returns>Positions list</returns>
-        public IEnumerable<Position> GetPositions(int accountID, bool isOpenOnly)
+        public IEnumerable<Position> GetPositions(int accountID, bool? isOpened)
         {
             using (var db = new DaContext(_options))
             {
                 var list = db.Position.Where(r => r.AccountID == accountID);
-                if (isOpenOnly) list = list.Where(r => !r.CloseTime.HasValue);
+                if (isOpened == true) 
+                    list = list.Where(r => !r.CloseTime.HasValue);
+                else if (isOpened == false) 
+                    list = list.Where(r => r.CloseTime.HasValue);
 
                 return list.ToList();
             }

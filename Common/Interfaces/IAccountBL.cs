@@ -13,6 +13,7 @@ namespace Common.Interfaces
         CommonData.Account CreateTestAccount(string code, string name, decimal commPerc, bool isShortEnable);
         CommonData.Cash CreateCash(int accountID, decimal initialSumma, decimal currSumma, decimal sellSumma, decimal buySumma, decimal sellCommSumma, decimal buyCommSumma);
         CommonData.Account GetAccountByID(int accountID);
+        CommonData.Account GetRealAccount();
         void UpdateAccount(CommonData.Account account);
         bool DeleteTestAccountData(int accountID, bool fullDelete);
         CommonData.Cash GetCash(int accountID);

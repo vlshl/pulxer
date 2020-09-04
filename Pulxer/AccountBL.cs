@@ -74,6 +74,15 @@ namespace Pulxer
         }
 
         /// <summary>
+        /// Получить данные по реальному (не тестовому) торговому счету
+        /// </summary>
+        /// <returns></returns>
+        public CommonData.Account GetRealAccount()
+        {
+            return _accountDA.GetAccounts().FirstOrDefault(r => r.AccountType == AccountTypes.Real);
+        }
+
+        /// <summary>
         /// Обновить данные по счету
         /// </summary>
         /// <param name="account"></param>

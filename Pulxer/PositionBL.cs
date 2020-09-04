@@ -12,7 +12,8 @@ namespace Pulxer
         PosTable GetPosTable(int accountID);
         void SavePosTable(PosTable table);
         void RefreshPositions(int accountID);
-        IEnumerable<Position> GetOpenPositions(int accountID);
+        IEnumerable<Position> GetOpenedPositions(int accountID);
+        IEnumerable<Position> GetClosedPositions(int accountID);
         IEnumerable<Position> GetAllPositions(int accountID);
         IEnumerable<Position> GetPositions(IEnumerable<int> ids);
         IEnumerable<PosTrade> GetPosTrades(IEnumerable<int> posIDs);
@@ -119,9 +120,19 @@ namespace Pulxer
         /// </summary>
         /// <param name="accountID">Торговый счет</param>
         /// <returns></returns>
-        public IEnumerable<Position> GetOpenPositions(int accountID)
+        public IEnumerable<Position> GetOpenedPositions(int accountID)
         {
             return _positionDA.GetPositions(accountID, true);
+        }
+
+        /// <summary>
+        /// Получить список закрытых позиций
+        /// </summary>
+        /// <param name="accountID">Торговый счет</param>
+        /// <returns></returns>
+        public IEnumerable<Position> GetClosedPositions(int accountID)
+        {
+            return _positionDA.GetPositions(accountID, false);
         }
 
         /// <summary>
@@ -131,7 +142,7 @@ namespace Pulxer
         /// <returns></returns>
         public IEnumerable<Position> GetAllPositions(int accountID)
         {
-            return _positionDA.GetPositions(accountID, false);
+            return _positionDA.GetPositions(accountID, null);
         }
 
         /// <summary>
