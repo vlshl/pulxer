@@ -45,16 +45,16 @@ namespace WebApp.Controllers
             return list;
         }
 
-        [HttpGet("opened")]
+        [HttpGet("open")]
         [Authorize]
-        public IEnumerable<RemotePosition> GetOpenedPositions()
+        public IEnumerable<RemotePosition> GetOpenPositions()
         {
             return GetPositions(true);
         }
 
-        [HttpGet("closed")]
+        [HttpGet("close")]
         [Authorize]
-        public IEnumerable<RemotePosition> GetClosedPositions()
+        public IEnumerable<RemotePosition> GetClosPositions()
         {
             return GetPositions(false);
         }
@@ -82,6 +82,28 @@ namespace WebApp.Controllers
             }).ToList();
 
             return list;
+        }
+
+        [HttpPost("clear")]
+        [Authorize]
+        public IActionResult ClearPos()
+        {
+            var acc = _accountBL.GetRealAccount();
+            if (acc == null) return BadRequest();
+            
+            _positionBL.ClearPositions(acc.AccountID);
+            return Ok();
+        }
+
+        [HttpPost("refresh")]
+        [Authorize]
+        public IActionResult RefreshPos()
+        {
+            var acc = _accountBL.GetRealAccount();
+            if (acc == null) return BadRequest();
+
+            _positionBL.RefreshPositions(acc.AccountID);
+            return Ok();
         }
     }
 }

@@ -12,14 +12,12 @@ namespace Cli
     {
         private readonly IConsole _console;
         private readonly IInstrumBL _instrumBL;
-        private readonly IPositionBL _positionBL;
         private readonly IAccountDA _accountDA;
 
-        public PositionCtrl(IConsole console, IInstrumBL instrumBL, IPositionBL positionBL, IAccountDA accountDA)
+        public PositionCtrl(IConsole console, IInstrumBL instrumBL, IAccountDA accountDA)
         {
             _console = console;
             _instrumBL = instrumBL;
-            _positionBL = positionBL;
             _accountDA = accountDA;
         }
 
@@ -57,108 +55,6 @@ namespace Cli
             {
                 _console.WriteError(ex.ToString());
             }
-        }
-
-        public void RefreshPositions(List<string> args)
-        {
-            if (args.Count < 1)
-            {
-                _console.WriteError("Неверное число аргументов");
-                return;
-            }
-
-            int accountID;
-            if (!int.TryParse(args[0].Trim(), out accountID))
-            {
-                _console.WriteError("Неверно указан id счета");
-                return;
-            }
-
-            try
-            {
-                _positionBL.RefreshPositions(accountID);
-            }
-            catch (Exception ex)
-            {
-                _console.WriteError(ex.ToString());
-            }
-        }
-
-        public void GetPositions(List<string> args, bool isOpenOnly)
-        {
-            if (args.Count < 1)
-            {
-                _console.WriteError("Неверное число аргументов");
-                return;
-            }
-
-            int accountID;
-            if (!int.TryParse(args[0].Trim(), out accountID))
-            {
-                _console.WriteError("Неверно указан id счета");
-                return;
-            }
-
-            try
-            {
-                IEnumerable<Position> posList = null;
-                if (isOpenOnly)
-                {
-                    posList = _positionBL.GetOpenPositions(accountID);
-                }
-                else
-                {
-                    posList = _positionBL.GetAllPositions(accountID);
-                }
-
-                foreach (var pos in posList)
-                {
-                    PrintPosition(pos, _instrumBL);
-                }
-            }
-            catch (Exception ex)
-            {
-                _console.WriteError(ex.ToString());
-            }
-        }
-
-        public void ClearPositions(List<string> args)
-        {
-            if (args.Count < 1)
-            {
-                _console.WriteError("Неверное число аргументов");
-                return;
-            }
-
-            int accountID;
-            if (!int.TryParse(args[0].Trim(), out accountID))
-            {
-                _console.WriteError("Неверно указан id счета");
-                return;
-            }
-
-            try
-            {
-                _positionBL.ClearPositions(accountID);
-            }
-            catch (Exception ex)
-            {
-                _console.WriteError(ex.ToString());
-            }
-        }
-
-        private void PrintPosition(Position pos, IInstrumBL instrumBL)
-        {
-            var instrum = instrumBL.GetInstrumByID(pos.InsID);
-            if (instrum == null) return;
-            _console.WriteLine(string.Format("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}",
-                instrum.Ticker,
-                pos.OpenTime.ToString("dd.MM.yyyy HH:mm:ss"),
-                pos.OpenPrice.ToString(),
-                pos.Count.ToString(),
-                pos.PosType.ToString(),
-                pos.CloseTime != null ? pos.CloseTime.Value.ToString("dd.MM.yyyy HH:mm:ss") : "",
-                pos.ClosePrice != null ? pos.ClosePrice.Value.ToString() : ""));
         }
     }
 }

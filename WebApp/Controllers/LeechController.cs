@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using Common;
+﻿using Common;
 using Common.Interfaces;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Pulxer.Leech;
+using System.Text.RegularExpressions;
 
 namespace WebApp.Controllers
 {
@@ -57,6 +52,8 @@ namespace WebApp.Controllers
 
         [HttpGet("ident")]
         [Authorize]
+        [Produces("application/json")] // response
+        [Consumes("application/json")] // request        
         public string GetLeechIdentity()
         {
             var ls = _lsm.GetServer();

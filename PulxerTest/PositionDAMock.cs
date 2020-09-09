@@ -63,10 +63,12 @@ namespace PulxerTest
             return _posTrades.Where(r => posIDs.Contains(r.PosID));
         }
 
-        public IEnumerable<Position> GetPositions(int accountID, bool isOpenOnly)
+        public IEnumerable<Position> GetPositions(int accountID, bool? isOpened)
         {
-            if (isOpenOnly)
+            if (isOpened == true)
                 return _positions.Where(r => r.AccountID == accountID && r.CloseTime == null);
+            else if (isOpened == false)
+                return _positions.Where(r => r.AccountID == accountID && r.CloseTime != null);
             else
                 return _positions.Where(r => r.AccountID == accountID);
         }

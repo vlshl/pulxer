@@ -34,11 +34,10 @@ namespace Cli
             _console.WriteLine(string.Format("Leech instrums: {0}", instrums.Count().ToString()));
         }
 
-        public async void SyncLeech()
+        public async void SyncAllTrades()
         {
             try
             {
-                //await _importLeech.SyncAccountDataAsync();
                 await _importLeech.SyncAllTradesAsync();
             }
             catch (AggregateException ex)

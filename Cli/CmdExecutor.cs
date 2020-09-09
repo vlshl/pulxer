@@ -31,10 +31,10 @@ namespace Cli
             {
                 Help();
             }
-            else if (cmd == "sync-leech")
+            else if (cmd == "sync-alltrades")
             {
                 var leechCtrl = ActivatorUtilities.CreateInstance<LeechCtrl>(_sp);
-                leechCtrl.SyncLeech();
+                leechCtrl.SyncAllTrades();
             }
             else if (cmd == "list-leechinstrum")
             {
@@ -138,26 +138,6 @@ namespace Cli
                 var posCtrl = ActivatorUtilities.CreateInstance<PositionCtrl>(_sp);
                 posCtrl.LoadTrades(args);
             }
-            else if (cmd == "refresh-pos")
-            {
-                var posCtrl = ActivatorUtilities.CreateInstance<PositionCtrl>(_sp);
-                posCtrl.RefreshPositions(args);
-            }
-            else if (cmd == "clear-pos")
-            {
-                var posCtrl = ActivatorUtilities.CreateInstance<PositionCtrl>(_sp);
-                posCtrl.ClearPositions(args);
-            }
-            else if (cmd == "get-openpos")
-            {
-                var posCtrl = ActivatorUtilities.CreateInstance<PositionCtrl>(_sp);
-                posCtrl.GetPositions(args, true);
-            }
-            else if (cmd == "get-allpos")
-            {
-                var posCtrl = ActivatorUtilities.CreateInstance<PositionCtrl>(_sp);
-                posCtrl.GetPositions(args, false);
-            }
             else if (cmd == "list-user")
             {
                 var userCtrl = ActivatorUtilities.CreateInstance<UserCtrl>(_sp);
@@ -205,7 +185,7 @@ namespace Cli
             _console.WriteLine("Help - Список команд");
             _console.WriteLine("Exit - Выход");
             _console.WriteSeparator();
-            _console.WriteLine("Sync-Leech - Синхронизация данных из базы Leech");
+            _console.WriteLine("Sync-AllTrades - Синхронизация тиковых данных из базы Leech");
             _console.WriteLine("List-LeechInstrum - Список инструментов из базы Leech");
             _console.WriteLine("List-Instrum - Список инструментов из базы Pulxer");
             _console.WriteLine("Create-InsStores Tf Ticker Ticker ... - Создание потоков данных для указанных тикеров");
@@ -221,11 +201,6 @@ namespace Cli
             _console.WriteLine("TestRun tickSourceID testConfigID [AccountID] - Выполнение тестового прогона (запуск фонового процесса), если указан счет, то используется он, иначе создается новый");
             _console.WriteLine("TestRun Stop - Остановка тестового прогона");
             _console.WriteLine("Load-trades accountID xml-file - Ручная загрузка сделок из xml-файла");
-            _console.WriteSeparator();
-            _console.WriteLine("Refresh-Pos accountID - Обновление списка позиций по сделкам");
-            _console.WriteLine("Clear-Pos accountID - Очистка списка позиций по сделкам");
-            _console.WriteLine("Get-OpenPos accountID - Вывод списка открытых позиций");
-            _console.WriteLine("Get-AllPos accountID - Вывод полного списка позиций");
             _console.WriteSeparator();
             _console.WriteLine("List-TickSource - Список источников данных");
             _console.WriteLine("List-TestConfig - Список тестовых конфигураций");
