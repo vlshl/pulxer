@@ -25,13 +25,13 @@ namespace Common.Interfaces
         void UpdateHolding(Holding holding);
         void DeleteHolding(int holdingID);
 
-        IEnumerable<Order> GetOrders(int accountID, int? fromID = null);
+        IEnumerable<Order> GetOrders(int accountID, bool isActiveOnly = false, int? fromID = null);
         IEnumerable<Order> GetOrders(IEnumerable<int> ids);
         Order CreateOrder(int accountID, DateTime time, int insID, BuySell bs, int lotCount, decimal? price,
             OrderStatus status, int? stopOrderID, long orderNo);
         void UpdateOrder(Order order);
 
-        IEnumerable<StopOrder> GetStopOrders(int accountID, int? fromID = null);
+        IEnumerable<StopOrder> GetStopOrders(int accountID, bool isActiveOnly = false, int? fromID = null);
         IEnumerable<StopOrder> GetStopOrders(IEnumerable<int> ids);
         StopOrder CreateStopOrder(int accountID, DateTime time, int insID, BuySell bs, StopOrderType st, DateTime? endTime, decimal alertPrice, decimal? price,
             int lotCount, StopOrderStatus status, DateTime? completeTime, long stopOrderNo);

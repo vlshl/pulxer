@@ -224,13 +224,15 @@ namespace Storage
         /// Get Order list by account Id
         /// </summary>
         /// <param name="accountID">account Id</param>
+        /// <param name="isActiveOnly">true - only active status, false - all orders</param>
         /// <param name="fromID">Minimal order ID or null</param>
         /// <returns>Order list</returns>
-        public IEnumerable<Order> GetOrders(int accountID, int? fromID = null)
+        public IEnumerable<Order> GetOrders(int accountID, bool isActiveOnly = false, int? fromID = null)
         {
             using (var db = new DaContext(_options))
             {
                 var orders = db.Order.Where(r => r.AccountID == accountID);
+                if (isActiveOnly) orders = orders.Where(r => r.Status == OrderStatus.Active);
                 if (fromID != null) orders = orders.Where(r => r.OrderID >= fromID.Value);
 
                 return orders.ToList();
@@ -304,13 +306,15 @@ namespace Storage
         /// Get StopOrder list by account Id
         /// </summary>
         /// <param name="accountID">account Id</param>
+        /// <param name="isActiveOnly">true - active status only, false - all StopOrders</param>
         /// <param name="fromID">Minimal stoporder ID or null</param>
         /// <returns>StopOrder list</returns>
-        public IEnumerable<StopOrder> GetStopOrders(int accountID, int? fromID = null)
+        public IEnumerable<StopOrder> GetStopOrders(int accountID, bool isActiveOnly = false, int? fromID = null)
         {
             using (var db = new DaContext(_options))
             {
                 var stopOrders = db.StopOrder.Where(r => r.AccountID == accountID);
+                if (isActiveOnly) stopOrders = stopOrders.Where(r => r.Status == StopOrderStatus.Active);
                 if (fromID != null) stopOrders = stopOrders.Where(r => r.StopOrderID >= fromID.Value);
 
                 return stopOrders.ToList();

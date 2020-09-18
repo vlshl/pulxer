@@ -11,10 +11,12 @@ namespace Common.Interfaces
     {
         Task<Instrum[]> GetInstrumList();
         Task<Account[]> GetAccountList();
-        Task<StopOrder[]> GetStopOrderList(int accountID);
-        Task<Order[]> GetOrderList(int accountID);
-        Task<Trade[]> GetTradeList(int accountID);
-        Task<Cash> GetCash(int accountID);
-        Task<Holding[]> GetHoldingList(int accountID);
+        Task<StopOrder[]> GetStopOrders(int rAccountID, int fromId);
+        Task<StopOrder[]> GetStopOrders(int[] ids);
+        Task<Order[]> GetOrders(int rAccountID, int fromId);
+        Task<Order[]> GetOrders(int[] ids);
+        Task<Trade[]> GetTrades(int rAccountID, int fromId);
+        Task<Cash> GetCash(int rAccountID);
+        Task<Holding[]> GetHoldingList(int rAccountID);
     }
 }

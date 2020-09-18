@@ -73,10 +73,11 @@ namespace PulxerTest
         #endregion
 
         #region StopOrder
-        public IEnumerable<StopOrder> GetStopOrders(int accountID, int? fromID = null)
+        public IEnumerable<StopOrder> GetStopOrders(int accountID, bool isActiveOnly = false, int? fromID = null)
         {
             var list = _id_stopOrders.Values.Where(r => r.AccountID == accountID);
             if (fromID != null) list = list.Where(r => r.StopOrderID >= fromID.Value);
+            if (isActiveOnly) list = list.Where(r => r.Status == StopOrderStatus.Active);
             return list.ToList();
         }
 
@@ -117,10 +118,11 @@ namespace PulxerTest
         #endregion
 
         #region Order
-        public IEnumerable<Order> GetOrders(int accountID, int? fromID = null)
+        public IEnumerable<Order> GetOrders(int accountID, bool isActiveOnly = false, int? fromID = null)
         {
             var list = _id_orders.Values.Where(r => r.AccountID == accountID);
             if (fromID != null) list = list.Where(r => r.OrderID >= fromID.Value);
+            if (isActiveOnly) list = list.Where(r => r.Status == OrderStatus.Active);
             return list.ToList();
         }
 

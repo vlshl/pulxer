@@ -11,13 +11,15 @@ namespace WebApp.Controllers
     [ApiController]
     public class LeechController : ControllerBase
     {
-        private LeechServerManager _lsm;
-        private IImportLeech _importLeech;
+        private readonly LeechServerManager _lsm;
+        private readonly IImportLeech _importLeech;
+        private readonly IAccountBL _accountBL;
 
-        public LeechController(LeechServerManager lsm, IImportLeech importLeech)
+        public LeechController(LeechServerManager lsm, IImportLeech importLeech, IAccountBL accountBL)
         {
             _lsm = lsm;
             _importLeech = importLeech;
+            _accountBL = accountBL;
         }
 
         [HttpPost("sync")]
@@ -31,6 +33,25 @@ namespace WebApp.Controllers
             if (sps == null) return BadRequest();
 
             _importLeech.SyncAccountDataAsync(sps).Wait();
+            ls.DeleteSyncPipe().Wait();
+
+            return Ok();
+        }
+
+        [HttpPost("fastsync")]
+        [Authorize]
+        public IActionResult FastSync()
+        {
+            var ls = _lsm.GetServer();
+            if (ls == null) return BadRequest();
+
+            var sps = ls.CreateSyncPipe().Result;
+            if (sps == null) return BadRequest();
+
+            var acc = _accountBL.GetRealAccount();
+            if (acc == null) return null;
+
+            _importLeech.FastSyncAccountDataAsync(sps, acc.AccountID).Wait();
             ls.DeleteSyncPipe().Wait();
 
             return Ok();

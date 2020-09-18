@@ -54,9 +54,9 @@ namespace Pulxer.Leech
             }
         }
 
-        public async Task<StopOrder[]> GetStopOrderList(int accountId)
+        public async Task<StopOrder[]> GetStopOrders(int accountId, int fromId)
         {
-            var res = await _core.SendMessageAsync(_pipe, Encoding.UTF8.GetBytes("GetStopOrderList " + accountId.ToString()));
+            var res = await _core.SendMessageAsync(_pipe, Encoding.UTF8.GetBytes("GetStopOrders " + accountId.ToString() + " " + fromId.ToString()));
             if (res == null) return null;
 
             try
@@ -70,9 +70,26 @@ namespace Pulxer.Leech
             }
         }
 
-        public async Task<Order[]> GetOrderList(int accountId)
+        public async Task<StopOrder[]> GetStopOrders(int[] ids)
         {
-            var res = await _core.SendMessageAsync(_pipe, Encoding.UTF8.GetBytes("GetOrderList " + accountId.ToString()));
+            if (ids == null || !ids.Any()) return null;
+            var res = await _core.SendMessageAsync(_pipe, Encoding.UTF8.GetBytes("GetStopOrdersByIds " + string.Join(" ", ids)));
+            if (res == null) return null;
+
+            try
+            {
+                var data = Encoding.UTF8.GetString(res);
+                return JsonConvert.DeserializeObject<StopOrder[]>(data);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        public async Task<Order[]> GetOrders(int accountId, int fromId)
+        {
+            var res = await _core.SendMessageAsync(_pipe, Encoding.UTF8.GetBytes("GetOrders " + accountId.ToString() + " " + fromId.ToString()));
             if (res == null) return null;
 
             try
@@ -86,9 +103,26 @@ namespace Pulxer.Leech
             }
         }
 
-        public async Task<Trade[]> GetTradeList(int accountId)
+        public async Task<Order[]> GetOrders(int[] ids)
         {
-            var res = await _core.SendMessageAsync(_pipe, Encoding.UTF8.GetBytes("GetTradeList " + accountId.ToString()));
+            if (ids == null || !ids.Any()) return null;
+            var res = await _core.SendMessageAsync(_pipe, Encoding.UTF8.GetBytes("GetOrdersByIds " + string.Join(" ", ids)));
+            if (res == null) return null;
+
+            try
+            {
+                var data = Encoding.UTF8.GetString(res);
+                return JsonConvert.DeserializeObject<Order[]>(data);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        public async Task<Trade[]> GetTrades(int accountId, int fromId)
+        {
+            var res = await _core.SendMessageAsync(_pipe, Encoding.UTF8.GetBytes("GetTrades " + accountId.ToString() + " " + fromId.ToString()));
             if (res == null) return null;
 
             try

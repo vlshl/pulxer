@@ -108,12 +108,12 @@ namespace PulxerTest
             var trd2 = sps.AddTrade(ord2);
 
             // действительно добавили записи
-            Assert.True(sps.GetStopOrderList(r_accounts[0].AccountID).Result.Count() == 1);
-            Assert.True(sps.GetOrderList(r_accounts[0].AccountID).Result.Count() == 1);
-            Assert.True(sps.GetTradeList(r_accounts[0].AccountID).Result.Count() == 1);
-            Assert.True(sps.GetStopOrderList(r_accounts[1].AccountID).Result.Count() == 0);
-            Assert.True(sps.GetOrderList(r_accounts[1].AccountID).Result.Count() == 1);
-            Assert.True(sps.GetTradeList(r_accounts[1].AccountID).Result.Count() == 1);
+            Assert.True(sps.GetStopOrders(r_accounts[0].AccountID, 0).Result.Count() == 1);
+            Assert.True(sps.GetOrders(r_accounts[0].AccountID, 0).Result.Count() == 1);
+            Assert.True(sps.GetTrades(r_accounts[0].AccountID, 0).Result.Count() == 1);
+            Assert.True(sps.GetStopOrders(r_accounts[1].AccountID, 0).Result.Count() == 0);
+            Assert.True(sps.GetOrders(r_accounts[1].AccountID, 0).Result.Count() == 1);
+            Assert.True(sps.GetTrades(r_accounts[1].AccountID, 0).Result.Count() == 1);
 
             ImportLeech import = new ImportLeech(instrumDA, accountDA, null, null, replBL);
             import.SyncAccountDataAsync(sps).Wait();
@@ -123,12 +123,12 @@ namespace PulxerTest
             int l_acc0ID = repl_acc[r_accounts[0].AccountID];
             int l_acc1ID = repl_acc[r_accounts[1].AccountID];
 
-            CompareStopOrders(sps.GetStopOrderList(r_accounts[0].AccountID).Result, accountDA.GetStopOrders(l_acc0ID), replBL);
-            CompareStopOrders(sps.GetStopOrderList(r_accounts[1].AccountID).Result, accountDA.GetStopOrders(l_acc1ID), replBL);
-            CompareOrders(sps.GetOrderList(r_accounts[0].AccountID).Result, accountDA.GetOrders(l_acc0ID), replBL);
-            CompareOrders(sps.GetOrderList(r_accounts[1].AccountID).Result, accountDA.GetOrders(l_acc1ID), replBL);
-            CompareTrades(sps.GetTradeList(r_accounts[0].AccountID).Result, accountDA.GetTrades(l_acc0ID), replBL);
-            CompareTrades(sps.GetTradeList(r_accounts[1].AccountID).Result, accountDA.GetTrades(l_acc1ID), replBL);
+            CompareStopOrders(sps.GetStopOrders(r_accounts[0].AccountID, 0).Result, accountDA.GetStopOrders(l_acc0ID), replBL);
+            CompareStopOrders(sps.GetStopOrders(r_accounts[1].AccountID, 0).Result, accountDA.GetStopOrders(l_acc1ID), replBL);
+            CompareOrders(sps.GetOrders(r_accounts[0].AccountID, 0).Result, accountDA.GetOrders(l_acc0ID), replBL);
+            CompareOrders(sps.GetOrders(r_accounts[1].AccountID, 0).Result, accountDA.GetOrders(l_acc1ID), replBL);
+            CompareTrades(sps.GetTrades(r_accounts[0].AccountID, 0).Result, accountDA.GetTrades(l_acc0ID), replBL);
+            CompareTrades(sps.GetTrades(r_accounts[1].AccountID, 0).Result, accountDA.GetTrades(l_acc1ID), replBL);
 
             // еще добавили данных
             var so3 = sps.AddStopOrder(r_accounts[0].AccountID, r_instrums[0].InsID, Platform.BuySell.Sell, Platform.StopOrderType.TakeProfit, 2000, 2);
@@ -141,12 +141,12 @@ namespace PulxerTest
             import.SyncAccountDataAsync(sps).Wait();
 
             // и снова сравнили
-            CompareStopOrders(sps.GetStopOrderList(r_accounts[0].AccountID).Result, accountDA.GetStopOrders(l_acc0ID), replBL);
-            CompareStopOrders(sps.GetStopOrderList(r_accounts[1].AccountID).Result, accountDA.GetStopOrders(l_acc1ID), replBL);
-            CompareOrders(sps.GetOrderList(r_accounts[0].AccountID).Result, accountDA.GetOrders(l_acc0ID), replBL);
-            CompareOrders(sps.GetOrderList(r_accounts[1].AccountID).Result, accountDA.GetOrders(l_acc1ID), replBL);
-            CompareTrades(sps.GetTradeList(r_accounts[0].AccountID).Result, accountDA.GetTrades(l_acc0ID), replBL);
-            CompareTrades(sps.GetTradeList(r_accounts[1].AccountID).Result, accountDA.GetTrades(l_acc1ID), replBL);
+            CompareStopOrders(sps.GetStopOrders(r_accounts[0].AccountID, 0).Result, accountDA.GetStopOrders(l_acc0ID), replBL);
+            CompareStopOrders(sps.GetStopOrders(r_accounts[1].AccountID, 0).Result, accountDA.GetStopOrders(l_acc1ID), replBL);
+            CompareOrders(sps.GetOrders(r_accounts[0].AccountID, 0).Result, accountDA.GetOrders(l_acc0ID), replBL);
+            CompareOrders(sps.GetOrders(r_accounts[1].AccountID, 0).Result, accountDA.GetOrders(l_acc1ID), replBL);
+            CompareTrades(sps.GetTrades(r_accounts[0].AccountID, 0).Result, accountDA.GetTrades(l_acc0ID), replBL);
+            CompareTrades(sps.GetTrades(r_accounts[1].AccountID, 0).Result, accountDA.GetTrades(l_acc1ID), replBL);
 
             // изменили записи
             so3.Status = StopOrderStatus.Reject;
@@ -156,12 +156,12 @@ namespace PulxerTest
             import.SyncAccountDataAsync(sps).Wait();
 
             // и снова сравнили
-            CompareStopOrders(sps.GetStopOrderList(r_accounts[0].AccountID).Result, accountDA.GetStopOrders(l_acc0ID), replBL);
-            CompareStopOrders(sps.GetStopOrderList(r_accounts[1].AccountID).Result, accountDA.GetStopOrders(l_acc1ID), replBL);
-            CompareOrders(sps.GetOrderList(r_accounts[0].AccountID).Result, accountDA.GetOrders(l_acc0ID), replBL);
-            CompareOrders(sps.GetOrderList(r_accounts[1].AccountID).Result, accountDA.GetOrders(l_acc1ID), replBL);
-            CompareTrades(sps.GetTradeList(r_accounts[0].AccountID).Result, accountDA.GetTrades(l_acc0ID), replBL);
-            CompareTrades(sps.GetTradeList(r_accounts[1].AccountID).Result, accountDA.GetTrades(l_acc1ID), replBL);
+            CompareStopOrders(sps.GetStopOrders(r_accounts[0].AccountID, 0).Result, accountDA.GetStopOrders(l_acc0ID), replBL);
+            CompareStopOrders(sps.GetStopOrders(r_accounts[1].AccountID, 0).Result, accountDA.GetStopOrders(l_acc1ID), replBL);
+            CompareOrders(sps.GetOrders(r_accounts[0].AccountID, 0).Result, accountDA.GetOrders(l_acc0ID), replBL);
+            CompareOrders(sps.GetOrders(r_accounts[1].AccountID, 0).Result, accountDA.GetOrders(l_acc1ID), replBL);
+            CompareTrades(sps.GetTrades(r_accounts[0].AccountID, 0).Result, accountDA.GetTrades(l_acc0ID), replBL);
+            CompareTrades(sps.GetTrades(r_accounts[1].AccountID, 0).Result, accountDA.GetTrades(l_acc1ID), replBL);
         }
 
         [Fact]

@@ -97,9 +97,14 @@ namespace PulxerTest
         #endregion
 
         #region StopOrder
-        public Task<StopOrder[]> GetStopOrderList(int accountID)
+        public Task<StopOrder[]> GetStopOrders(int accountID, int fromId)
         {
-            return Task.Run(() => { return _stopOrders.Where(r => r.AccountID == accountID).ToArray(); });
+            return Task.Run(() => { return _stopOrders.Where(r => r.AccountID == accountID && r.StopOrderID >= fromId).ToArray(); });
+        }
+
+        public Task<StopOrder[]> GetStopOrders(int[] ids)
+        {
+            return Task.Run(() => { return _stopOrders.Where(r => ids.Contains(r.StopOrderID)).ToArray(); });
         }
 
         public StopOrder AddStopOrder(int accountID, int insID, BuySell bs, StopOrderType st, decimal price, int lots)
@@ -127,9 +132,14 @@ namespace PulxerTest
         #endregion
 
         #region Order
-        public Task<Order[]> GetOrderList(int accountID)
+        public Task<Order[]> GetOrders(int accountID, int fromId)
         {
-            return Task.Run(() => { return _orders.Where(r => r.AccountID == accountID).ToArray(); });
+            return Task.Run(() => { return _orders.Where(r => r.AccountID == accountID && r.OrderID >= fromId).ToArray(); });
+        }
+
+        public Task<Order[]> GetOrders(int[] ids)
+        {
+            return Task.Run(() => { return _orders.Where(r => ids.Contains(r.OrderID)).ToArray(); });
         }
 
         public Order AddOrder(int accountID, int insID, BuySell bs, decimal price, int lots)
@@ -174,9 +184,9 @@ namespace PulxerTest
         #endregion
 
         #region Trade
-        public Task<Trade[]> GetTradeList(int accountID)
+        public Task<Trade[]> GetTrades(int rAccountID, int fromId)
         {
-            return Task.Run(() => { return _trades.Where(r => r.AccountID == accountID).ToArray(); });
+            return Task.Run(() => { return _trades.Where(r => r.AccountID == rAccountID && r.TradeID >= fromId).ToArray(); });
         }
 
         public Trade AddTrade(Order ord)

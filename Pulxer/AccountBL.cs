@@ -145,7 +145,7 @@ namespace Pulxer
         /// <returns>Список заявок</returns>
         public IEnumerable<Order> GetOrders(int accountID, int? fromID = null)
         {
-            return _accountDA.GetOrders(accountID, fromID);
+            return _accountDA.GetOrders(accountID, false, fromID);
         }
 
         /// <summary>
@@ -168,7 +168,7 @@ namespace Pulxer
         /// <returns>Список заявок</returns>
         public IEnumerable<StopOrder> GetStopOrders(int accountID, int? fromID = null)
         {
-            return _accountDA.GetStopOrders(accountID, fromID);
+            return _accountDA.GetStopOrders(accountID, false, fromID);
         }
 
         /// <summary>
