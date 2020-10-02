@@ -1,7 +1,8 @@
-﻿using System;
+﻿using Platform;
+using System;
 using System.Xml;
 
-namespace Platform
+namespace Pulxer.Drawing
 {
     public class PenSeriesProps : ISeriesProps
     {

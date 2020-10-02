@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Common\Common.csproj" />
+    <ProjectReference Include="..\Indic\Indic.csproj" />
     <ProjectReference Include="..\LeechPipe\LeechPipe.csproj" />
     <ProjectReference Include="..\Platform\Platform.csproj" />
     <ProjectReference Include="..\Storage\Storage.csproj" />
@@ -14,6 +15,7 @@
   <ItemGroup>
     <Folder Include="History\" />
     <Folder Include="HistoryProvider\" />
+    <Folder Include="Indicators\" />
   </ItemGroup>
 
   <ItemGroup>

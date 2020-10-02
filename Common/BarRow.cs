@@ -103,6 +103,29 @@ namespace Common
             }
         }
 
+        public ITickDispatcher TickDispatcher
+        {
+            get
+            {
+                return _tDisp;
+            }
+            set
+            {
+                if (_tDisp == value) return;
+
+                if (value != null)
+                {
+                    _tDisp = value;
+                    _tDisp.Subscribe(this, _insID, Td_Tick);
+                }
+                else
+                {
+                    if (_tDisp != null) _tDisp.Unsubscribe(this, _insID);
+                    _tDisp = value;
+                }
+            }
+        }
+
         void TSource_Tick(Tick tick)
         {
             if (tick.InsID == _insID)

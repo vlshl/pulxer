@@ -1,4 +1,5 @@
 ﻿using Platform;
+using Pulxer.Drawing;
 using System.Xml;
 using Xunit;
 

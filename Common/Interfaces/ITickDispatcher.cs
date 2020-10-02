@@ -56,5 +56,11 @@ namespace Common.Interfaces
         /// <param name="insID">Инструмент</param>
         /// <returns></returns>
         IEnumerable<Tick> GetTicks(int insID);
+
+        /// <summary>
+        /// Дата последней сделки (без времени)
+        /// </summary>
+        DateTime? CurrentDate { get; }
     }
+
 }

@@ -1,6 +1,7 @@
 ﻿using Platform;
 using System.IO;
 using System.Xml;
+using Pulxer.Drawing;
 
 namespace Pulxer
 {
