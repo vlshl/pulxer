@@ -19,4 +19,14 @@ namespace Storage.DbModel
         public int InsStoreID { get; set; }
         public DateTime Date { get; set; }
     }
+
+    public class DbChart
+    {
+        public int ChartID { get; set; }
+        public int InsID { get; set; }
+        public byte Tf { get; set; }
+        public int AccountID { get; set; }
+        public string Data { get; set; }
+    }
+
 }

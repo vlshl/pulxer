@@ -40,6 +40,7 @@ namespace Storage
         public DbSet<ReposObject> Repository { get; set; }
         public DbSet<Series> Series { get; set; }
         public DbSet<SeriesValue> SeriesValue { get; set; }
+        public DbSet<DbChart> Chart { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -247,6 +248,15 @@ namespace Storage
             seriesValueBuilder.Property(p => p.Value).HasColumnName("value");
             seriesValueBuilder.Property(p => p.EndValue).HasColumnName("end_value");
             seriesValueBuilder.Property(p => p.Data).HasColumnName("data");
+
+            // Chart
+            var chartBuilder = modelBuilder.Entity<DbChart>().ToTable("chart");
+            chartBuilder.HasKey(r => r.ChartID);
+            chartBuilder.Property(p => p.ChartID).HasColumnName("chart_id");
+            chartBuilder.Property(p => p.InsID).HasColumnName("ins_id");
+            chartBuilder.Property(p => p.Tf).HasColumnName("tf");
+            chartBuilder.Property(p => p.AccountID).HasColumnName("account_id");
+            chartBuilder.Property(p => p.Data).HasColumnName("data");
         }
     }
 }

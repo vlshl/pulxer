@@ -36,6 +36,7 @@ namespace Pulxer
             services.AddTransient<ISyncBL, SyncBL>();
             services.AddTransient<IUserBL, UserBL>();
             services.AddTransient<IRepositoryBL, RepositoryBL>();
+            services.AddTransient<IDependencyManager, DependencyManager>();
         }
     }
 }
