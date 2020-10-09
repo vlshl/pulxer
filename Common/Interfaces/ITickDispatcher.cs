@@ -58,9 +58,9 @@ namespace Common.Interfaces
         IEnumerable<Tick> GetTicks(int insID);
 
         /// <summary>
-        /// Дата текущей торговой сессии (без времени)
+        /// Дата последней сделки (без времени)
         /// </summary>
-        DateTime CurrentDate { get; }
+        DateTime? CurrentDate { get; }
     }
 
 }

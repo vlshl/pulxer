@@ -2,7 +2,6 @@
 using Common.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Pulxer.Drawing;
 using Pulxer.History;
 using Pulxer.HistoryProvider;
 using Pulxer.Leech;
@@ -21,13 +20,11 @@ namespace Pulxer
             services.AddSingleton<IConfig>(new Config(confSection)); 
             services.AddSingleton<ILogger, Logger>();
             services.AddSingleton<LeechServerManager>();
-            services.AddSingleton<ChartManagerCache>();
-            services.AddSingleton<IHistoryProvider, FinamHistoryProvider>();
-            services.AddSingleton<ITickDispatcher, TickDispatcher>();
 
             services.AddTransient<IInstrumBL, InstrumBL>();
             services.AddTransient<IInsStoreBL, InsStoreBL>();
             services.AddTransient<IImportLeech, ImportLeech>();
+            services.AddSingleton<IHistoryProvider, FinamHistoryProvider>();
             services.AddTransient<IRequester, Requester>();
             services.AddTransient<ITestConfigBL, TestConfigBL>();
             services.AddTransient<ITickSourceBL, TickSourceBL>();
@@ -40,7 +37,6 @@ namespace Pulxer
             services.AddTransient<IUserBL, UserBL>();
             services.AddTransient<IRepositoryBL, RepositoryBL>();
             services.AddTransient<IDependencyManager, DependencyManager>();
-            services.AddTransient<ChartSystem>();
         }
     }
 }
