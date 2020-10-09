@@ -23,7 +23,7 @@ namespace Pulxer.Drawing
         private readonly IInsStoreBL _insStoreBL;
         private readonly IAccountDA _accountDA;
 
-        private DateTime? _startDate;
+        private DateTime _startDate;
         private DateTime _endDate;
         private List<IndicatorBase> _indicators = new List<IndicatorBase>();
         private IFactory _factory = null;
@@ -38,14 +38,14 @@ namespace Pulxer.Drawing
         /// </summary>
         /// <param name="instrumBL">Подсистема фин. инструментов</param>
         /// <param name="td">Диспетчер потока данных по сделкам</param>
-        public ChartManager(IInstrumBL instrumBL, IInsStoreBL insStoreBL, IAccountDA accountDA, ITickDispatcher td, IDependencyManager depManager)
+        public ChartManager(IInstrumBL instrumBL, IInsStoreBL insStoreBL, IAccountDA accountDA, ITickDispatcher td)
         {
             _instrumBL = instrumBL;
             _insStoreBL = insStoreBL;
             _accountDA = accountDA;
             _tickDispatcher = td;
-            _factory = new Factory(_srcProv, depManager);
-            _depManager = depManager;
+            _depManager = new DependencyManager();
+            _factory = new Factory(_srcProv, _depManager);
         }
 
         /// <summary>
@@ -53,19 +53,17 @@ namespace Pulxer.Drawing
         /// То есть динамическое изменение цены не предусмотрено.
         /// </summary>
         /// <param name="instrumBL">Подсистема фин. инструментов</param>
-        /// <param name="startDate">Первый день отображаемых данных, если null, то вычисляется автоматически исходя из конечной даты и таймфрейма</param>
+        /// <param name="startDate">Первый день отображаемых данных</param>
         /// <param name="endDate">Последний день отображаемых данных</param>
-        /// <param name="ersProv">Провайдер источника событий</param>
-        public ChartManager(IInstrumBL instrumBL, IInsStoreBL insStoreBL, IAccountDA accountDA, DateTime? startDate, DateTime endDate, 
-            IDependencyManager depManager)
+        public ChartManager(IInstrumBL instrumBL, IInsStoreBL insStoreBL, IAccountDA accountDA, DateTime startDate, DateTime endDate)
         {
             _instrumBL = instrumBL;
             _insStoreBL = insStoreBL;
             _accountDA = accountDA;
-            _startDate = startDate != null ? startDate.Value.Date : (DateTime?)null;
+            _startDate = startDate.Date;
             _endDate = endDate.Date;
-            _factory = new Factory(_srcProv, depManager);
-            _depManager = depManager;
+            _depManager = new DependencyManager();
+            _factory = new Factory(_srcProv, _depManager);
         }
 
         /// <summary>
@@ -151,25 +149,27 @@ namespace Pulxer.Drawing
         /// <returns></returns>
         public async Task LoadHistoryAsync()
         {
-            DateTime end = DateTime.MinValue;
-            if (_tickDispatcher != null && _tickDispatcher.CurrentDate != null)
-                end = _tickDispatcher.CurrentDate.Value.AddDays(-1);
+            DateTime start, end;
+            if (_tickDispatcher != null)
+            {
+                end = _tickDispatcher.CurrentDate.AddDays(-1);
+            }
             else
+            {
                 end = _endDate;
-            if (end == DateTime.MinValue) return;
+            }
 
             foreach (var psrc in _guid_source.Values)
             {
                 if (psrc.Bars.Count > 0) continue; // история уже загружена
 
-                DateTime start;
-                if (_startDate != null)
+                if (_tickDispatcher != null)
                 {
-                    start = _startDate.Value;
+                    start = _insStoreBL.GetDefaultStartHistoryDate(end, psrc.Bars.Timeframe);
                 }
                 else
-                { 
-                    start = _insStoreBL.GetDefaultStartHistoryDate(end, psrc.Bars.Timeframe);
+                {
+                    start = _startDate;
                 }
                 await _insStoreBL.LoadHistoryAsync(psrc.Bars, psrc.Instrum.InsID, start, end);
                 if (_tickDispatcher != null) psrc.Bars.TickDispatcher = _tickDispatcher;
