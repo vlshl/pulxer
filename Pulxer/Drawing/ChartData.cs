@@ -2,6 +2,7 @@
 using Platform;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Pulxer.Drawing
@@ -20,13 +21,15 @@ namespace Pulxer.Drawing
 
         private Timeline _timeline = null;
         private int _digits = 0;
-        private List<IVisual> _leftVisuals = new List<IVisual>();
-        private List<IVisual> _rightVisuals = new List<IVisual>();
+        private Dictionary<int, IVisual> _leftVisuals = new Dictionary<int, IVisual>();
+        private Dictionary<int, IVisual> _rightVisuals = new Dictionary<int, IVisual>();
+        private int _visualKey;
 
         public ChartData(Timeline tl, int digits)
         {
             _timeline = tl;
             _digits = digits;
+            _visualKey = 0;
         }
 
         /// <summary>
@@ -63,7 +66,7 @@ namespace Pulxer.Drawing
 
             PriceChart vis = new PriceChart(bars, brush);
             vis.Changed += vis_Changed;
-            if (isLeftAxis) _leftVisuals.Add(vis); else _rightVisuals.Add(vis);
+            if (isLeftAxis) _leftVisuals.Add(_visualKey++, vis); else _rightVisuals.Add(_visualKey++, vis);
         }
 
         /// <summary>
@@ -74,7 +77,14 @@ namespace Pulxer.Drawing
         public void AddVisual(IVisual vis, bool isLeftAxis = false)
         {
             vis.Changed += vis_Changed;
-            if (isLeftAxis) _leftVisuals.Add(vis); else _rightVisuals.Add(vis);
+            if (isLeftAxis)
+            {
+                if (!_leftVisuals.ContainsValue(vis)) _leftVisuals.Add(_visualKey++, vis);
+            }
+            else
+            {
+                if (!_rightVisuals.ContainsValue(vis)) _rightVisuals.Add(_visualKey++, vis);
+            }
         }
 
         /// <summary>
@@ -84,8 +94,19 @@ namespace Pulxer.Drawing
         public void RemoveVisual(IVisual vis)
         {
             vis.Changed -= vis_Changed;
-            _leftVisuals.Remove(vis);
-            _rightVisuals.Remove(vis);
+
+            if (_leftVisuals.ContainsValue(vis))
+            {
+                var pair = _leftVisuals.FirstOrDefault(r => r.Value == vis);
+                _leftVisuals.Remove(pair.Key);
+            }
+
+            if (_rightVisuals.ContainsValue(vis))
+            {
+                var pair = _rightVisuals.FirstOrDefault(r => r.Value == vis);
+                _rightVisuals.Remove(pair.Key);
+            }
+
             if (OnRedraw != null) OnRedraw();
         }
 
@@ -101,7 +122,7 @@ namespace Pulxer.Drawing
         {
             get
             {
-                return _leftVisuals;
+                return _leftVisuals.Values;
             }
         }
 
@@ -112,9 +133,50 @@ namespace Pulxer.Drawing
         {
             get
             {
-                return _rightVisuals;
+                return _rightVisuals.Values;
             }
         }
+
+        /// <summary>
+        /// Get all visuals
+        /// </summary>
+        /// <param name="isLeftAxis">true - left visuals, false (def) - right visuals</param>
+        /// <returns></returns>
+        public KeyValuePair<int, IVisual>[] GetVisuals(bool isLeftAxis = false)
+        {
+            if (isLeftAxis)
+            {
+                return _leftVisuals.ToArray();
+            }
+            else
+            {
+                return _rightVisuals.ToArray();
+            }
+        }
+
+        /// <summary>
+        /// Get visual
+        /// </summary>
+        /// <param name="key">Key of visual</param>
+        /// <returns></returns>
+        public IVisual GetVisual(int key)
+        {
+            if (_rightVisuals.ContainsKey(key)) return _rightVisuals[key];
+            if (_leftVisuals.ContainsKey(key)) return _leftVisuals[key];
+            return null;
+        }
+
+        //public IVisual GetLeftVisual(int key)
+        //{
+        //    if (!_leftVisuals.ContainsKey(key)) return null;
+        //    return _leftVisuals[key];
+        //}
+
+        //public IVisual GetRigthVisual(int key)
+        //{
+        //    if (!_leftVisuals.ContainsKey(key)) return null;
+        //    return _leftVisuals[key];
+        //}
     }
 
     /// <summary>
@@ -122,10 +184,10 @@ namespace Pulxer.Drawing
     /// </summary>
     public class ChartBrush
     {
-        public byte Red;
-        public byte Green;
-        public byte Blue;
-        public byte Alpha;
+        public byte Red { get; set; }
+        public byte Green { get; set; }
+        public byte Blue { get; set; }
+        public byte Alpha { get; set; }
 
         public ChartBrush(byte r, byte g, byte b, byte a = 255)
         {

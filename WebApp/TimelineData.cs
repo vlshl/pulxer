@@ -12,13 +12,13 @@ namespace WebApp
         public Timeframes Timeframe { get; set; }
         public int[] Increments { get; set; }
 
-        public static TimelineData Generate(Timeline timeline, int from = 0, int count = 100)
+        public static TimelineData Generate(Timeline timeline, int from, int? count)
         {
             if (from < 0) from = 0;
-            if (count < 0) count = 100;
+            if (count != null && count.Value < 0) count = 0;
             if (from >= timeline.Count) return null;
             int rest = timeline.Count - from;
-            if (count > rest) count = rest;
+            if (count == null || count.Value > rest) count = rest;
             List<int> incs = new List<int>();
 
             TimelineData data = new TimelineData();
@@ -39,18 +39,16 @@ namespace WebApp
                 case Timeframes.Week: s = TimeSpan.TicksPerDay * 7; break;
             }
 
-            // неправильно
             DateTime cur = data.StartTime;
             int lastInc = -1; int lastIncCount = 0;
             for (int i = from + 1; i < from + count; i++)
             {
                 DateTime time = timeline.Start(i).Value;
                 int inc = (int)((time.Ticks - cur.Ticks) / s);
-                
-                if (inc != lastInc)
+                if (inc != lastInc && lastInc >= 0)
                 {
-                    incs.Add(inc);
-                    if (lastInc >= 0) incs.Add(lastIncCount);
+                    incs.Add(lastInc);
+                    incs.Add(lastIncCount);
                     lastIncCount = 1;
                 }
                 else
@@ -58,9 +56,11 @@ namespace WebApp
                     lastIncCount++;
                 }
                 lastInc = inc;
-
                 cur = time;
             }
+
+            incs.Add(lastInc);
+            incs.Add(lastIncCount);
             data.Increments = incs.ToArray();
 
             return data;

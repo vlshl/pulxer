@@ -34,6 +34,15 @@ namespace Pulxer.Drawing
         }
 
         /// <summary>
+        /// Get Bars list
+        /// </summary>
+        /// <returns></returns>
+        public BarRow GetBars()
+        {
+            return _bars;
+        }
+
+        /// <summary>
         /// The last price (current close price of last bar)
         /// </summary>
         public decimal? LastPrice
