@@ -21,14 +21,16 @@ namespace Pulxer.Drawing
 
         private Timeline _timeline = null;
         private int _digits = 0;
+        private bool _isDynamic = false;
         private Dictionary<int, IVisual> _leftVisuals = new Dictionary<int, IVisual>();
         private Dictionary<int, IVisual> _rightVisuals = new Dictionary<int, IVisual>();
         private int _visualKey;
 
-        public ChartData(Timeline tl, int digits)
+        public ChartData(Timeline tl, int digits, bool isDynamic)
         {
             _timeline = tl;
             _digits = digits;
+            _isDynamic = isDynamic;
             _visualKey = 0;
         }
 
@@ -51,6 +53,17 @@ namespace Pulxer.Drawing
             get
             {
                 return _digits;
+            }
+        }
+
+        /// <summary>
+        /// Динамический график или статический
+        /// </summary>
+        public bool IsDynamic
+        {
+            get
+            {
+                return _isDynamic;
             }
         }
 

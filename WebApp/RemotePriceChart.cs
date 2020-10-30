@@ -6,19 +6,19 @@ using System.Threading.Tasks;
 
 namespace WebApp
 {
-    public class PriceChartData
+    public class RemotePriceChart
     {
         public ChartBrush Brush { get; set; }
         public long StartPrice { get; set; }
         public int Decimals { get; set; }
         public long[] Diffs { get; set; }
 
-        public static PriceChartData Generate(int key, int decimals, ChartData chartData)
+        public static RemotePriceChart Generate(int key, int decimals, ChartData chartData, int from)
         {
             var pc = chartData.GetVisual(key) as PriceChart;
             if (pc == null) return null;
 
-            var data = new PriceChartData();
+            var data = new RemotePriceChart();
             var br = pc.GetBars();
             if (br == null) return null;
 
@@ -39,7 +39,7 @@ namespace WebApp
             else if (decimals == 9) k = 1000000000;
             else if (decimals == 10) k = 1000000000;
 
-            var bars = br.Bars;
+            var bars = br.Bars.Skip(from);
             if (!bars.Any()) return data;
 
             data.StartPrice = (long)(bars.First().Open * k);

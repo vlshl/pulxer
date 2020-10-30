@@ -81,23 +81,23 @@ namespace Platform
                     d2 = d1.AddMinutes(1);
                     break;
                 case Timeframes.Min5:
-                    d1 = new DateTime(date.Year, date.Month, date.Day, date.Hour, date.Minute, 0);
+                    d1 = new DateTime(date.Year, date.Month, date.Day, date.Hour, (date.Minute / 5) * 5, 0);
                     d2 = d1.AddMinutes(5);
                     break;
                 case Timeframes.Min10:
-                    d1 = new DateTime(date.Year, date.Month, date.Day, date.Hour, date.Minute, 0);
+                    d1 = new DateTime(date.Year, date.Month, date.Day, date.Hour, (date.Minute / 10) * 10, 0);
                     d2 = d1.AddMinutes(10);
                     break;
                 case Timeframes.Min15:
-                    d1 = new DateTime(date.Year, date.Month, date.Day, date.Hour, date.Minute, 0);
+                    d1 = new DateTime(date.Year, date.Month, date.Day, date.Hour, (date.Minute / 15) * 15, 0);
                     d2 = d1.AddMinutes(15);
                     break;
                 case Timeframes.Min20:
-                    d1 = new DateTime(date.Year, date.Month, date.Day, date.Hour, date.Minute, 0);
+                    d1 = new DateTime(date.Year, date.Month, date.Day, date.Hour, (date.Minute / 20) * 20, 0);
                     d2 = d1.AddMinutes(20);
                     break;
                 case Timeframes.Min30:
-                    d1 = new DateTime(date.Year, date.Month, date.Day, date.Hour, date.Minute, 0);
+                    d1 = new DateTime(date.Year, date.Month, date.Day, date.Hour, (date.Minute / 30) * 30, 0);
                     d2 = d1.AddMinutes(30);
                     break;
                 case Timeframes.Hour:

@@ -6,13 +6,13 @@ using System.Threading.Tasks;
 
 namespace WebApp
 {
-    public class TimelineData
+    public class RemoteTimeline
     {
         public DateTime StartTime { get; set; }
         public Timeframes Timeframe { get; set; }
         public int[] Increments { get; set; }
 
-        public static TimelineData Generate(Timeline timeline, int from, int? count)
+        public static RemoteTimeline Generate(Timeline timeline, int from, int? count = null)
         {
             if (from < 0) from = 0;
             if (count != null && count.Value < 0) count = 0;
@@ -21,7 +21,7 @@ namespace WebApp
             if (count == null || count.Value > rest) count = rest;
             List<int> incs = new List<int>();
 
-            TimelineData data = new TimelineData();
+            RemoteTimeline data = new RemoteTimeline();
             data.StartTime = timeline.Start(from).Value;
             data.Timeframe = timeline.Timeframe;
             

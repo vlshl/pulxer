@@ -31,6 +31,7 @@ namespace Pulxer.Drawing
         private IValueRowSourcesProvider _srcProv = new ValueRowSourceProvider();
         private Equity _equity = null;
         private EquityIndicator _eqIndic = null;
+        private bool _isDynamic;
 
         /// <summary>
         /// Используется для динамических графиков.
@@ -46,6 +47,7 @@ namespace Pulxer.Drawing
             _tickDispatcher = td;
             _depManager = new DependencyManager();
             _factory = new Factory(_srcProv, _depManager);
+            _isDynamic = true;
         }
 
         /// <summary>
@@ -64,6 +66,7 @@ namespace Pulxer.Drawing
             _endDate = endDate.Date;
             _depManager = new DependencyManager();
             _factory = new Factory(_srcProv, _depManager);
+            _isDynamic = false;
         }
 
         /// <summary>
@@ -127,7 +130,7 @@ namespace Pulxer.Drawing
         private void CreateBarRowSource(Instrum ins, Timeframes tf, string guid)
         {
             BarRow bars = new BarRow(tf, ins.InsID);
-            _chartData = new ChartData(bars.Dates, ins.Decimals);
+            _chartData = new ChartData(bars.Dates, ins.Decimals, _isDynamic);
             _chartData.AddPrices(bars, new ChartBrush(0, 0, 0));
             _guid_source.Add(guid, new PriceSource() { Bars = bars, Instrum = ins });
 

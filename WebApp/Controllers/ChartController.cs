@@ -19,24 +19,22 @@ namespace WebApp.Controllers
             _instrumBL = instrumBL;
         }
 
-        [HttpGet("{accountID}/{instrumId}/{timeframe}/timeline/{from?}/{count?}")]
+        [HttpGet("{accountID}/{instrumId}/{timeframe}/timeline/{from?}")]
         [Authorize]
-        public TimelineData GetTimelineData(int accountID, int instrumId, int timeframe, int from = 0, int? count = null)
+        public RemoteTimeline GetRemoteTimeline(int accountID, int instrumId, int timeframe, int from = 0)
         {
             var cm = _chartSystem.GetChartManager(accountID, instrumId, (Timeframes)timeframe);
             if (cm == null) return null;
 
-            cm.LoadHistoryAsync().Wait(); //?????????????????
-
             var chartData = cm.GetChartData();
             if (chartData == null || chartData.Timeline == null) return null;
 
-            return TimelineData.Generate(chartData.Timeline, from, count);
+            return RemoteTimeline.Generate(chartData.Timeline, from);
         }
 
-        [HttpGet("{accountID}/{instrumId}/{timeframe}/visuals")]
+        [HttpGet("{accountID}/{instrumId}/{timeframe}/chartdata")]
         [Authorize]
-        public VisualData[] GetVisualData(int accountID, int instrumId, int timeframe)
+        public RemoteChartData GetChartData(int accountID, int instrumId, int timeframe)
         {
             var cm = _chartSystem.GetChartManager(accountID, instrumId, (Timeframes)timeframe);
             if (cm == null) return null;
@@ -44,12 +42,12 @@ namespace WebApp.Controllers
             var chartData = cm.GetChartData();
             if (chartData == null) return null;
 
-            return VisualData.Generate(chartData);
+            return RemoteChartData.Generate(chartData);
         }
 
-        [HttpGet("{accountID}/{instrumId}/{timeframe}/pricechart/{key}")]
+        [HttpGet("{accountID}/{instrumId}/{timeframe}/pricechart/{key}/{from?}")]
         [Authorize]
-        public PriceChartData GetPriceChartData(int accountID, int instrumId, int timeframe, int key)
+        public RemotePriceChart GetRemotePriceChart(int accountID, int instrumId, int timeframe, int key, int from = 0)
         {
             var instrum = _instrumBL.GetInstrumByID(instrumId);
             if (instrum == null) return null;
@@ -61,7 +59,7 @@ namespace WebApp.Controllers
             if (chartData == null) return null;
 
 
-            return PriceChartData.Generate(key, instrum.Decimals, chartData);
+            return RemotePriceChart.Generate(key, instrum.Decimals, chartData, from);
         }
     }
 }
