@@ -68,12 +68,14 @@ namespace Pulxer.Leech
             return _tickPipeServer;
         }
 
-        // не вызывается никогда
         public async Task<bool> DeleteTickPipe()
         {
             if (_tickPipe == 0) return false;
 
-            return await _sysPipe.DeletePipeAsync(_tickPipe);
+            bool isSuccess = await _sysPipe.DeletePipeAsync(_tickPipe);
+            _tickPipeServer = null;
+
+            return isSuccess;
         }
     }
 }

@@ -41,6 +41,8 @@ namespace Pulxer
             services.AddTransient<IRepositoryBL, RepositoryBL>();
             services.AddTransient<IDependencyManager, DependencyManager>();
             services.AddTransient<ChartSystem>();
+
+            services.AddHostedService<SchedulerService>();
         }
     }
 }

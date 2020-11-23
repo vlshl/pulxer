@@ -60,6 +60,7 @@ namespace Storage
         /// <returns></returns>
         public CommonData.Chart GetChart(int accountID, int insID, Timeframes tf)
         {
+            return null; //?????????????????????
             DbChart chart = null;
 
             using (var db = new DaContext(_options))

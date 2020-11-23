@@ -68,7 +68,10 @@ namespace WebApp.Controllers
             var tps = ls.GetTickPipe().Result;
             if (tps == null) return null;
 
-            return tps.GetLastPrices(tickerList).Result;
+            var prices = tps.GetLastPrices(tickerList).Result;
+            ls.DeleteTickPipe().Wait();
+
+            return prices;
         }
 
         [HttpGet("ident")]

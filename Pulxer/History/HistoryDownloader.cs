@@ -37,7 +37,7 @@ namespace Pulxer.History
         /// <returns>Асинхронная задача загрузки</returns>
         public Task DownloadAllAsync(DateTime toDate, bool isLastDirty, BgTaskProgress progress, CancellationToken cancel)
         {
-            return Task.Run(async () =>
+            return Task.Run(() =>
                 {
                     try
                     {
@@ -45,13 +45,16 @@ namespace Pulxer.History
                         int count = insStores.Count(); int idx = 1;
                         if (progress != null) progress.OnStart(count > 1);
                         Dictionary<CommonData.InsStore, BgTaskProgress> progresses = new Dictionary<CommonData.InsStore, BgTaskProgress>();
-                        foreach(var ss in insStores)
+                        if (progress != null)
                         {
-                            string name = "";
-                            var instrum = _instrumBL.GetInstrumByID(ss.InsID);
-                            if (instrum != null) name = instrum.ShortName;
-                            var child = progress.AddChildProgress(name);
-                            progresses.Add(ss, child);
+                            foreach (var ss in insStores)
+                            {
+                                string name = "";
+                                var instrum = _instrumBL.GetInstrumByID(ss.InsID);
+                                if (instrum != null) name = instrum.ShortName;
+                                var child = progress.AddChildProgress(name);
+                                progresses.Add(ss, child);
+                            }
                         }
 
                         foreach (var insStore in insStores)
@@ -75,8 +78,8 @@ namespace Pulxer.History
                                 fromDate = _insStoreBL.GetDefaultStartHistoryDate(toDate, insStore.Tf);
                             }
 
-                            await DownloadAsync(insStore, fromDate, toDate, isLastDirty, true,
-                                progresses[insStore], cancel);
+                            var p = progresses.ContainsKey(insStore) ? progresses[insStore] : null;
+                            DownloadAsync(insStore, fromDate, toDate, isLastDirty, true, p, cancel).Wait();
                             if (progress != null) progress.OnProgress((double)idx++ / count * 100);
                         }
                         if (progress != null)
@@ -148,11 +151,9 @@ namespace Pulxer.History
             switch (tf)
             {
                 case Timeframes.Tick:
-                    days = 1; break;
-
                 case Timeframes.Min:
                 case Timeframes.Min5:
-                    days = 10; break;
+                    days = 1; break;
 
                 case Timeframes.Min10:
                 case Timeframes.Min15:

@@ -52,7 +52,6 @@ namespace LeechPipe
                 _recvMessages.TryAdd(0, new ConcurrentQueue<byte[]>()); // нулевой пайп
 
                 _waitItems.Clear();
-
                 _isWorking = true;
 
                 if (createRecvThread)
@@ -160,7 +159,11 @@ namespace LeechPipe
                 var waitItem = new WaitRecvItem() { Mre = mre, Data = null };
                 _waitItems.Add(pipe, waitItem);
 
-                _transport.SendMessageAsync(sendBuffer).Wait();
+                lock (_transport)
+                {
+                    _transport.SendMessageAsync(sendBuffer).Wait();
+                }
+
                 if (!mre.WaitOne(TIMEOUT))
                 {
                     lock (_waitItems)
@@ -188,7 +191,10 @@ namespace LeechPipe
                 sendBuffer[1] = (byte)(pipe >> 8);
                 Array.Copy(data, 0, sendBuffer, 2, data.Length);
 
-                _transport.SendMessageAsync(sendBuffer).Wait();
+                lock (_transport)
+                {
+                    _transport.SendMessageAsync(sendBuffer).Wait();
+                }
             });
         }
 

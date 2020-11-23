@@ -36,14 +36,15 @@ namespace Common.Interfaces
         void AddTick(Tick tick);
 
         /// <summary>
+        /// Add new trades
+        /// </summary>
+        /// <param name="ticks">Trades info</param>
+        void AddTicks(IEnumerable<Tick> ticks);
+
+        /// <summary>
         /// Инициализация перед началом торговой сессии.
         /// </summary>
         void Initialize();
-
-        /// <summary>
-        /// Завершение после окончания торговой сессии.
-        /// </summary>
-        void Close();
 
         /// <summary>
         /// Список фин инструментов, для которых есть накопленные данные
@@ -56,6 +57,13 @@ namespace Common.Interfaces
         /// <param name="insID">Инструмент</param>
         /// <returns></returns>
         IEnumerable<Tick> GetTicks(int insID);
+
+        /// <summary>
+        /// Количество загруженных сделок на данный момент
+        /// </summary>
+        /// <param name="insID">Инструмент</param>
+        /// <returns>Кол-во сделок</returns>
+        int GetTicksCount(int insID);
 
         /// <summary>
         /// Дата текущей торговой сессии (без времени)

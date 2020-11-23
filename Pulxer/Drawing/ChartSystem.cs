@@ -81,5 +81,17 @@ namespace Pulxer.Drawing
                 return cm;
             }
         }
+
+        /// <summary>
+        /// Инициализация перед началом торговой сессии
+        /// </summary>
+        public void Initialize()
+        {
+            _tickDisp.Initialize();
+            lock(_cmCache)
+            {
+                _cmCache.Clear();
+            }
+        }
     }
 }

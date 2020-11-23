@@ -32,5 +32,10 @@ namespace Pulxer.Drawing
 
             return true;
         }
+
+        public void Clear()
+        {
+            _key_chartManager.Clear();
+        }
     }
 }

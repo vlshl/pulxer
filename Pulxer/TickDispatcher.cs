@@ -1,5 +1,7 @@
 ﻿using Common;
+using Common.Data;
 using Common.Interfaces;
+using Pulxer.Leech;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -40,20 +42,9 @@ namespace Pulxer
         public void Initialize()
         {
             _logger.AddInfo("TickDispatcher", "Initialize ...");
-            _ttcs.Clear();
-            _insID_ticks.Clear();
-            _logger.AddInfo("TickDispatcher", "Initialized");
-        }
-
-        /// <summary>
-        /// Завершение и очистка после окончания торговой сессии
-        /// </summary>
-        public void Close()
-        {
-            _logger.AddInfo("TickDispatcher", "Close ...");
             UnsubscribeAll();
             _insID_ticks.Clear();
-            _logger.AddInfo("TickDispatcher", "Closed");
+            _logger.AddInfo("TickDispatcher", "Initialized");
         }
 
         /// <summary>
@@ -123,7 +114,6 @@ namespace Pulxer
                 return DateTime.Today; // ???????????????????
             }
         }
-
         #endregion
 
         /// <summary>
@@ -138,6 +128,27 @@ namespace Pulxer
                 ticks.Add(tick);
             }
             var list = _ttcs.Where(t => t.InsID == tick.InsID).ToList();
+            foreach (var r in list)
+            {
+                r.Mre.Set();
+            }
+        }
+
+        /// <summary>
+        /// Явное добавление новых сделок по одному инструменту
+        /// </summary>
+        /// <param name="ticks">Информация по сделкам (у всех сделок должен быть один инструмент)</param>
+        public void AddTicks(IEnumerable<Tick> ticks)
+        {
+            if (!ticks.Any()) return;
+
+            int insId = ticks.First().InsID;
+            var tickList = GetTickList(insId);
+            lock (tickList)
+            {
+                tickList.AddRange(ticks);
+            }
+            var list = _ttcs.Where(t => t.InsID == insId).ToList();
             foreach (var r in list)
             {
                 r.Mre.Set();
@@ -214,6 +225,20 @@ namespace Pulxer
             {
                 if (!_insID_ticks.ContainsKey(insID)) return null;
                 return _insID_ticks[insID].ToList();
+            }
+        }
+
+        /// <summary>
+        /// Количество накопленных сделок на данный момент
+        /// </summary>
+        /// <param name="insId">Инструмент</param>
+        /// <returns>Количество сделок</returns>
+        public int GetTicksCount(int insId)
+        {
+            lock (_insID_ticks)
+            {
+                if (!_insID_ticks.ContainsKey(insId)) return 0;
+                return _insID_ticks[insId].Count();
             }
         }
 

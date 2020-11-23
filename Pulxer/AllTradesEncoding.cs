@@ -59,8 +59,9 @@ namespace Pulxer
         /// Раскодирование бинарных данных в массив тиков
         /// </summary>
         /// <param name="buffer">Бинарные данные в формате AllTrades</param>
+        /// <param name="withHeader">Бинарные данные должны содержать заголовок с номером версии</param>
         /// <returns>Раскодированный массив тиков или null</returns>
-        public IEnumerable<AllTradesTick> Decode(byte[] buffer)
+        public IEnumerable<AllTradesTick> Decode(byte[] buffer, bool withHeader = true)
         {
             if (buffer == null) return null;
 
@@ -69,9 +70,17 @@ namespace Pulxer
 
             uint curSecond = 0;
             int curPrice = 0;
+            int shiftIndex = 0;
 
-            int shiftIndex = DecodeHeader();
-            if (shiftIndex == 0) return null;
+            if (withHeader)
+            {
+                shiftIndex = DecodeHeader();
+                if (shiftIndex == 0) return null;
+            }
+            else
+            {
+                _version = 1;
+            }
 
             _bufferIndex += shiftIndex;
             List<AllTradesTick> ticks = new List<AllTradesTick>();
