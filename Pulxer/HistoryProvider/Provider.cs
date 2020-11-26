@@ -1,5 +1,6 @@
 ﻿using Common;
 using Common.Interfaces;
+using Microsoft.Extensions.Logging;
 using Platform;
 using System;
 using System.Collections.Generic;
@@ -36,18 +37,22 @@ namespace Pulxer.HistoryProvider
         private string _baseUrl;
         private IRequester _requester;
         private readonly IConfig _config = null;
+        private readonly ILogger _logger;
 
-        public FinamHistoryProvider(IRequester req, IConfig config)
+        public FinamHistoryProvider(IRequester req, IConfig config, ILogger<FinamHistoryProvider> logger)
         {
             _tfds = new List<TimeframeData>();
             _tickers = new List<TickerData>();
             _baseUrl = "";
             _requester = req;
             _config = config;
+            _logger = logger;
         }
 
         public async Task Initialize()
         {
+            _logger.LogInformation("Initialize.");
+
             _tfds.Clear(); _tickers.Clear();
 
             try 
@@ -113,9 +118,11 @@ namespace Pulxer.HistoryProvider
                 }
 
                 _baseUrl = xd.Root.Element("Url").Attribute("Base").Value;
+
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Initialization error.");
                 throw new Exception("Ошибка при инициализации провайдера исторических данных", ex);
             }
         }

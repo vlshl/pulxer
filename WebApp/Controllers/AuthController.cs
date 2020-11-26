@@ -4,6 +4,7 @@ using Common.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 using System;
@@ -19,18 +20,24 @@ namespace WebApp.Controllers
     {
         private readonly IUserBL _userBL;
         private readonly IConfiguration _config;
+        private readonly ILogger _logger;
 
-        public AuthController(IUserBL userBL, IConfiguration config)
+        public AuthController(IUserBL userBL, IConfiguration config, ILogger<AuthController> logger)
         {
             _userBL = userBL;
             _config = config;
+            _logger = logger;
         }
 
         [HttpPost("/auth")]
         public ActionResult<AuthUser> Auth(string login, string password)
         {
             var user = _userBL.AuthUser(login, password);
-            if (user == null) return Unauthorized();
+            if (user == null)
+            {
+                _logger.LogInformation("Logon failed: {user}", login);
+                return Unauthorized();
+            }
 
             DateTime expTime;
             string token = _userBL.BuildJwtToken(_config, user, out expTime);
@@ -43,6 +50,8 @@ namespace WebApp.Controllers
                 ExpTimeStr = expTime.ToString("o"),
                 Role = user.Role
             };
+
+            _logger.LogInformation("Logon success: {user}", user.Login);
 
             return Ok(authUser);
         }

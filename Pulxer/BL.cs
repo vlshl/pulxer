@@ -19,11 +19,11 @@ namespace Pulxer
 
             var confSection = config.GetSection("Config");
             services.AddSingleton<IConfig>(new Config(confSection)); 
-            services.AddSingleton<ILogger, Logger>();
             services.AddSingleton<LeechServerManager>();
             services.AddSingleton<ChartManagerCache>();
             services.AddSingleton<IHistoryProvider, FinamHistoryProvider>();
             services.AddSingleton<ITickDispatcher, TickDispatcher>();
+            services.AddSingleton<Scheduler>();
 
             services.AddTransient<IInstrumBL, InstrumBL>();
             services.AddTransient<IInsStoreBL, InsStoreBL>();

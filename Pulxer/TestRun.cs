@@ -2,6 +2,7 @@
 using Common;
 using Common.Data;
 using Common.Interfaces;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Platform;
 using System;

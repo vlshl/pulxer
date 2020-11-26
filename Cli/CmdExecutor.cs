@@ -1,6 +1,7 @@
 ﻿using Common;
 using Common.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Pulxer;
 using System;
 using System.Collections.Generic;
@@ -129,10 +130,6 @@ namespace Cli
                 var tr = ActivatorUtilities.CreateInstance<TestRunCtrl>(_sp);
                 tr.TestRunAsync(args);
             }
-            else if (cmd == "log")
-            {
-                Log();
-            }
             else if (cmd == "load-trades")
             {
                 var posCtrl = ActivatorUtilities.CreateInstance<PositionCtrl>(_sp);
@@ -216,20 +213,6 @@ namespace Cli
             _console.WriteSeparator();
             _console.WriteLine("List-Account - Список счетов");
             _console.WriteLine("Delete-Account accountID [full] - Удаление тестового счета, full - полное удаление, иначе удаляются только данные по счету");
-            _console.WriteSeparator();
-            _console.WriteLine("Log - Вывод лога");
-        }
-
-        private void Log()
-        {
-            var logger = _logger as Logger;
-            if (logger == null) return;
-
-            var logs = logger.GetLogs();
-            foreach (var text in logs)
-            {
-                _console.WriteLine(text);
-            }
         }
 
         #region FileProtect

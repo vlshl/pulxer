@@ -3,6 +3,7 @@ using Common.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Pulxer.Drawing;
 using Pulxer.History;
 using System;
@@ -18,14 +19,17 @@ namespace Pulxer
         private ChartManagerCache _cmCache;
         private IServiceProvider _services;
         private int _downloadAllTimeout = 600; // sec
+        private readonly ILogger _logger;
 
-        public SchedulerService(ITickDispatcher tickDisp, ChartManagerCache cmCache, ILogger logger, IConfiguration config, IServiceProvider services)
+        public SchedulerService(ITickDispatcher tickDisp, ChartManagerCache cmCache, ILogger<SchedulerService> logger, IConfiguration config, IServiceProvider services,
+            Scheduler scheduler)
         {
             _tickDisp = tickDisp;
             _cmCache = cmCache;
             _services = services;
+            _logger = logger;
+            _scheduler = scheduler;
 
-            _scheduler = new Scheduler(logger);
             var section = config.GetSection("Scheduler");
             if (section != null)
             {
@@ -52,16 +56,19 @@ namespace Pulxer
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
+            _logger.LogInformation("Start scheduler");
             return Task.Run(() => { _scheduler.Start(); });
         }
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
+            _logger.LogInformation("Stop scheduler");
             return Task.Run(() => { _scheduler.Stop(); });
         }
 
         private void OpenSession()
         {
+            _logger.LogInformation("Open session ...");
             DateTime today = DateTime.Today;
 
             _services.GetRequiredService<IHistoryProvider>().Initialize().Wait();
@@ -77,6 +84,7 @@ namespace Pulxer
                 var downloader = scope.ServiceProvider.GetRequiredService<HistoryDownloader>();
                 downloader.DownloadAllAsync(today.AddDays(-1), false, null, cancellationTokenSource.Token).Wait();
             }
+            _logger.LogInformation("Session opened.");
         }
     }
 }

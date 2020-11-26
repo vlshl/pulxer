@@ -1,4 +1,5 @@
 ﻿using Common.Interfaces;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -18,10 +19,10 @@ namespace Pulxer
         private readonly ILogger _logger = null;
         private Dictionary<int, Action> _time_action = null;
 
-        public Scheduler(ILogger logger)
+        public Scheduler(ILogger<Scheduler> logger)
         {
-            _logger = logger ?? throw new ArgumentNullException("logger");
             _time_action = new Dictionary<int, Action>();
+            _logger = logger;
         }
 
         /// <summary>
@@ -29,6 +30,7 @@ namespace Pulxer
         /// </summary>
         public void Start()
         {
+            _logger.LogInformation("Start scheduler.");
             _isWorking = true;
             Thread thread = new Thread(new ThreadStart(DoWork));
             thread.Start();
@@ -40,6 +42,7 @@ namespace Pulxer
         public void Stop()
         {
             _isWorking = false;
+            _logger.LogInformation("Stop scheduler.");
         }
 
         /// <summary>
@@ -106,10 +109,11 @@ namespace Pulxer
                             try
                             {
                                 _time_action[time].Invoke();
+                                if (_logger != null) _logger.LogInformation("Execute action at {time}", time.ToString());
                             }
                             catch (Exception ex)
                             {
-                                _logger.AddException("Scheduler", ex);
+                                if (_logger != null) _logger.LogError(ex, "Action {time} execution error.", time);
                             }
                         });
                     }

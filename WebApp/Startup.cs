@@ -14,6 +14,7 @@ using System.Net.WebSockets;
 using Pulxer.Leech;
 using System.Text;
 using Microsoft.AspNetCore.Authentication;
+using Serilog;
 
 namespace WebApp
 {
@@ -88,6 +89,8 @@ namespace WebApp
                 }
             });
 
+            app.UseSerilogRequestLogging(); 
+            
             if (env.IsDevelopment())
             {
                 app.UseCors(b =>

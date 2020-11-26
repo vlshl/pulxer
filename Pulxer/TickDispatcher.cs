@@ -1,6 +1,7 @@
 ﻿using Common;
 using Common.Data;
 using Common.Interfaces;
+using Microsoft.Extensions.Logging;
 using Pulxer.Leech;
 using System;
 using System.Collections.Generic;
@@ -29,7 +30,7 @@ namespace Pulxer
         /// <summary>
         /// Конструктор
         /// </summary>
-        public TickDispatcher(ILogger logger)
+        public TickDispatcher(ILogger<TickDispatcher> logger)
         {
             _logger = logger;
             _ttcs = new List<TickThreadControl>();
@@ -41,10 +42,10 @@ namespace Pulxer
         /// </summary>
         public void Initialize()
         {
-            _logger.AddInfo("TickDispatcher", "Initialize ...");
+            _logger.LogInformation("Initialize ...");
             UnsubscribeAll();
             _insID_ticks.Clear();
-            _logger.AddInfo("TickDispatcher", "Initialized");
+            _logger.LogInformation("Initialized");
         }
 
         /// <summary>

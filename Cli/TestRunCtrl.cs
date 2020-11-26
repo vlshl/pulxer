@@ -1,5 +1,6 @@
 ﻿using BL;
 using Common.Interfaces;
+using Microsoft.Extensions.Logging;
 using Pulxer;
 using System;
 using System.Collections.Generic;

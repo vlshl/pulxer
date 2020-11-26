@@ -2,6 +2,7 @@
 using Common;
 using Common.Data;
 using Common.Interfaces;
+using Microsoft.Extensions.Logging;
 using Platform;
 using System;
 using System.Collections.Generic;
@@ -65,7 +66,7 @@ namespace Pulxer
 
         public void AddLog(string source, string text)
         {
-            _logger.AddInfo("Bot:" + source, text);
+            _logger.LogInformation("Bot:" + source + " " + text);
         }
 
         public IInstrum GetInstrum(string ticker)

@@ -8,6 +8,7 @@ using CommonData = Common.Data;
 using System.Threading;
 using Common.Data;
 using Platform;
+using Microsoft.Extensions.Logging;
 
 namespace Pulxer.History
 {
@@ -19,12 +20,14 @@ namespace Pulxer.History
         private readonly IHistoryProvider _provider;
         private readonly IInstrumBL _instrumBL;
         private readonly IInsStoreBL _insStoreBL;
+        private readonly ILogger _logger;
 
-        public HistoryDownloader(IHistoryProvider provider, IInstrumBL instrumBL, IInsStoreBL insStoreBL)
+        public HistoryDownloader(IHistoryProvider provider, IInstrumBL instrumBL, IInsStoreBL insStoreBL, ILogger<HistoryDownloader> logger)
         {
             _provider = provider;
             _instrumBL = instrumBL;
             _insStoreBL = insStoreBL;
+            _logger = logger;
         }
 
         /// <summary>
@@ -41,6 +44,8 @@ namespace Pulxer.History
                 {
                     try
                     {
+                        _logger.LogInformation("DownloadAll to {date}", toDate.ToString("yyyy-MM-dd"));
+
                         var insStores = _insStoreBL.GetActiveInsStores();
                         int count = insStores.Count(); int idx = 1;
                         if (progress != null) progress.OnStart(count > 1);
@@ -86,9 +91,12 @@ namespace Pulxer.History
                         {
                             if (cancel.IsCancellationRequested) progress.OnAbort(); else progress.OnComplete();
                         }
+
+                        _logger.LogInformation("DownloadAll complete.");
                     }
                     catch (Exception ex)
                     {
+                        _logger.LogError(ex, "DownloadAll error.");
                         if (progress != null) progress.OnFault(ex);
                     }
                 });
@@ -289,11 +297,14 @@ namespace Pulxer.History
         private async Task<IEnumerable<Bar>> SyncDataBlock(InsStore insStore, DateTime date1, DateTime date2, 
             bool isLastDirty, CancellationToken cancel)
         {
+            _logger.LogInformation("SyncDataBlock: {date1}-{date2}", date1.ToString("yyyy-MM-dd"), date2.ToString("yyyy-MM-dd"));
+
             CommonData.Instrum ins = _instrumBL.GetInstrumByID(insStore.InsID);
             var bars = await _provider.GetDataAsync(ins.Ticker, insStore.Tf, date1, date2);
             if (bars == null) return null;
 
             _insStoreBL.InsertData(insStore.InsStoreID, ins.Decimals, bars, date1, date2, isLastDirty, cancel);
+            _logger.LogInformation("SyncDataBlock.InsertBars: {count}", bars.Count().ToString());
 
             return bars;
         }
