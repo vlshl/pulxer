@@ -1,20 +1,25 @@
 ﻿using Common.Interfaces;
+using Microsoft.Extensions.Logging;
 using System;
 using System.IO;
 using System.Net;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Pulxer.HistoryProvider
 {
     public class Requester : IRequester
     {
-        public Requester()
+        private ILogger<Requester> _logger;
+
+        public Requester(ILogger<Requester> logger)
         {
+            _logger = logger;
         }
 
         public async Task<byte[]> RequestAsync(string url)
         {
+            _logger.LogInformation("RequestAsync: " + url);
+
             MemoryStream ms = new MemoryStream();
             try
             {
@@ -22,9 +27,11 @@ namespace Pulxer.HistoryProvider
                 WebResponse resp = await req.GetResponseAsync();
                 Stream s = resp.GetResponseStream();
                 s.CopyTo(ms);
+                _logger.LogInformation("GetResponse: " + ms.Length + " bytes");
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Request error");
                 throw new Exception("Ошибка при загрузке данных. Url='" + url + "'", ex);
             }
 

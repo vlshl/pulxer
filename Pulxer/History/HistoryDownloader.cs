@@ -297,9 +297,9 @@ namespace Pulxer.History
         private async Task<IEnumerable<Bar>> SyncDataBlock(InsStore insStore, DateTime date1, DateTime date2, 
             bool isLastDirty, CancellationToken cancel)
         {
-            _logger.LogInformation("SyncDataBlock: {date1}-{date2}", date1.ToString("yyyy-MM-dd"), date2.ToString("yyyy-MM-dd"));
-
             CommonData.Instrum ins = _instrumBL.GetInstrumByID(insStore.InsID);
+            _logger.LogInformation("SyncDataBlock {Ticker} {date1} to {date2}", ins.Ticker, date1.ToString("yyyy-MM-dd"), date2.ToString("yyyy-MM-dd"));
+
             var bars = await _provider.GetDataAsync(ins.Ticker, insStore.Tf, date1, date2);
             if (bars == null) return null;
 
