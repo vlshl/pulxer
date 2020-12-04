@@ -55,9 +55,8 @@ namespace WebApp
 
             services.AddControllers();
             
-            string pulxerConnectionString = DataProtect.TryUnProtect(_config.GetConnectionString("Pulxer"));
-            string leechConnectionString = DataProtect.TryUnProtect(_config.GetConnectionString("Leech"));
-            Pulxer.BL.ConfigureServices(services, _config, pulxerConnectionString, leechConnectionString);
+            string connectionString = DataProtect.TryUnProtect(_config.GetConnectionString("Pulxer"));
+            Pulxer.BL.ConfigureServices(services, _config, connectionString);
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

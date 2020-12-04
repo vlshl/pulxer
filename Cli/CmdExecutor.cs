@@ -37,11 +37,6 @@ namespace Cli
                 var leechCtrl = ActivatorUtilities.CreateInstance<LeechCtrl>(_sp);
                 leechCtrl.SyncAllTrades();
             }
-            else if (cmd == "list-leechinstrum")
-            {
-                var leechCtrl = ActivatorUtilities.CreateInstance<LeechCtrl>(_sp);
-                leechCtrl.ListLeechInstrum();
-            }
             else if (cmd == "list-instrum")
             {
                 var instrumCtrl = ActivatorUtilities.CreateInstance<InstrumCtrl>(_sp);
@@ -183,7 +178,6 @@ namespace Cli
             _console.WriteLine("Exit - Выход");
             _console.WriteSeparator();
             _console.WriteLine("Sync-AllTrades - Синхронизация тиковых данных из базы Leech");
-            _console.WriteLine("List-LeechInstrum - Список инструментов из базы Leech");
             _console.WriteLine("List-Instrum - Список инструментов из базы Pulxer");
             _console.WriteLine("Create-InsStores Tf Ticker Ticker ... - Создание потоков данных для указанных тикеров");
             _console.WriteLine("List-InsStore - Список потоков данных");

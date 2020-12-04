@@ -12,10 +12,9 @@ namespace Pulxer
 {
     public static class BL
     {
-        public static void ConfigureServices(IServiceCollection services, IConfiguration config,
-            string pulxerConnectionString, string leechConnectionString)
+        public static void ConfigureServices(IServiceCollection services, IConfiguration config, string connectionString)
         {
-            DataAccess.ConfigureServices(services, pulxerConnectionString, leechConnectionString);
+            DataAccess.ConfigureServices(services, connectionString);
 
             var confSection = config.GetSection("Config");
             services.AddSingleton<IConfig>(new Config(confSection)); 

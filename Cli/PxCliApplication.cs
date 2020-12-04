@@ -37,9 +37,7 @@ namespace Cli
         private void ConfigureServices(IServiceCollection services)
         {
             services.AddSingleton<IConsole, PxConsole>();
-            Pulxer.BL.ConfigureServices(services, _config,
-                DataProtect.TryUnProtect(_config.GetConnectionString("Pulxer")), 
-                DataProtect.TryUnProtect(_config.GetConnectionString("Leech")));
+            Pulxer.BL.ConfigureServices(services, _config, DataProtect.TryUnProtect(_config.GetConnectionString("Pulxer")));
         }
 
         public void Run()
