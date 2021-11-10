@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Platform
 {
-    public delegate void OnTimerDelegate(DateTime? time, int delay);
+    public delegate void OnTimerDelegate(DateTime time, int delay);
     public delegate void OnTickDelegate(DateTime time, decimal price, int lots);
 
     public interface ILeechPlatform

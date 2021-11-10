@@ -156,7 +156,7 @@ namespace Pulxer.HistoryProvider
             if (data == null)
             {
                 string url = ReplParams(_baseUrl, ticker, tf, date1, date2);
-                data = await _requester.RequestAsync(url);
+                data = _requester.Request(url);
                 if (data != null) WriteCache(ticker, tf, date1, date2, data);
             }
 

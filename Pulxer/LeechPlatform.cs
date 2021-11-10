@@ -21,7 +21,6 @@ namespace Pulxer
         private List<BarRow> _barRows;
         private OnTimerDelegate _onTimer = null;
         private DateTime? _nextSecTime = null;
-        //private Task _onTimerTask = null;
         private ILogger _logger = null;
         private readonly TradeEngine _engine = null;
         private readonly TradeEngineData _data;
@@ -56,10 +55,19 @@ namespace Pulxer
 
             if (_onTimer != null)
             {
-                if (_nextSecTime == null || tick.Time >= _nextSecTime.Value)
+                if (_nextSecTime == null)
                 {
                     _onTimer(tick.Time, 0);
                     _nextSecTime = tick.Time.AddSeconds(1);
+                }
+                else
+                {
+                    while (tick.Time >= _nextSecTime.Value)
+                    {
+                        // tick.Time - это наше текущее время при тестировании, при реальной торговле время берется с системных часов
+                        _onTimer(_nextSecTime.Value, (int)((tick.Time.Ticks - _nextSecTime.Value.Ticks) / TimeSpan.TicksPerMillisecond));
+                        _nextSecTime = _nextSecTime.Value.AddSeconds(1);
+                    }
                 }
             }
         }
@@ -281,42 +289,5 @@ namespace Pulxer
             return new BotResult(false, msg);
         }
         #endregion
-
-        //public void OnTimer(OnTimerDelegate onTimer)
-        //{
-        //    _onTimer = onTimer;
-        //    if (_onTimer != null && _onTimerTask == null)
-        //    {
-        //        _onTimerTask = Task.Factory.StartNew(() => 
-        //        {
-        //            while (_onTimer != null)
-        //            {
-        //                var now = DateTime.Now;
-        //                DateTime nextSec = new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute, now.Second).AddSeconds(1);
-        //                long waitToNextSec = nextSec.Ticks - now.Ticks;
-        //                if (waitToNextSec > 0)
-        //                {
-        //                    Thread.Sleep(new TimeSpan(waitToNextSec));
-        //                }
-
-        //                if (_lastTickTime == null)
-        //                {
-        //                    _onTimer(null, 0);
-        //                }
-        //                else
-        //                {
-        //                    int delay = (int)(new TimeSpan(nextSec.Ticks - _lastTickTime.Value.Ticks).TotalMilliseconds);
-        //                    _onTimer(_lastTickTime.Value, delay);
-        //                }
-
-
-        //            }
-        //        });
-        //    }
-        //    else if (_onTimer == null && _onTimerTask != null)
-        //    {
-        //        _onTimerTask = null;
-        //    }
-        //}
     }
 }

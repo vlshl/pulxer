@@ -7,6 +7,6 @@ namespace Common.Interfaces
 {
     public interface IRequester
     {
-        Task<byte[]> RequestAsync(string url);
+        byte[] Request(string url);
     }
 }

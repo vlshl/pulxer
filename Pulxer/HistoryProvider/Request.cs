@@ -16,7 +16,7 @@ namespace Pulxer.HistoryProvider
             _logger = logger;
         }
 
-        public async Task<byte[]> RequestAsync(string url)
+        public byte[] Request(string url)
         {
             _logger.LogInformation("RequestAsync: " + url);
 
@@ -24,7 +24,7 @@ namespace Pulxer.HistoryProvider
             try
             {
                 HttpWebRequest req = (HttpWebRequest)HttpWebRequest.Create(url);
-                WebResponse resp = await req.GetResponseAsync();
+                WebResponse resp = req.GetResponseAsync().Result;
                 Stream s = resp.GetResponseStream();
                 s.CopyTo(ms);
                 _logger.LogInformation("GetResponse: " + ms.Length + " bytes");

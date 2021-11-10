@@ -155,22 +155,27 @@ namespace Pulxer.History
         {
             date1 = date1.Date; date2 = date2.Date;
 
-            int days = 1000;
+            int days = 0; int months = 0;
             switch (tf)
             {
                 case Timeframes.Tick:
                 case Timeframes.Min:
                 case Timeframes.Min5:
+                case Timeframes.Min10:
                     days = 1; break;
 
-                case Timeframes.Min10:
                 case Timeframes.Min15:
-                    days = 30; break;
-
                 case Timeframes.Min20:
                 case Timeframes.Min30:
                 case Timeframes.Hour:
-                    days = 100; break;
+                    months = 1; break;
+
+                case Timeframes.Day:
+                case Timeframes.Week:
+                    months = 12; break;
+                
+                default:
+                    days = 1; months = 0; break;
             }
 
             List<DownloadPart> parts = new List<DownloadPart>();
@@ -180,11 +185,11 @@ namespace Pulxer.History
                 DateTime d1 = date1;
                 do
                 {
-                    DateTime d2 = d1.AddDays(days - 1);
+                    DateTime d2 = d1.AddMonths(months).AddDays(days - 1);
                     if (d2 > date2) d2 = date2;
 
                     parts.Add(new DownloadPart() { Date1 = d1, Date2 = d2 });
-                    d1 = d1.AddDays(days);
+                    d1 = d1.AddMonths(months).AddDays(days);
                 } while (d1 <= date2);
             }
             else
@@ -192,11 +197,11 @@ namespace Pulxer.History
                 DateTime d2 = date2;
                 do
                 {
-                    DateTime d1 = d2.AddDays(-days + 1);
+                    DateTime d1 = d2.AddMonths(-months).AddDays(-days + 1);
                     if (d1 < date1) d1 = date1;
 
                     parts.Add(new DownloadPart() { Date1 = d1, Date2 = d2 });
-                    d2 = d2.AddDays(-days);
+                    d2 = d2.AddMonths(-months).AddDays(-days);
                 } while (d2 >= date1);
             }
 
