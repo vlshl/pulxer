@@ -1,8 +1,6 @@
 ﻿using Common;
 using Common.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Pulxer;
 using System;
 using System.Collections.Generic;
 
@@ -11,13 +9,11 @@ namespace Cli
     public class CmdExecutor : IExecutor
     {
         private readonly IConsole _console;
-        private readonly ILogger _logger;
         private readonly IServiceProvider _sp;
 
-        public CmdExecutor(IConsole console, ILogger logger, IServiceProvider sp)
+        public CmdExecutor(IConsole console, IServiceProvider sp)
         {
             _console = console;
-            _logger = logger;
             _sp = sp;
         }
 
