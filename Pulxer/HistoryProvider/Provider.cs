@@ -146,7 +146,7 @@ namespace Pulxer.HistoryProvider
                     select new HistoryProviderInstrum(t.Ticker, t.ShortName, t.Name, t.LotSize, t.Digits)).ToList();
         }
 
-        public async Task<IEnumerable<Bar>> GetDataAsync(string ticker, Timeframes tf, DateTime date1, DateTime date2)
+        public async Task<IEnumerable<Bar>> GetDataAsync(string ticker, Timeframes tf, DateTime date1, DateTime date2, int delay)
         {
             if (_requester == null) return null;
             if (_tickers.All(td => td.Ticker != ticker)) return null;
@@ -156,7 +156,7 @@ namespace Pulxer.HistoryProvider
             if (data == null)
             {
                 string url = ReplParams(_baseUrl, ticker, tf, date1, date2);
-                data = _requester.Request(url);
+                data = _requester.Request(url, delay);
                 if (data != null) WriteCache(ticker, tf, date1, date2, data);
             }
 

@@ -13,7 +13,7 @@ namespace Common
         Task Initialize();
         IEnumerable<HistoryProviderTimeframe> GetTimeframes();
         IEnumerable<HistoryProviderInstrum> GetInstrums();
-        Task<IEnumerable<Bar>> GetDataAsync(string ticker, Timeframes tf, DateTime date1, DateTime date2);
+        Task<IEnumerable<Bar>> GetDataAsync(string ticker, Timeframes tf, DateTime date1, DateTime date2, int delay);
     }
 
     /// <summary>

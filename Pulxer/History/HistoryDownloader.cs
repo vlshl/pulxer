@@ -21,13 +21,15 @@ namespace Pulxer.History
         private readonly IInstrumBL _instrumBL;
         private readonly IInsStoreBL _insStoreBL;
         private readonly ILogger _logger;
+        private readonly IConfig _config;
 
-        public HistoryDownloader(IHistoryProvider provider, IInstrumBL instrumBL, IInsStoreBL insStoreBL, ILogger<HistoryDownloader> logger)
+        public HistoryDownloader(IHistoryProvider provider, IInstrumBL instrumBL, IInsStoreBL insStoreBL, ILogger<HistoryDownloader> logger, IConfig config)
         {
             _provider = provider;
             _instrumBL = instrumBL;
             _insStoreBL = insStoreBL;
             _logger = logger;
+            _config = config;
         }
 
         /// <summary>
@@ -154,30 +156,8 @@ namespace Pulxer.History
         private IEnumerable<DownloadPart> GetDownloadParts(Timeframes tf, DateTime date1, DateTime date2, bool isForward)
         {
             date1 = date1.Date; date2 = date2.Date;
-
-            int days = 0; int months = 0;
-            switch (tf)
-            {
-                case Timeframes.Tick:
-                case Timeframes.Min:
-                case Timeframes.Min5:
-                case Timeframes.Min10:
-                    days = 1; break;
-
-                case Timeframes.Min15:
-                case Timeframes.Min20:
-                case Timeframes.Min30:
-                case Timeframes.Hour:
-                    months = 1; break;
-
-                case Timeframes.Day:
-                case Timeframes.Week:
-                    months = 12; break;
-                
-                default:
-                    days = 1; months = 0; break;
-            }
-
+            int days = _config.GetHistoryDownloaderDays(tf.ToString());
+            int months = _config.GetHistoryDownloaderMonths(tf.ToString());
             List<DownloadPart> parts = new List<DownloadPart>();
 
             if (isForward)
@@ -274,8 +254,7 @@ namespace Pulxer.History
                     bool hasData = _insStoreBL.HasData(part.Date1, part.Date2, insStore.InsStoreID);
                     if (hasData) continue;
 
-                    var bars = await SyncDataBlock(insStore, part.Date1, part.Date2, 
-                        part.Date2 >= DateTime.Today, cancel); // синхронизируем поток с минимальным ТФ, данные за сегодня грязные
+                    var bars = await SyncDataBlock(insStore, part.Date1, part.Date2, part.Date2 >= DateTime.Today, cancel); // синхронизируем поток с минимальным ТФ, данные за сегодня грязные
                     foreach (var ss in insStores) // остальные потоки формируем из минимального
                     {
                         if (cancel.IsCancellationRequested) break;
@@ -305,7 +284,8 @@ namespace Pulxer.History
             CommonData.Instrum ins = _instrumBL.GetInstrumByID(insStore.InsID);
             _logger.LogInformation("SyncDataBlock {Ticker} {date1} to {date2}", ins.Ticker, date1.ToString("yyyy-MM-dd"), date2.ToString("yyyy-MM-dd"));
 
-            var bars = await _provider.GetDataAsync(ins.Ticker, insStore.Tf, date1, date2);
+            int delay = _config.GetHistoryDownloaderDelay(insStore.Tf.ToString());
+            var bars = await _provider.GetDataAsync(ins.Ticker, insStore.Tf, date1, date2, delay);
             if (bars == null) return null;
 
             _insStoreBL.InsertData(insStore.InsStoreID, ins.Decimals, bars, date1, date2, isLastDirty, cancel);

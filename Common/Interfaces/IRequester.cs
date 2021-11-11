@@ -7,6 +7,6 @@ namespace Common.Interfaces
 {
     public interface IRequester
     {
-        byte[] Request(string url);
+        byte[] Request(string url, int delay);
     }
 }

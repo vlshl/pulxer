@@ -16,14 +16,14 @@ namespace Pulxer
         {
             DataAccess.ConfigureServices(services, connectionString);
 
-            var confSection = config.GetSection("Config");
-            services.AddSingleton<IConfig>(new Config(confSection)); 
+            services.AddSingleton<IConfig>(new Config(config)); 
             services.AddSingleton<LeechServerManager>();
             services.AddSingleton<ChartManagerCache>();
             services.AddSingleton<IHistoryProvider, FinamHistoryProvider>();
             services.AddSingleton<ITickDispatcher, TickDispatcher>();
             services.AddSingleton<Scheduler>();
-
+            
+            services.AddTransient<HistoryDownloader>();
             services.AddTransient<IInstrumBL, InstrumBL>();
             services.AddTransient<IInsStoreBL, InsStoreBL>();
             services.AddTransient<IImportLeech, ImportLeech>();
@@ -34,7 +34,6 @@ namespace Pulxer
             services.AddTransient<ITickHistoryBL, TickHistoryBL>();
             services.AddTransient<IReplicationBL, ReplicationBL>();
             services.AddTransient<IPositionBL, PositionBL>();
-            services.AddTransient<HistoryDownloader>();
             services.AddTransient<ISyncBL, SyncBL>();
             services.AddTransient<IUserBL, UserBL>();
             services.AddTransient<IRepositoryBL, RepositoryBL>();

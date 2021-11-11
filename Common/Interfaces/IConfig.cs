@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Platform;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -10,5 +11,8 @@ namespace Common.Interfaces
         string GetHistoryProviderConfig();
         string GetHistoryProviderCache();
         string GetBotsPath();
+        int GetHistoryDownloaderDays(string tf);
+        int GetHistoryDownloaderMonths(string tf);
+        int GetHistoryDownloaderDelay(string tf);
     }
 }

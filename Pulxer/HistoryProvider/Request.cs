@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.IO;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Pulxer.HistoryProvider
@@ -16,8 +17,10 @@ namespace Pulxer.HistoryProvider
             _logger = logger;
         }
 
-        public byte[] Request(string url)
+        public byte[] Request(string url, int delay)
         {
+            if (delay > 0) Thread.Sleep(delay);
+
             _logger.LogInformation("RequestAsync: " + url);
 
             MemoryStream ms = new MemoryStream();
@@ -39,22 +42,21 @@ namespace Pulxer.HistoryProvider
         }
     }
 
-    //public class RequesterTest : IRequester
-    //{
-    //    private readonly IConsole _console = null;
+    public class RequesterTest : IRequester
+    {
+        private readonly IConsole _console = null;
 
-    //    public RequesterTest(IConsole console)
-    //    {
-    //        _console = console;
-    //    }
+        public RequesterTest(IConsole console)
+        {
+            _console = console;
+        }
 
-    //    public async Task<byte[]> RequestAsync(string url)
-    //    {
-    //        _console.WriteLine(url);
+        public byte[] Request(string url, int delay)
+        {
+            _console.WriteLine(url);
+            Thread.Sleep(5000);
 
-    //        await Task.Factory.StartNew(() => { Thread.Sleep(5000); });
-
-    //        return new byte[] { };
-    //    }
-    //}
+            return new byte[] { };
+        }
+    }
 }
