@@ -19,7 +19,7 @@ namespace PulxerTest
             IReplicationBL replBL = new ReplicationBLMock();
 
             ImportLeech import = new ImportLeech(instrumDA, accountDA, null, null, replBL);
-            import.SyncAccountDataAsync(sps).Wait();
+            import.FullSyncAccountDataAsync(sps).Wait();
 
             var r_accounts = sps.GetAccountList().Result;
             CompareAccounts(r_accounts, accountDA.GetAccounts(), replBL);
@@ -30,14 +30,14 @@ namespace PulxerTest
             r_accounts[0].IsShortEnable = !r_accounts[0].IsShortEnable;
             r_accounts[0].CommPerc += 0.5m;
 
-            import.SyncAccountDataAsync(sps).Wait();
+            import.FullSyncAccountDataAsync(sps).Wait();
 
             CompareAccounts(r_accounts, accountDA.GetAccounts(), replBL);
 
             // добавим еще account
             sps.AddAccount(Common.Data.AccountTypes.Test, "ccc", "nnn", 0, false);
 
-            import.SyncAccountDataAsync(sps).Wait();
+            import.FullSyncAccountDataAsync(sps).Wait();
 
             CompareAccounts(sps.GetAccountList().Result, accountDA.GetAccounts(), replBL);
 
@@ -53,7 +53,7 @@ namespace PulxerTest
             IReplicationBL replBL = new ReplicationBLMock();
 
             ImportLeech import = new ImportLeech(instrumDA, accountDA, null, null, replBL);
-            import.SyncAccountDataAsync(sps).Wait();
+            import.FullSyncAccountDataAsync(sps).Wait();
 
             var r_instrums = sps.GetInstrumList().Result;
             CompareInstrums(r_instrums, instrumDA.GetInstrums(), replBL);
@@ -64,21 +64,21 @@ namespace PulxerTest
             r_instrums[0].LotSize = 10;
             r_instrums[0].Decimals = 3;
 
-            import.SyncAccountDataAsync(sps).Wait();
+            import.FullSyncAccountDataAsync(sps).Wait();
 
             CompareInstrums(r_instrums, instrumDA.GetInstrums(), replBL);
 
             // новый инструмент
             var newIns = sps.AddInstrum("ttt", "sn");
 
-            import.SyncAccountDataAsync(sps).Wait();
+            import.FullSyncAccountDataAsync(sps).Wait();
 
             CompareInstrums(sps.GetInstrumList().Result, instrumDA.GetInstrums(), replBL);
 
             // удалим инструмент
             sps.RemoveInstrum(newIns.InsID);
 
-            import.SyncAccountDataAsync(sps).Wait();
+            import.FullSyncAccountDataAsync(sps).Wait();
 
             // при удалении инструмента в удаленной базе,
             // в локальной базе мы его не удаляем, 
@@ -116,7 +116,7 @@ namespace PulxerTest
             Assert.True(sps.GetTrades(r_accounts[1].AccountID, 0).Result.Count() == 1);
 
             ImportLeech import = new ImportLeech(instrumDA, accountDA, null, null, replBL);
-            import.SyncAccountDataAsync(sps).Wait();
+            import.FullSyncAccountDataAsync(sps).Wait();
 
             // узнаем локальные accountID 
             var repl_acc = replBL.GetReplications(Common.Data.ReplObjects.Account);
@@ -138,7 +138,7 @@ namespace PulxerTest
             var trd4 = sps.AddTrade(ord4);
 
             // снова синхронизировали
-            import.SyncAccountDataAsync(sps).Wait();
+            import.FullSyncAccountDataAsync(sps).Wait();
 
             // и снова сравнили
             CompareStopOrders(sps.GetStopOrders(r_accounts[0].AccountID, 0).Result, accountDA.GetStopOrders(l_acc0ID), replBL);
@@ -153,7 +153,7 @@ namespace PulxerTest
             ord3.Status = OrderStatus.Reject;
 
             // снова синхронизировали
-            import.SyncAccountDataAsync(sps).Wait();
+            import.FullSyncAccountDataAsync(sps).Wait();
 
             // и снова сравнили
             CompareStopOrders(sps.GetStopOrders(r_accounts[0].AccountID, 0).Result, accountDA.GetStopOrders(l_acc0ID), replBL);
@@ -181,7 +181,7 @@ namespace PulxerTest
             var r_h2 = sps.AddHolding(r_accounts[1].AccountID, r_instrums[1].InsID, 200);
 
             // синхронизировали
-            import.SyncAccountDataAsync(sps).Wait();
+            import.FullSyncAccountDataAsync(sps).Wait();
 
             // узнаем локальные accountID 
             var repl_acc = replBL.GetReplications(Common.Data.ReplObjects.Account);
@@ -197,7 +197,7 @@ namespace PulxerTest
             r_h2.LotCount = 2000;
 
             // синхронизировали
-            import.SyncAccountDataAsync(sps).Wait();
+            import.FullSyncAccountDataAsync(sps).Wait();
 
             // сравниваем
             CompareHoldings(sps.GetHoldingList(r_accounts[0].AccountID).Result, accountDA.GetHoldings(l_acc0ID), replBL);
@@ -207,7 +207,7 @@ namespace PulxerTest
             var r_h3 = sps.AddHolding(r_accounts[1].AccountID, r_instrums[2].InsID, 300);
 
             // синхронизировали
-            import.SyncAccountDataAsync(sps).Wait();
+            import.FullSyncAccountDataAsync(sps).Wait();
 
             // сравниваем
             CompareHoldings(sps.GetHoldingList(r_accounts[0].AccountID).Result, accountDA.GetHoldings(l_acc0ID), replBL);
@@ -218,7 +218,7 @@ namespace PulxerTest
             sps.RemoveHolding(r_h2);
 
             // синхронизировали
-            import.SyncAccountDataAsync(sps).Wait();
+            import.FullSyncAccountDataAsync(sps).Wait();
 
             // сравниваем
             CompareHoldings(sps.GetHoldingList(r_accounts[0].AccountID).Result, accountDA.GetHoldings(l_acc0ID), replBL);
@@ -242,7 +242,7 @@ namespace PulxerTest
             var r_h2 = sps.AddCash(r_accounts[1].AccountID, 200);
 
             // синхронизировали
-            import.SyncAccountDataAsync(sps).Wait();
+            import.FullSyncAccountDataAsync(sps).Wait();
 
             // узнаем локальные accountID 
             var repl_acc = replBL.GetReplications(Common.Data.ReplObjects.Account);
@@ -263,7 +263,7 @@ namespace PulxerTest
             rCash.SellComm += 60.0m;
 
             // синхронизировали
-            import.SyncAccountDataAsync(sps).Wait();
+            import.FullSyncAccountDataAsync(sps).Wait();
 
             // сравниваем
             var rCash1 = sps.GetCash(r_accounts[0].AccountID).Result;

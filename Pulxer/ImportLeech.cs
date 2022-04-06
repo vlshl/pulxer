@@ -22,15 +22,17 @@ namespace Pulxer
         private Dictionary<int, int> _order_rid_lid;
         private Dictionary<int, int> _trade_rid_lid;
         private readonly IReplicationBL _replBL = null;
+        private readonly IPositionBL _posBL = null;
 
         public ImportLeech(IInstrumDA instrumDA, IAccountDA accountDA, IConfig config, ITickHistoryDA tickHistoryDA,
-            IReplicationBL replBL)
+            IReplicationBL replBL, IPositionBL posBL)
         {
             _instrumDA = instrumDA;
             _accountDA = accountDA;
             _config = config;
             _tickHistoryDA = tickHistoryDA;
             _replBL = replBL;
+            _posBL = posBL;
 
             _instrum_rid_lid = new Dictionary<int, int>();
             _account_rid_lid = new Dictionary<int, int>();
@@ -39,7 +41,7 @@ namespace Pulxer
             _trade_rid_lid = new Dictionary<int, int>();
         }
 
-        public async Task SyncAccountDataAsync(ISyncPipeServer sps)
+        public async Task FullSyncAccountDataAsync(ISyncPipeServer sps)
         {
             await Task.Run(async () =>
             {
@@ -55,11 +57,14 @@ namespace Pulxer
                 foreach (var rAccID in _account_rid_lid.Keys)
                 {
                     int lAccID = _account_rid_lid[rAccID];
-                    await SyncStopOrdersFull(sps, lAccID, rAccID);
-                    await SyncOrdersFull(sps, lAccID, rAccID);
-                    await SyncTradesFull(sps, lAccID, rAccID);
+                    await FullSyncStopOrders(sps, lAccID, rAccID);
+                    await FullSyncOrders(sps, lAccID, rAccID);
+                    await FullSyncTrades(sps, lAccID, rAccID);
                     await SyncHoldings(sps, lAccID, rAccID);
                     await SyncCash(sps, lAccID, rAccID);
+
+                    _posBL.ClearPositions(lAccID);
+                    _posBL.RefreshPositions(lAccID);
                 }
 
                 _replBL.UpdateReplications(ReplObjects.Instrum, _instrum_rid_lid);
@@ -77,7 +82,7 @@ namespace Pulxer
         /// <param name="sps"></param>
         /// <param name="lAccountId">Локальный счет (в локальной базе)</param>
         /// <returns></returns>
-        public async Task FastSyncAccountDataAsync(ISyncPipeServer sps, int lAccountId)
+        public async Task SyncAccountDataAsync(ISyncPipeServer sps, int lAccountId)
         {
             await Task.Run(async () =>
             {
@@ -92,11 +97,13 @@ namespace Pulxer
                 int rAccountId = found.Key;
                 if (rAccountId == 0) return;
 
-                await FastSyncStopOrders(sps, lAccountId, rAccountId);
-                await FastSyncOrders(sps, lAccountId, rAccountId);
-                await FastSyncTrades(sps, lAccountId, rAccountId);
+                await SyncStopOrders(sps, lAccountId, rAccountId);
+                await SyncOrders(sps, lAccountId, rAccountId);
+                await SyncTrades(sps, lAccountId, rAccountId);
                 await SyncHoldings(sps, lAccountId, rAccountId);
                 await SyncCash(sps, lAccountId, rAccountId);
+
+                _posBL.RefreshPositions(lAccountId);
 
                 _replBL.UpdateReplications(ReplObjects.Instrum, _instrum_rid_lid);
                 _replBL.UpdateReplications(ReplObjects.Account, _account_rid_lid);
@@ -228,7 +235,7 @@ namespace Pulxer
         /// <summary>
         /// Полная синхронизация стоп-заявок
         /// </summary>
-        private async Task SyncStopOrdersFull(ISyncPipeServer sps, int localAccountID, int remoteAccountID)
+        private async Task FullSyncStopOrders(ISyncPipeServer sps, int localAccountID, int remoteAccountID)
         {
             var remStopOrders = await sps.GetStopOrders(remoteAccountID, 0);
             if (remStopOrders == null) return;
@@ -290,7 +297,7 @@ namespace Pulxer
         /// <param name="localAccountID">Счет в локальной базе</param>
         /// <param name="remoteAccountID">Счет в базе Leech</param>
         /// <returns></returns>
-        private async Task FastSyncStopOrders(ISyncPipeServer sps, int localAccountID, int remoteAccountID)
+        private async Task SyncStopOrders(ISyncPipeServer sps, int localAccountID, int remoteAccountID)
         {
             // активные заявки могут измениться
             // по всем активным заявкам составляем список соответствующих remoteID
@@ -347,7 +354,7 @@ namespace Pulxer
         /// <summary>
         /// Полная синхронизация заявок
         /// </summary>
-        private async Task SyncOrdersFull(ISyncPipeServer sps, int localAccountID, int remoteAccountID)
+        private async Task FullSyncOrders(ISyncPipeServer sps, int localAccountID, int remoteAccountID)
         {
             var remOrders = await sps.GetOrders(remoteAccountID, 0);
             if (remOrders == null) return;
@@ -411,7 +418,7 @@ namespace Pulxer
         /// <param name="localAccountID">Счет в локальной базе</param>
         /// <param name="remoteAccountID">Счет в базе Leech</param>
         /// <returns></returns>
-        private async Task FastSyncOrders(ISyncPipeServer sps, int localAccountID, int remoteAccountID)
+        private async Task SyncOrders(ISyncPipeServer sps, int localAccountID, int remoteAccountID)
         {
             // активные заявки могут измениться
             // по всем активным заявкам составляем список соответствующих remoteID
@@ -425,29 +432,30 @@ namespace Pulxer
                 rids.Add(rid);
             }
             var rOrders = await sps.GetOrders(rids.ToArray()); // список заявок, которые могут измениться
-            if (rOrders == null) return;
-
-            foreach (var rord in rOrders)
+            if ((rOrders != null) && rOrders.Any())
             {
-                var lord = activeOrders.FirstOrDefault(r => r.OrderID == _order_rid_lid[rord.OrderID]);
-                if (lord == null) continue;
-
-                bool isUpdate = false;
-                if (rord.BuySell != lord.BuySell) { lord.BuySell = rord.BuySell; isUpdate = true; }
-                if (rord.LotCount != lord.LotCount) { lord.LotCount = rord.LotCount; isUpdate = true; }
-                if (rord.Price != lord.Price) { lord.Price = rord.Price; isUpdate = true; }
-                if (rord.Status != lord.Status) { lord.Status = rord.Status; isUpdate = true; }
-                if (rord.OrderNo != lord.OrderNo) { lord.OrderNo = rord.OrderNo; isUpdate = true; }
-                if (rord.Time != lord.Time) { lord.Time = rord.Time; isUpdate = true; }
-
-                int? soID = null;
-                if (rord.StopOrderID != null && _stoporder_rid_lid.ContainsKey(rord.StopOrderID.Value))
+                foreach (var rord in rOrders)
                 {
-                    soID = _stoporder_rid_lid[rord.StopOrderID.Value];
-                }
-                if (lord.StopOrderID != soID) { lord.StopOrderID = soID; isUpdate = true; }
+                    var lord = activeOrders.FirstOrDefault(r => r.OrderID == _order_rid_lid[rord.OrderID]);
+                    if (lord == null) continue;
 
-                if (isUpdate) _accountDA.UpdateOrder(lord);
+                    bool isUpdate = false;
+                    if (rord.BuySell != lord.BuySell) { lord.BuySell = rord.BuySell; isUpdate = true; }
+                    if (rord.LotCount != lord.LotCount) { lord.LotCount = rord.LotCount; isUpdate = true; }
+                    if (rord.Price != lord.Price) { lord.Price = rord.Price; isUpdate = true; }
+                    if (rord.Status != lord.Status) { lord.Status = rord.Status; isUpdate = true; }
+                    if (rord.OrderNo != lord.OrderNo) { lord.OrderNo = rord.OrderNo; isUpdate = true; }
+                    if (rord.Time != lord.Time) { lord.Time = rord.Time; isUpdate = true; }
+
+                    int? soID = null;
+                    if (rord.StopOrderID != null && _stoporder_rid_lid.ContainsKey(rord.StopOrderID.Value))
+                    {
+                        soID = _stoporder_rid_lid[rord.StopOrderID.Value];
+                    }
+                    if (lord.StopOrderID != soID) { lord.StopOrderID = soID; isUpdate = true; }
+
+                    if (isUpdate) _accountDA.UpdateOrder(lord);
+                }
             }
 
             int maxRid = 0; // максимальный реплицированный номер
@@ -456,22 +464,23 @@ namespace Pulxer
                 maxRid = _order_rid_lid.Keys.Max();
             }
             var newRemoteOrders = await sps.GetOrders(remoteAccountID, maxRid + 1); // новые записи, которые появились на сервере и еще не загружались
-            if (newRemoteOrders == null) return;
-
-            foreach (var rord in newRemoteOrders)
+            if ((newRemoteOrders != null) && newRemoteOrders.Any())
             {
-                if (!_instrum_rid_lid.ContainsKey(rord.InsID)) continue; // не смогли установить соответствие инструментов
+                foreach (var rord in newRemoteOrders)
+                {
+                    if (!_instrum_rid_lid.ContainsKey(rord.InsID)) continue; // не смогли установить соответствие инструментов
 
-                var ord = _accountDA.CreateOrder(localAccountID, rord.Time, _instrum_rid_lid[rord.InsID], rord.BuySell, rord.LotCount, rord.Price,
-                    rord.Status, rord.StopOrderID, rord.OrderNo);
-                _order_rid_lid.Add(rord.OrderID, ord.OrderID); // новое соответствие идентификаторов
+                    var ord = _accountDA.CreateOrder(localAccountID, rord.Time, _instrum_rid_lid[rord.InsID], rord.BuySell, rord.LotCount, rord.Price,
+                        rord.Status, rord.StopOrderID, rord.OrderNo);
+                    _order_rid_lid.Add(rord.OrderID, ord.OrderID); // новое соответствие идентификаторов
+                }
             }
         }
 
         /// <summary>
         /// Полная синхронизация сделок
         /// </summary>
-        private async Task SyncTradesFull(ISyncPipeServer sps, int localAccountID, int remoteAccountID)
+        private async Task FullSyncTrades(ISyncPipeServer sps, int localAccountID, int remoteAccountID)
         {
             var remTrades = await sps.GetTrades(remoteAccountID, 0);
             if (remTrades == null) return;
@@ -510,7 +519,7 @@ namespace Pulxer
         /// <summary>
         /// Инкрементальная синхронизация сделок
         /// </summary>
-        private async Task FastSyncTrades(ISyncPipeServer sps, int localAccountID, int remoteAccountID)
+        private async Task SyncTrades(ISyncPipeServer sps, int localAccountID, int remoteAccountID)
         {
             int maxRid = 0; // максимальный реплицированный номер
             if (_trade_rid_lid.Keys.Any())

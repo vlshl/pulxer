@@ -22,6 +22,22 @@ namespace WebApp.Controllers
             _accountBL = accountBL;
         }
 
+        [HttpPost("fullsync")]
+        [Authorize]
+        public IActionResult FullSync()
+        {
+            var ls = _lsm.GetServer();
+            if (ls == null) return BadRequest();
+
+            var sps = ls.CreateSyncPipe().Result;
+            if (sps == null) return BadRequest();
+
+            _importLeech.FullSyncAccountDataAsync(sps).Wait();
+            ls.DeleteSyncPipe().Wait();
+
+            return Ok();
+        }
+
         [HttpPost("sync")]
         [Authorize]
         public IActionResult Sync()
@@ -32,26 +48,10 @@ namespace WebApp.Controllers
             var sps = ls.CreateSyncPipe().Result;
             if (sps == null) return BadRequest();
 
-            _importLeech.SyncAccountDataAsync(sps).Wait();
-            ls.DeleteSyncPipe().Wait();
-
-            return Ok();
-        }
-
-        [HttpPost("fastsync")]
-        [Authorize]
-        public IActionResult FastSync()
-        {
-            var ls = _lsm.GetServer();
-            if (ls == null) return BadRequest();
-
-            var sps = ls.CreateSyncPipe().Result;
-            if (sps == null) return BadRequest();
-
             var acc = _accountBL.GetRealAccount();
             if (acc == null) return null;
 
-            _importLeech.FastSyncAccountDataAsync(sps, acc.AccountID).Wait();
+            _importLeech.SyncAccountDataAsync(sps, acc.AccountID).Wait();
             ls.DeleteSyncPipe().Wait();
 
             return Ok();
