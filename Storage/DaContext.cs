@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using Platform;
 using Storage.DbModel;
+using System.Linq;
 
 namespace Storage
 {
@@ -41,6 +42,7 @@ namespace Storage
         public DbSet<Series> Series { get; set; }
         public DbSet<SeriesValue> SeriesValue { get; set; }
         public DbSet<DbChart> Chart { get; set; }
+        public DbSet<Device> Device { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -213,14 +215,6 @@ namespace Storage
             posTradeBuilder.Property(p => p.TradeID).HasColumnName("trade_id");
             posTradeBuilder.Ignore(p => p.IsNew);
 
-            // User
-            var userBuilder = modelBuilder.Entity<User>().ToTable("users");
-            userBuilder.HasKey(r => r.UserID);
-            userBuilder.Property(p => p.UserID).HasColumnName("user_id");
-            userBuilder.Property(p => p.Login).HasColumnName("login");
-            userBuilder.Property(p => p.PasswordHash).HasColumnName("pwd_hash");
-            userBuilder.Property(p => p.Role).HasColumnName("role");
-
             // Repository
             var reposBuilder = modelBuilder.Entity<ReposObject>().ToTable("repository");
             reposBuilder.HasKey(r => new { r.ReposID });
@@ -257,6 +251,22 @@ namespace Storage
             chartBuilder.Property(p => p.Tf).HasColumnName("tf");
             chartBuilder.Property(p => p.AccountID).HasColumnName("account_id");
             chartBuilder.Property(p => p.Data).HasColumnName("data");
+
+            // User
+            var userBuilder = modelBuilder.Entity<User>().ToTable("users");
+            userBuilder.HasKey(r => r.UserId);
+            userBuilder.Property(p => p.UserId).HasColumnName("user_id");
+            userBuilder.Property(p => p.Login).HasColumnName("login");
+            userBuilder.Property(p => p.PasswordHash).HasColumnName("pwd_hash");
+            userBuilder.Property(p => p.Role).HasColumnName("role");
+
+            // Device
+            var deviceBuilder = modelBuilder.Entity<Device>().ToTable("device");
+            deviceBuilder.HasKey(r => r.DeviceId);
+            deviceBuilder.Property(p => p.DeviceId).HasColumnName("device_id");
+            deviceBuilder.Property(p => p.Code).HasColumnName("code");
+            deviceBuilder.Property(p => p.UserId).HasColumnName("user_id");
+            deviceBuilder.Property(p => p.Uid).HasColumnName("uid");
         }
     }
 }

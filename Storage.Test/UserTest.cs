@@ -27,13 +27,13 @@ namespace Storage.Test
             Assert.Single(users);
             var user1 = users[0];
 
-            Assert.Equal(user.UserID, user1.UserID);
+            Assert.Equal(user.UserId, user1.UserId);
             Assert.Equal(user.Login, user1.Login);
             Assert.Equal(user.PasswordHash, user1.PasswordHash);
             Assert.Equal(user.Role, user1.Role);
 
             // cleanup
-            userDA.DeleteUser(user.UserID);
+            userDA.DeleteUser(user.UserId);
         }
 
         [Fact]
@@ -43,9 +43,9 @@ namespace Storage.Test
 
             // create
             var userDA = new UserDA(_options);
-            userID = userDA.CreateUser("login", "hash", "role").UserID;
+            userID = userDA.CreateUser("login", "hash", "role").UserId;
 
-            var user = userDA.GetUsers().FirstOrDefault(r => r.UserID == userID);
+            var user = userDA.GetUsers().FirstOrDefault(r => r.UserId == userID);
 
             user.Login = "login1";
             user.PasswordHash = "hash1";
@@ -53,9 +53,9 @@ namespace Storage.Test
 
             userDA.UpdateUser(user);
 
-            var user1 = userDA.GetUsers().FirstOrDefault(r => r.UserID == userID);
+            var user1 = userDA.GetUsers().FirstOrDefault(r => r.UserId == userID);
 
-            Assert.Equal(userID, user1.UserID);
+            Assert.Equal(userID, user1.UserId);
             Assert.Equal("login1", user1.Login);
             Assert.Equal("hash1", user1.PasswordHash);
             Assert.Equal("role1", user1.Role);

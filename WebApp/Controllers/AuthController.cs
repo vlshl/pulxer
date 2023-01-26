@@ -16,6 +16,7 @@ using System.Threading.Tasks;
 
 namespace WebApp.Controllers
 {
+    [Route("auth")]
     public class AuthController : ControllerBase
     {
         private readonly IUserBL _userBL;
@@ -29,13 +30,13 @@ namespace WebApp.Controllers
             _logger = logger;
         }
 
-        [HttpPost("/auth")]
-        public ActionResult<AuthUser> Auth(string login, string password)
+        [HttpPost("user")]
+        public ActionResult<AuthUser> AuthUser(string login, string password)
         {
             var user = _userBL.AuthUser(login, password);
             if (user == null)
             {
-                _logger.LogInformation("Logon failed: {user}", login);
+                _logger.LogInformation("Logon failed: {0}", login);
                 return Unauthorized();
             }
 
@@ -44,78 +45,130 @@ namespace WebApp.Controllers
 
             AuthUser authUser = new AuthUser()
             {
-                UserID = user.UserID,
+                UserID = user.UserId,
                 Login = user.Login,
                 Token = token,
                 ExpTimeStr = expTime.ToString("o"),
                 Role = user.Role
             };
 
-            _logger.LogInformation("Logon success: {user}", user.Login);
+            _logger.LogInformation("Logon success: {0}", user.Login);
 
             return Ok(authUser);
         }
 
-        // оставлено для совместимости с мобильным клиентом
-        [HttpPost("/token")]
-        public async Task Token()
+        [HttpPost("device")]
+        public ActionResult<AuthUser> AuthDevice(string devUid, string code)
         {
-            var username = Request.Form["username"];
-            var password = Request.Form["password"];
-
-            var identity = GetIdentity(username, password);
-            if (identity == null)
+            var dev = _userBL.AuthDevice(devUid, code);
+            if (dev == null)
             {
-                Response.StatusCode = 400;
-                await Response.WriteAsync("Invalid login or password.");
-                return;
+                _logger.LogInformation("Device logon failed: {0}", devUid);
+                return Unauthorized();
             }
 
-            var jwtConfig = _config.GetSection("JwtToken");
-            string key = DataProtect.TryUnProtect(jwtConfig.GetValue("Key", AuthOptions.KEY));
-            string issuer = jwtConfig.GetValue("Issuer", AuthOptions.ISSUER);
-            string audience = jwtConfig.GetValue("Audience", AuthOptions.AUDIENCE);
-            int lifetime = jwtConfig.GetValue("Lifetime", AuthOptions.LIFETIME);
-            var now = DateTime.UtcNow;
-
-            var jwt = new JwtSecurityToken(
-                    issuer: issuer,
-                    audience: audience,
-                    notBefore: now,
-                    claims: identity.Claims,
-                    expires: now.Add(TimeSpan.FromMinutes(lifetime)),
-                    signingCredentials: new SigningCredentials(AuthOptions.GetSymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256));
-            var encodedJwt = new JwtSecurityTokenHandler().WriteToken(jwt);
-
-            var response = new
+            var user = _userBL.GetUserById(dev.UserId);
+            if (user == null)
             {
-                access_token = encodedJwt,
-                username = identity.Name
+                _logger.LogInformation("User not found: {0}", dev.UserId.ToString());
+                return Unauthorized();
+            }
+
+            DateTime expTime;
+            string token = _userBL.BuildJwtToken(_config, user, out expTime);
+
+            AuthUser authUser = new AuthUser()
+            {
+                UserID = user.UserId,
+                Login = user.Login,
+                Token = token,
+                ExpTimeStr = expTime.ToString("o"),
+                Role = user.Role
             };
 
-            Response.ContentType = "application/json";
-            await Response.WriteAsync(JsonConvert.SerializeObject(response,
-                new JsonSerializerSettings { Formatting = Formatting.Indented }));
+            _logger.LogInformation("Device logon success: Login={0}, Uid={1}", user.Login, dev.Uid);
+
+            return Ok(authUser);
         }
 
-        private ClaimsIdentity GetIdentity(string login, string password)
+        [HttpPost("createdev")]
+        [Produces("application/json")] // response
+        public string CreateDevice(string login, string password, string code)
         {
-            string hash = _userBL.CalcHash(password);
-            User user = _userBL.GetUsers().FirstOrDefault(r =>
-                r.Login == login && r.PasswordHash == hash);
-            if (user == null) return null;
+            string res = _userBL.CreateDeviceAuth(login, password, code);
+            if (string.IsNullOrEmpty(res)) return "";
 
-            var claims = new List<Claim>
-            {
-                new Claim(ClaimsIdentity.DefaultNameClaimType, user.Login),
-                new Claim(ClaimsIdentity.DefaultRoleClaimType, user.Role)
-            };
-
-            ClaimsIdentity claimsIdentity = new ClaimsIdentity(claims, "Token",
-                ClaimsIdentity.DefaultNameClaimType,
-                ClaimsIdentity.DefaultRoleClaimType);
-
-            return claimsIdentity;
+            return res;
         }
+
+        [HttpPost("deletedev")]
+        public bool DeleteDevice(string login, string password, string devUid)
+        {
+            return _userBL.DeleteDeviceAuth(login, password, devUid);
+        }
+
+
+
+        //// оставлено для совместимости с мобильным клиентом
+        //[HttpPost("/token")]
+        //public async Task Token()
+        //{
+        //    var username = Request.Form["username"];
+        //    var password = Request.Form["password"];
+
+        //    var identity = GetIdentity(username, password);
+        //    if (identity == null)
+        //    {
+        //        Response.StatusCode = 400;
+        //        await Response.WriteAsync("Invalid login or password.");
+        //        return;
+        //    }
+
+        //    var jwtConfig = _config.GetSection("JwtToken");
+        //    string key = DataProtect.TryUnProtect(jwtConfig.GetValue("Key", AuthOptions.KEY));
+        //    string issuer = jwtConfig.GetValue("Issuer", AuthOptions.ISSUER);
+        //    string audience = jwtConfig.GetValue("Audience", AuthOptions.AUDIENCE);
+        //    int lifetime = jwtConfig.GetValue("Lifetime", AuthOptions.LIFETIME);
+        //    var now = DateTime.UtcNow;
+
+        //    var jwt = new JwtSecurityToken(
+        //            issuer: issuer,
+        //            audience: audience,
+        //            notBefore: now,
+        //            claims: identity.Claims,
+        //            expires: now.Add(TimeSpan.FromMinutes(lifetime)),
+        //            signingCredentials: new SigningCredentials(AuthOptions.GetSymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256));
+        //    var encodedJwt = new JwtSecurityTokenHandler().WriteToken(jwt);
+
+        //    var response = new
+        //    {
+        //        access_token = encodedJwt,
+        //        username = identity.Name
+        //    };
+
+        //    Response.ContentType = "application/json";
+        //    await Response.WriteAsync(JsonConvert.SerializeObject(response,
+        //        new JsonSerializerSettings { Formatting = Formatting.Indented }));
+        //}
+
+        //private ClaimsIdentity GetIdentity(string login, string password)
+        //{
+        //    string hash = _userBL.CalcHash(password);
+        //    User user = _userBL.GetUsers().FirstOrDefault(r =>
+        //        r.Login == login && r.PasswordHash == hash);
+        //    if (user == null) return null;
+
+        //    var claims = new List<Claim>
+        //    {
+        //        new Claim(ClaimsIdentity.DefaultNameClaimType, user.Login),
+        //        new Claim(ClaimsIdentity.DefaultRoleClaimType, user.Role)
+        //    };
+
+        //    ClaimsIdentity claimsIdentity = new ClaimsIdentity(claims, "Token",
+        //        ClaimsIdentity.DefaultNameClaimType,
+        //        ClaimsIdentity.DefaultRoleClaimType);
+
+        //    return claimsIdentity;
+        //}
     }
 }

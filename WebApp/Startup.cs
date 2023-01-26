@@ -15,6 +15,7 @@ using Pulxer.Leech;
 using System.Text;
 using Microsoft.AspNetCore.Authentication;
 using Serilog;
+using System.Threading.Tasks;
 
 namespace WebApp
 {
@@ -74,6 +75,24 @@ namespace WebApp
             dfo.FileProvider = fp;
             app.UseDefaultFiles(dfo);
 
+            app.Use(async (ctx, next) =>
+            {
+                bool isMobile = ctx.Request.Headers["User-Agent"].ToString().ToLower().Contains("mobile");
+                if (isMobile)
+                {
+                    bool isApi = ctx.Request.Path.Value.StartsWith("/auth") || ctx.Request.Path.Value.StartsWith("/api") || ctx.Request.Path.Value.StartsWith("/ws");
+                    if (!isApi)
+                    {
+                        if (!ctx.Request.Path.Value.StartsWith("/barus"))
+                        {
+                            string path = ctx.Request.Path.Value.StartsWith("/") ? ("/barus" + ctx.Request.Path.Value) : ("/barus/" + ctx.Request.Path.Value);
+                            ctx.Request.Path = new PathString(path);
+                        }
+                    }
+                }
+                await next();
+            });
+
             // static
             app.UseStaticFiles(new StaticFileOptions
             {
@@ -81,7 +100,7 @@ namespace WebApp
                 RequestPath = "",
                 OnPrepareResponse = ctx =>
                 {
-                    if (ctx.Context.Request.Path.Value == "/index.html")
+                    if (ctx.Context.Request.Path.Value.EndsWith("/index.html"))
                     {
                         ctx.Context.Response.Headers.Append("Cache-Control", "no-cache, no-store, must-revalidate");
                     }

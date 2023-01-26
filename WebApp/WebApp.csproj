@@ -17,7 +17,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="pxapp\" />
     <Folder Include="wwwroot\" />
   </ItemGroup>
 

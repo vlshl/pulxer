@@ -18,7 +18,7 @@ namespace PulxerTest
             IInstrumDA instrumDA = new InstrumDAMock();
             IReplicationBL replBL = new ReplicationBLMock();
 
-            ImportLeech import = new ImportLeech(instrumDA, accountDA, null, null, replBL);
+            ImportLeech import = new ImportLeech(instrumDA, accountDA, null, null, replBL, null);
             import.FullSyncAccountDataAsync(sps).Wait();
 
             var r_accounts = sps.GetAccountList().Result;
@@ -52,7 +52,7 @@ namespace PulxerTest
             SyncPipeServerMock sps = new SyncPipeServerMock();
             IReplicationBL replBL = new ReplicationBLMock();
 
-            ImportLeech import = new ImportLeech(instrumDA, accountDA, null, null, replBL);
+            ImportLeech import = new ImportLeech(instrumDA, accountDA, null, null, replBL, null);
             import.FullSyncAccountDataAsync(sps).Wait();
 
             var r_instrums = sps.GetInstrumList().Result;
@@ -115,7 +115,7 @@ namespace PulxerTest
             Assert.True(sps.GetOrders(r_accounts[1].AccountID, 0).Result.Count() == 1);
             Assert.True(sps.GetTrades(r_accounts[1].AccountID, 0).Result.Count() == 1);
 
-            ImportLeech import = new ImportLeech(instrumDA, accountDA, null, null, replBL);
+            ImportLeech import = new ImportLeech(instrumDA, accountDA, null, null, replBL, null);
             import.FullSyncAccountDataAsync(sps).Wait();
 
             // узнаем локальные accountID 
@@ -171,7 +171,7 @@ namespace PulxerTest
             IAccountDA accountDA = new AccountDAMock();
             SyncPipeServerMock sps = new SyncPipeServerMock();
             IReplicationBL replBL = new ReplicationBLMock();
-            ImportLeech import = new ImportLeech(instrumDA, accountDA, null, null, replBL);
+            ImportLeech import = new ImportLeech(instrumDA, accountDA, null, null, replBL, null);
 
             var r_accounts = sps.GetAccountList().Result;
             var r_instrums = sps.GetInstrumList().Result;
@@ -232,7 +232,7 @@ namespace PulxerTest
             IAccountDA accountDA = new AccountDAMock();
             SyncPipeServerMock sps = new SyncPipeServerMock();
             IReplicationBL replBL = new ReplicationBLMock();
-            ImportLeech import = new ImportLeech(instrumDA, accountDA, null, null, replBL);
+            ImportLeech import = new ImportLeech(instrumDA, accountDA, null, null, replBL, null);
 
             var r_accounts = sps.GetAccountList().Result;
             var r_instrums = sps.GetInstrumList().Result;

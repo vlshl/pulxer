@@ -16,10 +16,12 @@ namespace Pulxer
     public class UserBL : IUserBL
     {
         private readonly IUserDA _userDA;
+        private readonly IDeviceDA _deviceDA;
 
-        public UserBL(IUserDA userDA)
+        public UserBL(IUserDA userDA, IDeviceDA deviceDA)
         {
             _userDA = userDA;
+            _deviceDA = deviceDA;
         }
 
         /// <summary>
@@ -47,6 +49,16 @@ namespace Pulxer
         }
 
         /// <summary>
+        /// Пользователь
+        /// </summary>
+        /// <param name="userId">Идентификатор пользователя</param>
+        /// <returns>Пользователь или null</returns>
+        public User GetUserById(int userId)
+        {
+            return _userDA.GetUsers().FirstOrDefault(u => u.UserId == userId);
+        }
+
+        /// <summary>
         /// Установить пароль для пользователя по логину
         /// </summary>
         /// <param name="login">Логин</param>
@@ -64,7 +76,7 @@ namespace Pulxer
         }
 
         /// <summary>
-        /// Удаление пользователя по логину
+        /// Удаление пользователя по логину. Также удаляются все связанные с пользователем устройства.
         /// </summary>
         /// <param name="login">Логин</param>
         /// <returns>true-пользователь успешно удален, false-пользователь с таким логином не существует</returns>
@@ -73,7 +85,8 @@ namespace Pulxer
             User user = _userDA.GetUsers().FirstOrDefault(r => r.Login == login);
             if (user == null) return false;
 
-            _userDA.DeleteUser(user.UserID);
+            _deviceDA.DeleteDevicesByUser(user.UserId);
+            _userDA.DeleteUser(user.UserId);
 
             return true;
         }
@@ -118,7 +131,7 @@ namespace Pulxer
 
             var claims = new List<Claim>
             {
-                new Claim(ClaimsIdentity.DefaultNameClaimType, user.UserID.ToString()),
+                new Claim(ClaimsIdentity.DefaultNameClaimType, user.UserId.ToString()),
                 new Claim(ClaimsIdentity.DefaultRoleClaimType, user.Role)
             }; 
 
@@ -131,6 +144,60 @@ namespace Pulxer
                     signingCredentials: new SigningCredentials(AuthOptions.GetSymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256));
 
             return new JwtSecurityTokenHandler().WriteToken(jwt);
+        }
+
+        /// <summary>
+        /// Аутентификация устройства
+        /// </summary>
+        /// <param name="devUid">Уникальный код устройства</param>
+        /// <param name="code">Пин-код</param>
+        /// <returns>Device-устройство, null-аутентификация не прошла</returns>
+        public Device AuthDevice(string devUid, string code)
+        {
+            if (string.IsNullOrEmpty(devUid) || string.IsNullOrEmpty(code)) return null;
+
+            var dev = _deviceDA.GetDevice(devUid);
+            if ((dev == null) || (dev.Code != code)) return null;
+
+            return dev;
+        }
+
+        /// <summary>
+        /// Создание аутентификации устройства. Создается связь между пользователем с указанным логином и устройством.
+        /// </summary>
+        /// <param name="login">Логин пользователя</param>
+        /// <param name="password">Пароль</param>
+        /// <param name="code">Пин-код</param>
+        /// <returns>Уникальный код устройства, пустая строка - неверный логин и пароль либо иные причины ошибки</returns>
+        public string CreateDeviceAuth(string login, string password, string code)
+        {
+            var user = AuthUser(login, password);
+            if (user == null) return "";
+
+            string devUid = Convert.ToBase64String(Guid.NewGuid().ToByteArray());
+            var dev = _deviceDA.CreateDevice(devUid, code, user.UserId);
+            if (dev == null) return "";
+
+            return devUid;
+        }
+
+        /// <summary>
+        /// Удаление аутентификации устройства
+        /// </summary>
+        /// <param name="login">Логин пользователя</param>
+        /// <param name="password">Пароль</param>
+        /// <param name="devUid">Уникальный идентификатор устройства</param>
+        /// <returns>true-успешно, false-либо неверный логин и пароль, либо не найдено устройство, либо нейденное устройство не соответствует пользователю, либо иные причины ошибки</returns>
+        public bool DeleteDeviceAuth(string login, string password, string devUid)
+        {
+            var user = AuthUser(login, password);
+            if (user == null) return false;
+
+            var dev = _deviceDA.GetDevice(devUid);
+            if (dev == null) return false;
+            if (dev.UserId != user.UserId) return false;
+
+            return _deviceDA.DeleteDevice(dev.Uid);
         }
     }
 }

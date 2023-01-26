@@ -29,7 +29,7 @@ namespace Cli
                 foreach (var user in users)
                 {
                     string str = string.Format("{0}\t{1}\t{2}\t{3}",
-                        user.UserID.ToString(),
+                        user.UserId.ToString(),
                         user.Login,
                         user.PasswordHash,
                         user.Role);
@@ -58,7 +58,7 @@ namespace Cli
                     _console.WriteError("Логин уже существует.");
                     return;
                 }
-                _console.WriteLine("Пользователь создан, Id=" + user.UserID.ToString());
+                _console.WriteLine("Пользователь создан, Id=" + user.UserId.ToString());
             }
             catch (Exception ex)
             {

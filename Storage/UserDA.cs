@@ -43,7 +43,7 @@ namespace Storage
         {
             User user = new User()
             {
-                UserID = 0,
+                UserId = 0,
                 Login = login,
                 PasswordHash = pwdhash,
                 Role = role
