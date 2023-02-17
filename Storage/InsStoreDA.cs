@@ -144,9 +144,12 @@ namespace Storage
                 {
                     try
                     {
+                        int t1 = StorageLib.ToDbTime(date1.Date);
+                        int t2 = StorageLib.ToDbTime(date2.Date.AddDays(1));
+
                         var insStoreParam = new NpgsqlParameter("@InsStoreID", insStoreID);
-                        var time1Param = new NpgsqlParameter("@Time1", StorageLib.ToDbTime(date1.Date));
-                        var time2Param = new NpgsqlParameter("@Time2", StorageLib.ToDbTime(date2.Date.AddDays(1)));
+                        var time1Param = new NpgsqlParameter("@Time1", t1);
+                        var time2Param = new NpgsqlParameter("@Time2", t2);
 
                         db.Database.ExecuteSqlCommand("delete from barhistory where insstore_id = @InsStoreID and bar_time >= @Time1 and bar_time < @Time2",
                             insStoreParam, time1Param, time2Param);
@@ -161,6 +164,7 @@ namespace Storage
                         foreach (var bar in bars)
                         {
                             if (cancel.IsCancellationRequested) break;
+                            if ((bar.Time < t1) || (bar.Time >= t2)) continue;
 
                             timeParam.Value = bar.Time;
                             opParam.Value = bar.OpenPrice;
