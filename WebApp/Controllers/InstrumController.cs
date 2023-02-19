@@ -3,6 +3,7 @@ using Common.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
+using WebApp.Controllers;
 
 namespace WebApp
 {
@@ -32,6 +33,34 @@ namespace WebApp
         public IEnumerable<Instrum> GetList()
         {
             return _instrumBL.GetInstrums();
+        }
+
+        [HttpGet("favs")]
+        [Authorize]
+        public int[] GetFavInstrumIds()
+        {
+            return _instrumBL.GetFavInstrumIds(this.GetUserId());
+        }
+
+        [HttpGet("actives")]
+        [Authorize]
+        public int[] GetActiveInstrumIds()
+        {
+            return _instrumBL.GetActiveInstrumIds();
+        }
+
+        [HttpPost("addfav/{instrumId}")]
+        [Authorize]
+        public int[] AddFavInstrum(int instrumId)
+        {
+            return _instrumBL.AddFavorite(this.GetUserId(), instrumId);
+        }
+
+        [HttpPost("remfav/{instrumId}")]
+        [Authorize]
+        public int[] RemoveFavInstrum(int instrumId)
+        {
+            return _instrumBL.RemoveFavorite(this.GetUserId(), instrumId);
         }
     }
 }

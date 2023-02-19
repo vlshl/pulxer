@@ -16,6 +16,10 @@ namespace Common.Interfaces
         CommonData.Instrum GetInstrum(string ticker);
         void SaveInstrum(CommonData.Instrum ins);
         void DeleteInstrumByID(int insID);
+        int[] GetFavInstrumIds(int userId);
+        int[] AddFavorite(int userId, int instrumId);
+        int[] RemoveFavorite(int userId, int instrumId);
+        int[] GetActiveInstrumIds();
     }
 }
 

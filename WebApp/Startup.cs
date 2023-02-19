@@ -77,18 +77,13 @@ namespace WebApp
 
             app.Use(async (ctx, next) =>
             {
-                bool isMobile = ctx.Request.Headers["User-Agent"].ToString().ToLower().Contains("mobile");
-                if (isMobile)
+                bool isApi = ctx.Request.Path.Value.StartsWith("/auth") || ctx.Request.Path.Value.StartsWith("/api") || ctx.Request.Path.Value.StartsWith("/ws");
+                if (!isApi)
                 {
-                    bool isApi = ctx.Request.Path.Value.StartsWith("/auth") || ctx.Request.Path.Value.StartsWith("/api") || ctx.Request.Path.Value.StartsWith("/ws");
-                    if (!isApi)
-                    {
-                        if (!ctx.Request.Path.Value.StartsWith("/barus"))
-                        {
-                            string path = ctx.Request.Path.Value.StartsWith("/") ? ("/barus" + ctx.Request.Path.Value) : ("/barus/" + ctx.Request.Path.Value);
-                            ctx.Request.Path = new PathString(path);
-                        }
-                    }
+                    bool isMobile = ctx.Request.Headers["User-Agent"].ToString().ToLower().Contains("mobile");
+                    string p = isMobile ? "barus" : "dario";
+                    string path = ctx.Request.Path.Value.StartsWith("/") ? ("/" + p + ctx.Request.Path.Value) : ("/" + p + "/" + ctx.Request.Path.Value);
+                    ctx.Request.Path = new PathString(path);
                 }
                 await next();
             });

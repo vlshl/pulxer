@@ -21,7 +21,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="pxapp\index.html">
+    <None Update="pxapp\barus\index.html">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="pxapp\dario\index.html">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>

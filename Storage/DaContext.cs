@@ -43,6 +43,8 @@ namespace Storage
         public DbSet<SeriesValue> SeriesValue { get; set; }
         public DbSet<DbChart> Chart { get; set; }
         public DbSet<Device> Device { get; set; }
+        public DbSet<Global> Globals { get; set; }
+        public DbSet<Setting> Settings { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -267,6 +269,22 @@ namespace Storage
             deviceBuilder.Property(p => p.Code).HasColumnName("code");
             deviceBuilder.Property(p => p.UserId).HasColumnName("user_id");
             deviceBuilder.Property(p => p.Uid).HasColumnName("uid");
+
+            // Global
+            var globalBuilder = modelBuilder.Entity<Global>().ToTable("global");
+            globalBuilder.HasKey(r => r.GlobalId);
+            globalBuilder.Property(p => p.GlobalId).HasColumnName("global_id");
+            globalBuilder.Property(p => p.Key).HasColumnName("key");
+            globalBuilder.Property(p => p.Value).HasColumnName("value");
+
+            // Setting
+            var settingBuilder = modelBuilder.Entity<Setting>().ToTable("setting");
+            settingBuilder.HasKey(r => r.SettingId);
+            settingBuilder.Property(p => p.SettingId).HasColumnName("setting_id");
+            settingBuilder.Property(p => p.UserId).HasColumnName("user_id");
+            settingBuilder.Property(p => p.Category).HasColumnName("category");
+            settingBuilder.Property(p => p.Key).HasColumnName("key");
+            settingBuilder.Property(p => p.Value).HasColumnName("value");
         }
     }
 }

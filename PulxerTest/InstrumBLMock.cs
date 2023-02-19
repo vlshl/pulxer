@@ -52,7 +52,17 @@ namespace PulxerTest
             _instrums.Add(instrum3);
         }
 
+        public void AddFavorite(int userId, int instrumId)
+        {
+            throw new NotImplementedException();
+        }
+
         public void DeleteInstrumByID(int insID)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IEnumerable<InstrumListItem> GetFavInstrumList(int userId)
         {
             throw new NotImplementedException();
         }
@@ -75,6 +85,11 @@ namespace PulxerTest
         public IEnumerable<Instrum> GetInstrums()
         {
             return _instrums;
+        }
+
+        public void RemoveFavorite(int userId, int instrumId)
+        {
+            throw new NotImplementedException();
         }
 
         public void SaveInstrum(Instrum ins)

@@ -20,6 +20,7 @@ namespace Storage
             services.AddTransient<IRepositoryDA, RepositoryDA>();
             services.AddTransient<IChartDA, ChartDA>();
             services.AddTransient<IDeviceDA, DeviceDA>();
+            services.AddTransient<ISettingsDA, SettingsDA>();
 
             services.AddDbContext<DaContext>(options => options.UseNpgsql(connectionString));
         }
