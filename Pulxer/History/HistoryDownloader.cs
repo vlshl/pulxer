@@ -255,14 +255,17 @@ namespace Pulxer.History
                     if (hasData) continue;
 
                     var bars = await SyncDataBlock(insStore, part.Date1, part.Date2, part.Date2 >= DateTime.Today, cancel); // синхронизируем поток с минимальным ТФ, данные за сегодня грязные
-                    foreach (var ss in insStores) // остальные потоки формируем из минимального
+                    if (bars != null)
                     {
-                        if (cancel.IsCancellationRequested) break;
+                        foreach (var ss in insStores) // остальные потоки формируем из минимального
+                        {
+                            if (cancel.IsCancellationRequested) break;
 
-                        var newBarRow = _insStoreBL.ConvertBars(ss.InsID, ss.Tf, bars, cancel);
-                        bool isLastDirty = part.Date2 >= DateTime.Today; // данные за сегодня помечаем как грязные, поскольку не уверены что они полные
-                        _insStoreBL.InsertData(ss.InsStoreID, ins.Decimals, newBarRow.Bars, part.Date1, part.Date2,
-                            isLastDirty, cancel);
+                            var newBarRow = _insStoreBL.ConvertBars(ss.InsID, ss.Tf, bars, cancel);
+                            bool isLastDirty = part.Date2 >= DateTime.Today; // данные за сегодня помечаем как грязные, поскольку не уверены что они полные
+                            _insStoreBL.InsertData(ss.InsStoreID, ins.Decimals, newBarRow.Bars, part.Date1, part.Date2,
+                                isLastDirty, cancel);
+                        }
                     }
                 }
             }

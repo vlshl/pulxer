@@ -149,8 +149,16 @@ namespace Pulxer.HistoryProvider
         public async Task<IEnumerable<Bar>> GetDataAsync(string ticker, Timeframes tf, DateTime date1, DateTime date2, int delay)
         {
             if (_requester == null) return null;
-            if (_tickers.All(td => td.Ticker != ticker)) return null;
-            if (_tfds.All(t => t.Tf != tf)) return null;
+            if (_tickers.All(td => td.Ticker != ticker))
+            {
+                _logger.LogError("Ticker not found: " + ticker);
+                return null;
+            }
+            if (_tfds.All(t => t.Tf != tf))
+            {
+                _logger.LogError("Timeframe not found: " + tf.ToString());
+                return null;
+            }
 
             byte[] data = ReadCache(ticker, tf, date1, date2);
             if (data == null)
@@ -158,6 +166,11 @@ namespace Pulxer.HistoryProvider
                 string url = ReplParams(_baseUrl, ticker, tf, date1, date2);
                 data = _requester.Request(url, delay);
                 if (data != null) WriteCache(ticker, tf, date1, date2, data);
+            }
+            if (data == null || !data.Any())
+            {
+                _logger.LogError("Response data is null or empty");
+                return null;
             }
 
             ParserSettings ps = new ParserSettings();
@@ -172,9 +185,16 @@ namespace Pulxer.HistoryProvider
                 ps.TickPriceIndex = ps.TickVolumeIndex = -1;
                 ps.FieldCount = 9;
             }
-            Parser parser = new Parser(ps);
             
-            return await parser.ParseAsync(data);
+            Parser parser = new Parser(ps, _logger);
+            var bars = await parser.ParseAsync(data, ticker, tf, date1, date2);
+            if (bars == null)
+            {
+                _logger.LogError("Parsing result is null");
+                DeleteFromCache(ticker, tf, date1, date2);
+            }
+
+            return bars;
         }
 
         /// <summary>
@@ -217,6 +237,44 @@ namespace Pulxer.HistoryProvider
             File.WriteAllBytes(Path.Combine(path2, filename), data);
 
             return true;
+        }
+
+        /// <summary>
+        /// Очистка данных в локальном кэше
+        /// </summary>
+        /// <param name="ticker">Тикер</param>
+        /// <param name="tf">Таймфрейм</param>
+        /// <param name="date1">Дата 1</param>
+        /// <param name="date2">Дата 2</param>
+        /// <returns></returns>
+        private void DeleteFromCache(string ticker, Timeframes tf, DateTime date1, DateTime date2)
+        {
+            string cachePath = _config.GetHistoryProviderCache();
+            if (string.IsNullOrEmpty(cachePath)) return;
+
+            if (!Directory.Exists(cachePath))
+            {
+                Directory.CreateDirectory(cachePath);
+            }
+
+            string path1 = Path.Combine(cachePath, ticker);
+            if (!Directory.Exists(path1))
+            {
+                Directory.CreateDirectory(path1);
+            }
+
+            string path2 = Path.Combine(path1, tf.ToString());
+            if (!Directory.Exists(path2))
+            {
+                Directory.CreateDirectory(path2);
+            }
+
+            string filename = string.Format("{0}_{1}.txt",
+                date1.ToString("yyyy-MM-dd"),
+                date2.ToString("yyyy-MM-dd"));
+
+            string p = Path.Combine(path2, filename);
+            if (File.Exists(p)) File.Delete(p);
         }
 
         /// <summary>

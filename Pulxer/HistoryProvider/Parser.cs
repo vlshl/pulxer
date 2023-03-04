@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Common;
+using Microsoft.Extensions.Logging;
 using Platform;
 
 namespace Pulxer.HistoryProvider
@@ -22,8 +23,8 @@ namespace Pulxer.HistoryProvider
         public bool IsTickData { get; set; }
         public Dictionary<string, Timeframes> Period2Timeframe;
 
-        //public int TickerIndex { get; set; }
-        //public int PeriodIndex { get; set; }
+        public int TickerIndex { get; set; }
+        public int PeriodIndex { get; set; }
         public int DateIndex { get; set; }
         public int TimeIndex { get; set; }
         public int OpenPriceIndex { get; set; }
@@ -59,8 +60,8 @@ namespace Pulxer.HistoryProvider
             this.Period2Timeframe.Add("D", Timeframes.Day);
             this.Period2Timeframe.Add("W", Timeframes.Week);
 
-            //this.TickerIndex = 0;
-            //this.PeriodIndex = 1;
+            this.TickerIndex = 0;
+            this.PeriodIndex = 1;
             this.DateIndex = 2;
             this.TimeIndex = 3;
             this.OpenPriceIndex = 4;
@@ -73,80 +74,122 @@ namespace Pulxer.HistoryProvider
             this.Nfi = new NumberFormatInfo();
             this.Nfi.NumberDecimalSeparator = NumberDecimalSeparator;
         }
+        public string GetTfKey(Timeframes tf)
+        {
+            if (!Period2Timeframe.Values.Contains(tf)) return "";
+
+            var p = Period2Timeframe.FirstOrDefault(r => r.Value == tf);
+            return p.Key;
+        }
     }
 
-    class Parser
+    public class Parser
     {
         private ParserSettings settings;
+        private readonly ILogger _logger;
 
-        public Parser()
+        public Parser(ILogger logger = null)
         {
             this.settings = new ParserSettings();
+            _logger = logger;
         }
 
-        public Parser(ParserSettings ps)
+        public Parser(ParserSettings ps, ILogger logger = null)
         {
             this.settings = ps;
+            _logger = logger;
         }
 
-        public Task<IEnumerable<Bar>> ParseAsync(byte[] data)
+        public Task<IEnumerable<Bar>> ParseAsync(byte[] data, string ticker, Timeframes tf, DateTime d1, DateTime d2)
         {
             return Task.Run<IEnumerable<Bar>>( () =>
             {
-                string str = settings.DataEncoding.GetString(data, 0, data.Length);
-                string[] lines = str.Split(new string[] { settings.LineSeparator }, StringSplitOptions.RemoveEmptyEntries)
-                                    .Skip(settings.SkipLinesCount).ToArray();
-
-                List<Bar> bars = new List<Bar>();
-                foreach (string ln in lines)
+                try
                 {
-                    string line = ln.Trim();
-                    if (line.Length == 0) continue;
+                    string str = settings.DataEncoding.GetString(data, 0, data.Length);
+                    string[] lines = str.Split(new string[] { settings.LineSeparator }, StringSplitOptions.RemoveEmptyEntries)
+                                        .Skip(settings.SkipLinesCount).ToArray();
 
-                    string[] prms = line.Split(settings.FieldSeparator.ToCharArray());
-                    if (prms.Length != settings.FieldCount) continue;
-
-                    //string _ticker = settings.TickerIndex >= 0 ? prms[settings.TickerIndex] : "";
-                    //string _per = settings.PeriodIndex >= 0 ? prms[settings.PeriodIndex] : "";
-                    string _date = settings.DateIndex >= 0 ? prms[settings.DateIndex] : "";
-                    string _time = settings.TimeIndex >= 0 ? prms[settings.TimeIndex] : "";
-
-                    string _open = settings.OpenPriceIndex >= 0 ? prms[settings.OpenPriceIndex] : "";
-                    string _high = settings.HighPriceIndex >= 0 ? prms[settings.HighPriceIndex] : "";
-                    string _low = settings.LowPriceIndex >= 0 ? prms[settings.LowPriceIndex] : "";
-                    string _close = settings.ClosePriceIndex >= 0 ? prms[settings.ClosePriceIndex] : "";
-                    string _volume = settings.VolumeIndex >= 0 ? prms[settings.VolumeIndex] : "";
-                    string _tickPrice = settings.TickPriceIndex >= 0 ? prms[settings.TickPriceIndex] : "";
-                    string _tickVolume = settings.TickVolumeIndex >= 0 ? prms[settings.TickVolumeIndex] : "";
-
-                    Bar bar = new Bar();
-
-                    bar.Time = DateTime.ParseExact(_date + " " + _time, "yyyyMMdd HHmmss", settings.Nfi);
-                    if (settings.IsTickData)
+                    string tfKey = settings.GetTfKey(tf);
+                    List<Bar> bars = new List<Bar>();
+                    foreach (string ln in lines)
                     {
-                        bar.Open = bar.High = bar.Low = bar.Close = decimal.Parse(_tickPrice, settings.Nfi);
-                        if (_tickVolume != "")
-                            bar.Volume = long.Parse(_tickVolume, settings.Nfi);
-                    }
-                    else
-                    {
-                        bar.Open = decimal.Parse(_open, settings.Nfi);
-                        bar.High = decimal.Parse(_high, settings.Nfi);
-                        bar.Low = decimal.Parse(_low, settings.Nfi);
-                        bar.Close = decimal.Parse(_close, settings.Nfi);
-                        if (_volume != "")
-                            bar.Volume = long.Parse(_volume, settings.Nfi);
+                        string line = ln.Trim();
+                        if (string.IsNullOrWhiteSpace(line)) continue;
+
+                        string[] prms = line.Split(settings.FieldSeparator.ToCharArray());
+                        if (prms.Length != settings.FieldCount)
+                        {
+                            _logger?.LogError("Line parsing error, invalid params count: " + line);
+                            continue;
+                        }
+
+                        string _ticker = settings.TickerIndex >= 0 ? prms[settings.TickerIndex] : "";
+                        if (_ticker != ticker)
+                        {
+                            _logger?.LogError("Line parsing error, invalid ticker: " + line);
+                            return null;
+                        }
+
+                        string _per = settings.PeriodIndex >= 0 ? prms[settings.PeriodIndex] : "";
+                        if (_per != tfKey)
+                        {
+                            _logger?.LogError("Line parsing error, invalid period: " + line);
+                            return null;
+                        }
+
+                        string _date = settings.DateIndex >= 0 ? prms[settings.DateIndex] : "";
+                        string _time = settings.TimeIndex >= 0 ? prms[settings.TimeIndex] : "";
+
+                        string _open = settings.OpenPriceIndex >= 0 ? prms[settings.OpenPriceIndex] : "";
+                        string _high = settings.HighPriceIndex >= 0 ? prms[settings.HighPriceIndex] : "";
+                        string _low = settings.LowPriceIndex >= 0 ? prms[settings.LowPriceIndex] : "";
+                        string _close = settings.ClosePriceIndex >= 0 ? prms[settings.ClosePriceIndex] : "";
+                        string _volume = settings.VolumeIndex >= 0 ? prms[settings.VolumeIndex] : "";
+                        string _tickPrice = settings.TickPriceIndex >= 0 ? prms[settings.TickPriceIndex] : "";
+                        string _tickVolume = settings.TickVolumeIndex >= 0 ? prms[settings.TickVolumeIndex] : "";
+
+                        Bar bar = new Bar();
+
+                        var time = DateTime.ParseExact(_date + " " + _time, "yyyyMMdd HHmmss", settings.Nfi);
+                        if ((time.Date < d1) || (time.Date > d2))
+                        {
+                            _logger?.LogError("Line parsing error, date out of range: " + line);
+                            continue;
+                        }
+
+                        bar.Time = time;
+                        if (settings.IsTickData)
+                        {
+                            bar.Open = bar.High = bar.Low = bar.Close = decimal.Parse(_tickPrice, settings.Nfi);
+                            if (_tickVolume != "")
+                                bar.Volume = long.Parse(_tickVolume, settings.Nfi);
+                        }
+                        else
+                        {
+                            bar.Open = decimal.Parse(_open, settings.Nfi);
+                            bar.High = decimal.Parse(_high, settings.Nfi);
+                            bar.Low = decimal.Parse(_low, settings.Nfi);
+                            bar.Close = decimal.Parse(_close, settings.Nfi);
+                            if (_volume != "")
+                                bar.Volume = long.Parse(_volume, settings.Nfi);
+                        }
+
+                        bars.Add(bar);
                     }
 
-                    bars.Add(bar);
+                    //if (bars.Count > 0)
+                    //    Logger.Write("Parsed: " + bars.Count.ToString() + " " + bars[0].Close.ToString());
+                    //else
+                    //    Logger.Write("Parsed: 0");
+
+                    return bars;
                 }
-
-                //if (bars.Count > 0)
-                //    Logger.Write("Parsed: " + bars.Count.ToString() + " " + bars[0].Close.ToString());
-                //else
-                //    Logger.Write("Parsed: 0");
-
-                return bars;
+                catch (Exception ex)
+                {
+                    _logger?.LogError(ex, "Parsing data fatal error");
+                    return null;
+                }
             });
         }
     }

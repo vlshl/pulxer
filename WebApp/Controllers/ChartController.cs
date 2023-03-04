@@ -1,4 +1,5 @@
-﻿using Common.Interfaces;
+﻿using Common.Data;
+using Common.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Platform;
@@ -66,19 +67,24 @@ namespace WebApp.Controllers
 
             if (chartData.IsDynamic)
             {
-                var ls = _lsm.GetServer();
-                if (ls == null) return null;
-
-                var tps = ls.GetTickPipe().Result;
-                if (tps == null) return null;
-
-                int count = _tickDisp.GetTicksCount(instrum.InsID);
-                var ticks = tps.GetLastTicks(_tickDisp.CurrentDate, instrum, count).Result;
-                if (ticks != null && ticks.Any()) _tickDisp.AddTicks(ticks);
-                ls.DeleteTickPipe().Wait();
+                LoadLastTicks(instrum);
             }
 
             return RemotePriceChart.Generate(key, instrum.Decimals, chartData, from);
+        }
+
+        private void LoadLastTicks(Instrum instrum)
+        {
+            var ls = _lsm.GetServer();
+            if (ls == null) return;
+
+            var tps = ls.GetTickPipe().Result;
+            if (tps == null) return;
+
+            int count = _tickDisp.GetTicksCount(instrum.InsID);
+            var ticks = tps.GetLastTicks(_tickDisp.CurrentDate, instrum, count).Result;
+            if (ticks != null && ticks.Any()) _tickDisp.AddTicks(ticks);
+            ls.DeleteTickPipe().Wait();
         }
     }
 }
