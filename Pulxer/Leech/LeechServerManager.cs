@@ -13,14 +13,14 @@ namespace Pulxer.Leech
         {
         }
 
-        public LeechServer CreateServer(LeechPipeServerSocket socket)
+        public bool CreateServer(LeechPipeServerSocket socket)
         {
             lock (this)
             {
-                if (_leechServer != null) return null;
+                if (_leechServer != null) return false;
 
                 _leechServer = new LeechServer(socket);
-                return _leechServer;
+                return true;
             }
         }
 
