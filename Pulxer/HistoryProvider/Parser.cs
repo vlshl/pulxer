@@ -102,6 +102,9 @@ namespace Pulxer.HistoryProvider
 
         public Task<IEnumerable<Bar>> ParseAsync(byte[] data, string ticker, Timeframes tf, DateTime d1, DateTime d2)
         {
+            _logger?.LogTrace("ParseAsync: {ticker} {tf} {d1} {d2} {bytes} bytes", ticker, tf.ToString(), d1.ToString(), d2.ToString(), 
+                data != null ? data.Length.ToString() : "null");
+
             return Task.Run<IEnumerable<Bar>>( () =>
             {
                 try
@@ -182,6 +185,8 @@ namespace Pulxer.HistoryProvider
                     //    Logger.Write("Parsed: " + bars.Count.ToString() + " " + bars[0].Close.ToString());
                     //else
                     //    Logger.Write("Parsed: 0");
+
+                    _logger?.LogTrace("Return bars: ", bars.Count.ToString());
 
                     return bars;
                 }

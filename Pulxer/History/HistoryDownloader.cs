@@ -46,9 +46,12 @@ namespace Pulxer.History
                 {
                     try
                     {
-                        _logger.LogInformation("DownloadAll to {date}", toDate.ToString("yyyy-MM-dd"));
+                        _logger?.LogInformation("DownloadAll to {date}", toDate.ToString("yyyy-MM-dd"));
 
                         var insStores = _insStoreBL.GetActiveInsStores();
+
+                        _logger?.LogTrace("Active InsStores: {count}", insStores.Count().ToString());
+
                         int count = insStores.Count(); int idx = 1;
                         if (progress != null) progress.OnStart(count > 1);
                         Dictionary<CommonData.InsStore, BgTaskProgress> progresses = new Dictionary<CommonData.InsStore, BgTaskProgress>();
@@ -66,23 +69,36 @@ namespace Pulxer.History
 
                         foreach (var insStore in insStores)
                         {
+                            _logger?.LogTrace("InsStoreId = {id}, InstrumId = {insId}, Tf = {tf}", insStore.InsStoreID.ToString(), insStore.InsID.ToString(), insStore.Tf.ToString());
+
                             if (cancel.IsCancellationRequested)
                             {
-                                if (progress != null) progress.OnAbort(); break;
+                                if (progress != null)
+                                {
+                                    progress.OnAbort();
+                                    _logger?.LogTrace("Progress.OnAbort");
+                                    break;
+                                }
                             }
 
                             var ssCal = _insStoreBL.GetInsStoreCalendar(insStore.InsStoreID);
-                            if (ssCal == null || ssCal.Periods == null) continue;
+                            if (ssCal == null || ssCal.Periods == null)
+                            {
+                                _logger?.LogTrace("InsStore calendar or periods is null");
+                                continue;
+                            }
 
                             DateTime fromDate;
                             if (ssCal.Periods.Count() > 0)
                             {
                                 var lastPeriod = ssCal.Periods.Last();
                                 fromDate = lastPeriod.IsLastDirty ? lastPeriod.EndDate : lastPeriod.EndDate.AddDays(1);
+                                _logger?.LogTrace("Last period found");
                             }
                             else
                             {
                                 fromDate = _insStoreBL.GetDefaultStartHistoryDate(toDate, insStore.Tf);
+                                _logger?.LogTrace("Default Start History Date");
                             }
 
                             var p = progresses.ContainsKey(insStore) ? progresses[insStore] : null;
@@ -91,14 +107,23 @@ namespace Pulxer.History
                         }
                         if (progress != null)
                         {
-                            if (cancel.IsCancellationRequested) progress.OnAbort(); else progress.OnComplete();
+                            if (cancel.IsCancellationRequested)
+                            {
+                                _logger?.LogTrace("IsCancellationRequested");
+                                progress.OnAbort();
+                            }
+                            else
+                            {
+                                _logger?.LogTrace("OnComplete");
+                                progress.OnComplete();
+                            }
                         }
 
-                        _logger.LogInformation("DownloadAll complete.");
+                        _logger?.LogInformation("DownloadAll complete.");
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, "DownloadAll error.");
+                        _logger?.LogError(ex, "DownloadAll error.");
                         if (progress != null) progress.OnFault(ex);
                     }
                 });
@@ -118,6 +143,9 @@ namespace Pulxer.History
         public async Task DownloadAsync(CommonData.InsStore insStore, DateTime date1, DateTime date2, bool isLastDirty, bool isForward,
             BgTaskProgress progress, CancellationToken cancel)
         {
+            _logger?.LogTrace("DownloadAsync: InsStoreId={id}, InsId={insId}, Tf={tf}, d1={d1}, d2={d2}, isLastDirty={drt}, isForward={fwd}", 
+                insStore.InsStoreID.ToString(), insStore.InsID.ToString(), insStore.Tf.ToString(), date1.ToString(), date2.ToString(), isLastDirty.ToString(), isForward.ToString());
+            
             try
             {
                 var parts = GetDownloadParts(insStore.Tf, date1, date2, isForward);
@@ -128,7 +156,8 @@ namespace Pulxer.History
                 {
                     if (cancel.IsCancellationRequested)
                     {
-                        if (progress != null) progress.OnAbort(); 
+                        if (progress != null) progress.OnAbort();
+                        _logger?.LogTrace("DownloadAsync Abort");
                         break;
                     }
                     await SyncDataBlock(insStore, part.Date1, part.Date2, isLastDirty, cancel);
@@ -141,6 +170,7 @@ namespace Pulxer.History
             }
             catch(Exception ex)
             {
+                _logger?.LogError(ex, "DownloadAsync Exception");
                 if (progress != null) progress.OnFault(ex);
             }
         }
@@ -284,15 +314,21 @@ namespace Pulxer.History
         private async Task<IEnumerable<Bar>> SyncDataBlock(InsStore insStore, DateTime date1, DateTime date2, 
             bool isLastDirty, CancellationToken cancel)
         {
+            _logger?.LogTrace("SyncDataBlock: insStoreId={id}, insId={insId}, tf={tf}, d1={d1}, d2={d2}, isLastDirty={dirty}", 
+                insStore.InsStoreID.ToString(), insStore.InsID.ToString(), insStore.Tf.ToString(), date1.ToString(), date2.ToString(), isLastDirty.ToString());
+
             CommonData.Instrum ins = _instrumBL.GetInstrumByID(insStore.InsID);
-            _logger.LogInformation("SyncDataBlock {Ticker} {date1} to {date2}", ins.Ticker, date1.ToString("yyyy-MM-dd"), date2.ToString("yyyy-MM-dd"));
 
             int delay = _config.GetHistoryDownloaderDelay(insStore.Tf.ToString());
             var bars = await _provider.GetDataAsync(ins.Ticker, insStore.Tf, date1, date2, delay);
-            if (bars == null) return null;
+            if (bars == null)
+            {
+                _logger?.LogTrace("Bars is null");
+                return null;
+            }
 
             _insStoreBL.InsertData(insStore.InsStoreID, ins.Decimals, bars, date1, date2, isLastDirty, cancel);
-            _logger.LogInformation("SyncDataBlock.InsertBars: {count}", bars.Count().ToString());
+            _logger?.LogInformation("SyncDataBlock.InsertBars: {count}", bars.Count().ToString());
 
             return bars;
         }

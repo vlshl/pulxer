@@ -51,7 +51,7 @@ namespace Pulxer.HistoryProvider
 
         public async Task Initialize()
         {
-            _logger.LogInformation("Initialize.");
+            _logger?.LogInformation("Initialize.");
 
             _tfds.Clear(); _tickers.Clear();
 
@@ -122,7 +122,7 @@ namespace Pulxer.HistoryProvider
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Initialization error.");
+                _logger?.LogError(ex, "Initialization error.");
                 throw new Exception("Ошибка при инициализации провайдера исторических данных", ex);
             }
         }
@@ -148,28 +148,40 @@ namespace Pulxer.HistoryProvider
 
         public async Task<IEnumerable<Bar>> GetDataAsync(string ticker, Timeframes tf, DateTime date1, DateTime date2, int delay)
         {
-            if (_requester == null) return null;
+            _logger?.LogTrace("GetDataAsync: {ticker} {tf} {d1} { d2} {delay}", ticker, tf.ToString(), date1.ToString(), date2.ToString(), delay.ToString());
+
+            if (_requester == null)
+            {
+                _logger?.LogTrace("Requester is null");
+                return null;
+            }
             if (_tickers.All(td => td.Ticker != ticker))
             {
-                _logger.LogError("Ticker not found: " + ticker);
+                _logger?.LogError("Ticker not found: " + ticker);
                 return null;
             }
             if (_tfds.All(t => t.Tf != tf))
             {
-                _logger.LogError("Timeframe not found: " + tf.ToString());
+                _logger?.LogError("Timeframe not found: " + tf.ToString());
                 return null;
             }
 
             byte[] data = ReadCache(ticker, tf, date1, date2);
             if (data == null)
             {
+                _logger?.LogTrace("Data not found in cache");
+
                 string url = ReplParams(_baseUrl, ticker, tf, date1, date2);
                 data = _requester.Request(url, delay);
-                if (data != null) WriteCache(ticker, tf, date1, date2, data);
+                if (data != null)
+                {
+                    _logger?.LogTrace("Write to cache: {count} bytes", data.Length.ToString());
+                    WriteCache(ticker, tf, date1, date2, data);
+                }
             }
             if (data == null || !data.Any())
             {
-                _logger.LogError("Response data is null or empty");
+                _logger?.LogError("Response data is null or empty");
                 return null;
             }
 
@@ -190,7 +202,7 @@ namespace Pulxer.HistoryProvider
             var bars = await parser.ParseAsync(data, ticker, tf, date1, date2);
             if (bars == null)
             {
-                _logger.LogError("Parsing result is null");
+                _logger?.LogError("Parsing result is null");
                 DeleteFromCache(ticker, tf, date1, date2);
             }
 
@@ -300,8 +312,9 @@ namespace Pulxer.HistoryProvider
             {
                 data = File.ReadAllBytes(path);
             }
-            catch
+            catch(Exception ex)
             {
+                _logger?.LogError(ex, "ReadCache error");
             }
 
             return data;
