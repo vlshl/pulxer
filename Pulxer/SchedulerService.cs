@@ -18,7 +18,7 @@ namespace Pulxer
         private ITickDispatcher _tickDisp;
         private ChartManagerCache _cmCache;
         private IServiceProvider _services;
-        private int _downloadAllTimeout = 600; // sec
+        private int _downloadAllSecondsTimeout = 600; // sec
         private readonly ILogger _logger;
 
         public SchedulerService(ITickDispatcher tickDisp, ChartManagerCache cmCache, ILogger<SchedulerService> logger, IConfiguration config, IServiceProvider services,
@@ -49,7 +49,7 @@ namespace Pulxer
                 int timeout;
                 if (int.TryParse(delaySection.Value, out timeout))
                 {
-                    _downloadAllTimeout = timeout;
+                    _downloadAllSecondsTimeout = timeout;
                 }
             }
         }
@@ -78,7 +78,7 @@ namespace Pulxer
                 _cmCache.Clear();
             }
 
-            var cancellationTokenSource = new CancellationTokenSource(_downloadAllTimeout * 1000);
+            var cancellationTokenSource = new CancellationTokenSource(_downloadAllSecondsTimeout * 1000);
             using (var scope = _services.CreateScope())
             {
                 var downloader = scope.ServiceProvider.GetRequiredService<HistoryDownloader>();

@@ -108,12 +108,12 @@ namespace Pulxer
                         {
                             try
                             {
+                                _logger?.LogInformation("Execute action at {time}", time.ToString());
                                 _time_action[time].Invoke();
-                                if (_logger != null) _logger.LogInformation("Execute action at {time}", time.ToString());
                             }
                             catch (Exception ex)
                             {
-                                if (_logger != null) _logger.LogError(ex, "Action {time} execution error.", time);
+                                _logger?.LogError(ex, "Action {time} execution error.", time);
                             }
                         });
                     }

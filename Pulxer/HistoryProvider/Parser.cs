@@ -186,7 +186,7 @@ namespace Pulxer.HistoryProvider
                     //else
                     //    Logger.Write("Parsed: 0");
 
-                    _logger?.LogTrace("Return bars: ", bars.Count.ToString());
+                    _logger?.LogTrace("Return bars: {count}", bars.Count.ToString());
 
                     return bars;
                 }

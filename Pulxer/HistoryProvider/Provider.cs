@@ -148,7 +148,7 @@ namespace Pulxer.HistoryProvider
 
         public async Task<IEnumerable<Bar>> GetDataAsync(string ticker, Timeframes tf, DateTime date1, DateTime date2, int delay)
         {
-            _logger?.LogTrace("GetDataAsync: {ticker} {tf} {d1} { d2} {delay}", ticker, tf.ToString(), date1.ToString(), date2.ToString(), delay.ToString());
+            _logger?.LogTrace("GetDataAsync: {ticker} {tf} {d1} {d2} {delay}", ticker, tf.ToString(), date1.ToString(), date2.ToString(), delay.ToString());
 
             if (_requester == null)
             {
@@ -310,7 +310,10 @@ namespace Pulxer.HistoryProvider
             byte[] data = null;
             try
             {
-                data = File.ReadAllBytes(path);
+                if (File.Exists(path))
+                {
+                    data = File.ReadAllBytes(path);
+                }
             }
             catch(Exception ex)
             {
