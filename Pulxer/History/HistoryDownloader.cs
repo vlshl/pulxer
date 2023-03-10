@@ -93,12 +93,12 @@ namespace Pulxer.History
                             {
                                 var lastPeriod = ssCal.Periods.Last();
                                 fromDate = lastPeriod.IsLastDirty ? lastPeriod.EndDate : lastPeriod.EndDate.AddDays(1);
-                                _logger?.LogTrace("Last period found");
+                                _logger?.LogTrace("Last period found: {d1} - {d2}, isLastDirty = {dirty}", lastPeriod.StartDate.ToString(), lastPeriod.EndDate.ToString(), lastPeriod.IsLastDirty.ToString());
                             }
                             else
                             {
                                 fromDate = _insStoreBL.GetDefaultStartHistoryDate(toDate, insStore.Tf);
-                                _logger?.LogTrace("Default Start History Date");
+                                _logger?.LogTrace("Last period not found. Default start history date: {d}", fromDate.ToString());
                             }
 
                             var p = progresses.ContainsKey(insStore) ? progresses[insStore] : null;
