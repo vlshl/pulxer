@@ -20,12 +20,16 @@ namespace Pulxer
     /// То есть если торговая сессия уже идет, то новый подписчик сначала получит все сделки с начала торговой сессии, 
     /// а затем начнет получать актуальные сделки по мере их возникновения.
     /// </summary>
-    public class TickDispatcher : ITickDispatcher
+    public class TickDispatcher : ITickSubscribe
     {
         //private ITickSource _tickSource = null;
         private List<TickThreadControl> _ttcs = null;
         private Dictionary<int, List<Tick>> _insID_ticks;
         private readonly ILogger _logger = null;
+        private Tick _lastTick;
+        private DateTime _sessionDate;
+        private bool _isInitializing = false;
+        private TickProvider _tickProvider = null;
 
         /// <summary>
         /// Конструктор
@@ -35,17 +39,43 @@ namespace Pulxer
             _logger = logger;
             _ttcs = new List<TickThreadControl>();
             _insID_ticks = new Dictionary<int, List<Tick>>();
+            _lastTick = default;
+            _sessionDate = DateTime.Today;
         }
 
         /// <summary>
         /// Инициализация перед началом торговой сессии
         /// </summary>
-        public void Initialize()
+        /// <param name="sessionDate">Дата новой торговой сессии</param>
+        public void Initialize(DateTime sessionDate)
         {
-            _logger.LogInformation("Initialize ...");
-            UnsubscribeAll();
-            _insID_ticks.Clear();
-            _logger.LogInformation("Initialized");
+            lock (_insID_ticks)
+            {
+                if (_isInitializing) return;
+
+                _logger.LogInformation("Initialize ...");
+                _isInitializing = true;
+                UnsubscribeAll();
+                _insID_ticks.Clear();
+                _sessionDate = sessionDate;
+                _isInitializing = false;
+                _logger.LogInformation("Initialized");
+            }
+        }
+
+        public void SetTickProvider(TickProvider tp)
+        {
+            _tickProvider = tp;
+
+            // в момент вызова SetTickProvider диспетчер TickDispatcher уже создан и возможно уже имеет подписки Subscribe
+            // поэтому сообщаем провайдеру все инструменты, на которые уже есть подписки и для которых надо получать тиковые данные
+            lock (_insID_ticks)
+            {
+                foreach(int insId in _insID_ticks.Keys)
+                {
+                    _tickProvider.AddInstrum(insId);
+                }
+            }
         }
 
         /// <summary>
@@ -69,21 +99,26 @@ namespace Pulxer
         /// <param name="onTick">Callback, который будет вызываться диспетчером при каждой сделке указанного инструмента</param>
         public void Subscribe(object subscriber, int insID, OnTickEH onTick)
         {
+            if (_isInitializing) return;
+
             var ticks = GetTickList(insID);
             TickThreadControl ttc = new TickThreadControl(subscriber, insID, ticks);
             ttc.IsRunning = true;
             CreateTickThread(onTick, ttc);
             _ttcs.Add(ttc);
+            _tickProvider?.AddInstrum(insID);
         }
 
         /// <summary>
         /// Отписаться от потока сделок.
-        /// Отписываются все подписчики указанного инструмента.
+        /// Если у инструмента и подписчика было несколько подписок (т.е. Subscribe вызывался несколько раз с одними и теми же subscriber и insID), удаляются все подписки.
         /// </summary>
         /// <param name="subscriber">Объект-подписчик</param>
         /// <param name="insID">Инструмент</param>
         public void Unsubscribe(object subscriber, int insID)
         {
+            if (_isInitializing) return;
+
             var list = _ttcs.Where(t => object.ReferenceEquals(t.Subscriber, subscriber) 
                 && t.InsID == insID).ToList();
             foreach (var r in list)
@@ -91,6 +126,7 @@ namespace Pulxer
                 r.IsRunning = false;
                 r.Mre.Set();
                 _ttcs.Remove(r);
+                _tickProvider?.RemoveInstrum(insID);
             }
         }
 
@@ -99,20 +135,23 @@ namespace Pulxer
         /// </summary>
         public void UnsubscribeAll()
         {
+            if (_isInitializing) return;
+
             var list = _ttcs.ToList();
             foreach (var r in list)
             {
                 r.IsRunning = false;
                 r.Mre.Set();
                 _ttcs.Remove(r);
+                _tickProvider?.RemoveInstrum(r.InsID);
             }
         }
 
-        public DateTime CurrentDate
+        public DateTime SessionDate
         {
             get
             {
-                return DateTime.Today; // ???????????????????
+                return _sessionDate;
             }
         }
         #endregion
@@ -123,6 +162,14 @@ namespace Pulxer
         /// <param name="tick">Информация по сделке</param>
         public void AddTick(Tick tick)
         {
+            if (_isInitializing) return;
+            if (tick.Time.Date != _sessionDate) return;
+
+            lock (this)
+            {
+                _lastTick = tick;
+            }
+
             var ticks = GetTickList(tick.InsID);
             lock (ticks)
             {
@@ -136,12 +183,20 @@ namespace Pulxer
         }
 
         /// <summary>
-        /// Явное добавление новых сделок по одному инструменту
+        /// Явное добавление новых сделок по одному инструменту.
+        /// Дата проверяется на соответствие SessionDate только у последнего тика.
         /// </summary>
         /// <param name="ticks">Информация по сделкам (у всех сделок должен быть один инструмент)</param>
         public void AddTicks(IEnumerable<Tick> ticks)
         {
+            if (_isInitializing) return;
             if (!ticks.Any()) return;
+            if (ticks.Last().Time.Date != _sessionDate) return;
+
+            lock (this)
+            {
+                _lastTick = ticks.Last();
+            }
 
             int insId = ticks.First().InsID;
             var tickList = GetTickList(insId);
@@ -163,10 +218,26 @@ namespace Pulxer
         /// <returns>Если тиков нет, то default(Tick)</returns>
         public Tick GetLastTick(int insID)
         {
+            if (_isInitializing) return default(Tick);
+
             var ticks = GetTickList(insID);
             lock (ticks)
             {
                 return ticks.LastOrDefault();
+            }
+        }
+
+        /// <summary>
+        /// Последний тик
+        /// </summary>
+        /// <returns>Если тиков нет, то default(Tick)</returns>
+        public Tick GetLastTick()
+        {
+            if (_isInitializing) return default(Tick);
+
+            lock (this)
+            {
+                return _lastTick;
             }
         }
 
@@ -200,8 +271,11 @@ namespace Pulxer
 
         private List<Tick> GetTickList(int insID)
         {
-            if (!_insID_ticks.ContainsKey(insID)) _insID_ticks.Add(insID, new List<Tick>());
-            return _insID_ticks[insID];
+            lock (_insID_ticks)
+            {
+                if (!_insID_ticks.ContainsKey(insID)) _insID_ticks.Add(insID, new List<Tick>());
+                return _insID_ticks[insID];
+            }
         }
 
         /// <summary>

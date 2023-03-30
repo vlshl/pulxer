@@ -208,12 +208,12 @@ namespace LeechPipe
                 while (_isWorking)
                 {
                     var recvBuffer = await _transport.RecvMessageAsync();
-                    int count = recvBuffer.Length;
-                    if (count < 2)
+                    if ((recvBuffer == null) || (recvBuffer.Length < 2))
                     {
                         Close(); break;
                     }
 
+                    int count = recvBuffer.Length;
                     ushort pipe = (ushort)((recvBuffer[1] >> 8) + recvBuffer[0]);
                     byte[] data = new byte[count - 2];
                     Array.Copy(recvBuffer, 2, data, 0, count - 2);

@@ -7,7 +7,7 @@ namespace Pulxer
 {
     public struct AllTradesTick
     {
-        public uint Second;
+        public DateTime Ts;
         public decimal Price;
         public int Lots;
     }
@@ -16,6 +16,7 @@ namespace Pulxer
     {
         const string VERSION0 = "AllTrades 1.0   ";
         const string VERSION1 = "AllTrades 1.1   ";
+        const string VERSION2 = "AllTrades 1.2   ";
         const int SIG_SIZE = 16;
         const int VERSION0_TIMECORRECT = -3600; // 1 h
 
@@ -23,11 +24,14 @@ namespace Pulxer
         private byte[] _buffer;
         private byte[] _ver0Sig;
         private byte[] _ver1Sig;
+        private byte[] _ver2Sig;
         private int _version;
         private int _k;
         private List<AllTradesTick> _ticks;
         private byte[] _tickBuffer;
         private byte _tickBufferCount;
+        private DateTime _ts2000;
+        private DateTime _ts0001;
 
         public AllTradesEncoding(int decimals)
         {
@@ -49,9 +53,13 @@ namespace Pulxer
 
             _ver0Sig = new ASCIIEncoding().GetBytes(VERSION0);
             _ver1Sig = new ASCIIEncoding().GetBytes(VERSION1);
+            _ver2Sig = new ASCIIEncoding().GetBytes(VERSION2);
             _version = -1;
             _ticks = new List<AllTradesTick>();
             _tickBuffer = new byte[32];
+            _ts2000 = new DateTime(2000, 1, 1);
+            _ts0001 = new DateTime(0); // 01.01.0001
+
         }
 
         #region Decode
@@ -68,7 +76,7 @@ namespace Pulxer
             _buffer = buffer;
             _bufferIndex = 0;
 
-            uint curSecond = 0;
+            DateTime curTs = DateTime.MinValue;
             int curPrice = 0;
             int shiftIndex = 0;
 
@@ -79,7 +87,7 @@ namespace Pulxer
             }
             else
             {
-                _version = 1;
+                _version = 2;
             }
 
             _bufferIndex += shiftIndex;
@@ -99,17 +107,25 @@ namespace Pulxer
                 _bufferIndex += shiftIndex;
 
                 if (isDelta)
-                    curSecond += sec;
-                else
-                    curSecond = sec;
-                if (_version == 0)
                 {
-                    tick.Second = (uint)((int)curSecond + VERSION0_TIMECORRECT);
+                    curTs = curTs.AddSeconds(sec);
                 }
                 else
                 {
-                    tick.Second = curSecond;
+                    if (_version == 0)
+                    {
+                        curTs = _ts0001.AddSeconds(sec + VERSION0_TIMECORRECT);
+                    }
+                    else if (_version == 1)
+                    {
+                        curTs = _ts0001.AddSeconds(sec);
+                    }
+                    else
+                    {
+                        curTs = _ts2000.AddSeconds(sec);
+                    }
                 }
+                tick.Ts = curTs;
 
                 shiftIndex = DecodePrice(out price, out isDelta);
                 if (shiftIndex == 0) break;
@@ -140,6 +156,7 @@ namespace Pulxer
             Array.Copy(_buffer, _bufferIndex, verSig, 0, SIG_SIZE);
             if (IsEqual(verSig, _ver0Sig)) _version = 0;
             else if (IsEqual(verSig, _ver1Sig)) _version = 1;
+            else if (IsEqual(verSig, _ver2Sig)) _version = 2;
             if (_version < 0) return 0;
 
             return SIG_SIZE;
@@ -228,9 +245,9 @@ namespace Pulxer
         #endregion
 
         #region Encode
-        public void AddTick(uint second, decimal price, int lots)
+        public void AddTick(DateTime ts, decimal price, int lots)
         {
-            _ticks.Add(new AllTradesTick() { Second = second, Price = price, Lots = lots });
+            _ticks.Add(new AllTradesTick() { Ts = ts, Price = price, Lots = lots });
         }
 
         public void ClearTicks()
@@ -244,14 +261,15 @@ namespace Pulxer
             uint curSecond = 0;
             int curPrice = 0;
 
-            encodeBytes.AddRange(_ver1Sig); // сигнатура
+            encodeBytes.AddRange(_ver2Sig); // сигнатура
 
             foreach (var tick in _ticks)
             {
                 _tickBufferCount = 0;
-                uint diffSec = (uint)(tick.Second - curSecond);
-                EncodeTime(tick.Second, diffSec);
-                curSecond = tick.Second;
+                uint sec = (uint)((tick.Ts.Ticks - _ts2000.Ticks) / TimeSpan.TicksPerSecond);
+                uint diffSec = (uint)(sec - curSecond);
+                EncodeTime(sec, diffSec);
+                curSecond = sec;
 
                 int p = (int)Math.Round(tick.Price * _k);
                 int dp = p - curPrice;

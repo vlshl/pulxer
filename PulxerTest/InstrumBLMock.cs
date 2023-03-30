@@ -102,11 +102,6 @@ namespace PulxerTest
             throw new NotImplementedException();
         }
 
-        public void SaveInstrum(Instrum ins)
-        {
-            throw new NotImplementedException();
-        }
-
         int[] IInstrumBL.AddFavorite(int userId, int instrumId)
         {
             throw new NotImplementedException();

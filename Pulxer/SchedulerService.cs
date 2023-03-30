@@ -15,13 +15,13 @@ namespace Pulxer
     public class SchedulerService : IHostedService
     {
         private Scheduler _scheduler;
-        private ITickDispatcher _tickDisp;
+        private TickDispatcher _tickDisp;
         private ChartManagerCache _cmCache;
         private IServiceProvider _services;
         private int _downloadAllSecondsTimeout = 600; // sec
         private readonly ILogger _logger;
 
-        public SchedulerService(ITickDispatcher tickDisp, ChartManagerCache cmCache, ILogger<SchedulerService> logger, IConfiguration config, IServiceProvider services,
+        public SchedulerService(TickDispatcher tickDisp, ChartManagerCache cmCache, ILogger<SchedulerService> logger, IConfiguration config, IServiceProvider services,
             Scheduler scheduler)
         {
             _tickDisp = tickDisp;
@@ -69,21 +69,29 @@ namespace Pulxer
         private void OpenSession()
         {
             _logger.LogInformation("Open session ...");
+
             DateTime today = DateTime.Today;
 
+            // инициализация провайдера исторических данных
             _services.GetRequiredService<IHistoryProvider>().Initialize().Wait();
-            _tickDisp.Initialize();
-            lock (_cmCache)
-            {
-                _cmCache.Clear();
-            }
 
+            // загрузка истории по вчерашний день включительно
             var cancellationTokenSource = new CancellationTokenSource(_downloadAllSecondsTimeout * 1000);
             using (var scope = _services.CreateScope())
             {
                 var downloader = scope.ServiceProvider.GetRequiredService<HistoryDownloader>();
                 downloader.DownloadAllAsync(today.AddDays(-1), false, null, cancellationTokenSource.Token).Wait();
             }
+
+            // инициализация диспетчера тиков, начало новой сессии сегодняшним числом
+            _tickDisp.Initialize(today);
+            
+            // очистка кэша объектов ChartManager, чтобы эти объекты создавались вновь уже для новой торговой сессии
+            lock (_cmCache)
+            {
+                _cmCache.Clear();
+            }
+
             _logger.LogInformation("Session opened.");
         }
     }

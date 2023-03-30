@@ -14,7 +14,6 @@ namespace Common.Interfaces
         IEnumerable<CommonData.Instrum> GetInstrums();
         CommonData.Instrum GetInstrumByID(int insID);
         CommonData.Instrum GetInstrum(string ticker);
-        void SaveInstrum(CommonData.Instrum ins);
         void DeleteInstrumByID(int insID);
         int[] GetFavInstrumIds(int userId);
         int[] AddFavorite(int userId, int instrumId);

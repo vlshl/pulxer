@@ -16,7 +16,7 @@ namespace Pulxer.Drawing
     /// </summary>
     public class ChartManager
     {
-        private ITickDispatcher _tickDispatcher;
+        private TickDispatcher _tickDispatcher;
         private ChartData _chartData = null;
         private Dictionary<string, PriceSource> _guid_source = new Dictionary<string, PriceSource>();
         private readonly IInstrumBL _instrumBL;
@@ -39,7 +39,7 @@ namespace Pulxer.Drawing
         /// </summary>
         /// <param name="instrumBL">Подсистема фин. инструментов</param>
         /// <param name="td">Диспетчер потока данных по сделкам</param>
-        public ChartManager(IInstrumBL instrumBL, IInsStoreBL insStoreBL, IAccountDA accountDA, ITickDispatcher td)
+        public ChartManager(IInstrumBL instrumBL, IInsStoreBL insStoreBL, IAccountDA accountDA, TickDispatcher td)
         {
             _instrumBL = instrumBL;
             _insStoreBL = insStoreBL;
@@ -155,7 +155,7 @@ namespace Pulxer.Drawing
             DateTime start, end;
             if (_tickDispatcher != null)
             {
-                end = _tickDispatcher.CurrentDate.AddDays(-1);
+                end = _tickDispatcher.SessionDate.AddDays(-1);
             }
             else
             {

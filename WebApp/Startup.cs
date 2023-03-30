@@ -16,6 +16,7 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication;
 using Serilog;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace WebApp
 {
@@ -137,11 +138,19 @@ namespace WebApp
 
                         WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync();
                         var lsm = context.RequestServices.GetRequiredService<LeechServerManager>();
-                        bool isSuccess = lsm.CreateServer(new LeechPipeServerSocket(webSocket));
+                        var logger = context.RequestServices.GetRequiredService<ILogger<LeechPipeServerSocket>>();
+                        var lpss = new LeechPipeServerSocket(webSocket, logger);
+                        bool isSuccess = lsm.CreateServer(lpss);
+
                         if (isSuccess)
                         {
+                            var tiskProvider = context.RequestServices.GetRequiredService<TickProvider>();
+                            tiskProvider.Open();
+
                             var ls = lsm.GetServer();
                             await ls.Run();
+
+                            tiskProvider.Close();
                             ls.Close();
                             lsm.DeleteServer();
                         }

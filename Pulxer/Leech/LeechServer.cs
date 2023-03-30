@@ -1,4 +1,5 @@
 ﻿using LeechPipe;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,10 +18,14 @@ namespace Pulxer.Leech
         private ushort _syncPipe;
         private ushort _tickPipe;
         private TickPipeServer _tickPipeServer;
+        private readonly InstrumCache _instrumCache;
+        private readonly ILogger _logger;
 
-        public LeechServer(LeechPipeServerSocket socket)
+        public LeechServer(LeechPipeServerSocket socket, InstrumCache instrumCache, ILogger logger)
         {
+            _logger = logger;
             _tickPipeServer = null;
+            _instrumCache = instrumCache;
             _core = new LpCore(socket, true); // сервер
             _pipeFactory = new LeechServerPipeFactory(_core);
             _sysPipe = new SystemLp(_pipeFactory, _core);
@@ -64,7 +69,7 @@ namespace Pulxer.Leech
             _tickPipe = await _sysPipe.CreatePipeAsync(Encoding.UTF8.GetBytes("tick"));
             if (_tickPipe == 0) return null;
 
-            _tickPipeServer = new TickPipeServer(_core, _tickPipe);
+            _tickPipeServer = new TickPipeServer(_core, _tickPipe, _instrumCache, _logger);
             return _tickPipeServer;
         }
 

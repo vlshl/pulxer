@@ -1,4 +1,5 @@
 ﻿using LeechPipe;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -13,10 +14,12 @@ namespace Pulxer.Leech
     {
         private WebSocket _socket;
         private CancellationTokenSource _cts;
+        private readonly ILogger<LeechPipeServerSocket> _logger;
 
-        public LeechPipeServerSocket(WebSocket socket)
+        public LeechPipeServerSocket(WebSocket socket, ILogger<LeechPipeServerSocket> logger)
         {
             _socket = socket;
+            _logger = logger;
             _cts = new CancellationTokenSource();
         }
 
@@ -38,32 +41,47 @@ namespace Pulxer.Leech
             byte[] buffer = new byte[LpCore.SEGMENT_SIZE];
             WebSocketReceiveResult res;
 
-            using (var ms = new MemoryStream())
+            try
             {
-                do
+                using (var ms = new MemoryStream())
                 {
-                    ArraySegment<byte> segm = new ArraySegment<byte>(buffer, 0, buffer.Length);
-                    res = await _socket.ReceiveAsync(segm, _cts.Token);
-                    ms.Write(buffer, 0, res.Count);
-                } while (!res.EndOfMessage);
+                    do
+                    {
+                        ArraySegment<byte> segm = new ArraySegment<byte>(buffer, 0, buffer.Length);
+                        res = await _socket.ReceiveAsync(segm, _cts.Token);
+                        ms.Write(buffer, 0, res.Count);
+                    } while (!res.EndOfMessage);
 
-                return ms.ToArray();
+                    return ms.ToArray();
+                }
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError(ex, "RecvMessageAsync: receive error");
+                return null;
             }
         }
 
         public async Task SendMessageAsync(byte[] buffer)
         {
             int offset = 0;
-            while (offset < buffer.Length)
+            try
             {
-                int restLen = buffer.Length - offset;
-                bool endOfMessage = restLen <= LpCore.SEGMENT_SIZE;
-                int count = endOfMessage ? restLen : LpCore.SEGMENT_SIZE;
+                while (offset < buffer.Length)
+                {
+                    int restLen = buffer.Length - offset;
+                    bool endOfMessage = restLen <= LpCore.SEGMENT_SIZE;
+                    int count = endOfMessage ? restLen : LpCore.SEGMENT_SIZE;
 
-                await _socket.SendAsync(new ArraySegment<byte>(buffer, offset, count),
-                    WebSocketMessageType.Binary, endOfMessage, _cts.Token);
+                    await _socket.SendAsync(new ArraySegment<byte>(buffer, offset, count),
+                        WebSocketMessageType.Binary, endOfMessage, _cts.Token);
 
-                offset += count;
+                    offset += count;
+                }
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError(ex, "SendMessageAsync: send error");
             }
         }
     }

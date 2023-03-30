@@ -35,7 +35,7 @@ namespace Common
         private DateTime _nextBarTime;
         private bool _isNewBar = true; // the next AddTick() must begin the next bar
         private ITickSource _tSource = null;
-        private ITickDispatcher _tDisp = null;
+        private ITickSubscribe _tDisp = null;
         private int _insID = 0;
         private bool _isSuspended = false;
         private int? _lastCloseBarIndex = null;
@@ -63,7 +63,7 @@ namespace Common
             _insID = insID;
         }
 
-        public BarRow(Timeframes tf, ITickDispatcher tickDisp, int insID)
+        public BarRow(Timeframes tf, ITickSubscribe tickDisp, int insID)
             : this(tf, insID)
         {
             _tDisp = tickDisp;
@@ -103,7 +103,7 @@ namespace Common
             }
         }
 
-        public ITickDispatcher TickDispatcher
+        public ITickSubscribe TickDispatcher
         {
             get
             {

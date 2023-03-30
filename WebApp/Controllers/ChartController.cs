@@ -3,6 +3,7 @@ using Common.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Platform;
+using Pulxer;
 using Pulxer.Drawing;
 using Pulxer.Leech;
 using System.Linq;
@@ -16,9 +17,9 @@ namespace WebApp.Controllers
         private readonly ChartSystem _chartSystem;
         private readonly IInstrumBL _instrumBL;
         private readonly LeechServerManager _lsm;
-        private readonly ITickDispatcher _tickDisp;
+        private readonly TickDispatcher _tickDisp;
 
-        public ChartController(ITickDispatcher tickDisp, LeechServerManager lsm, ChartSystem chartSys, IInstrumBL instrumBL)
+        public ChartController(TickDispatcher tickDisp, LeechServerManager lsm, ChartSystem chartSys, IInstrumBL instrumBL)
         {
             _tickDisp = tickDisp;
             _lsm = lsm;
@@ -65,26 +66,7 @@ namespace WebApp.Controllers
             var chartData = cm.GetChartData();
             if (chartData == null) return null;
 
-            if (chartData.IsDynamic)
-            {
-                LoadLastTicks(instrum);
-            }
-
             return RemotePriceChart.Generate(key, instrum.Decimals, chartData, from);
-        }
-
-        private void LoadLastTicks(Instrum instrum)
-        {
-            var ls = _lsm.GetServer();
-            if (ls == null) return;
-
-            var tps = ls.GetTickPipe().Result;
-            if (tps == null) return;
-
-            int count = _tickDisp.GetTicksCount(instrum.InsID);
-            var ticks = tps.GetLastTicks(_tickDisp.CurrentDate, instrum, count).Result;
-            if (ticks != null && ticks.Any()) _tickDisp.AddTicks(ticks);
-            ls.DeleteTickPipe().Wait();
         }
     }
 }

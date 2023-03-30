@@ -38,9 +38,18 @@ namespace Pulxer
 
                 AllTradesEncoding encoding = new AllTradesEncoding(instrum.Decimals);
                 var allTradesTicks = encoding.Decode(data);
-                if (allTradesTicks == null) return new List<Tick>();
+                if (allTradesTicks == null || !allTradesTicks.Any()) return new List<Tick>();
 
-                return allTradesTicks.Select(t => new Tick(0, date.AddSeconds(t.Second), insID, t.Lots, t.Price)).ToList();
+                if (allTradesTicks.First().Ts.Date == DateTime.MinValue.Date) // дата минимальная, значит это версия AllTrades 1.0 или 1.1
+                {
+                    // дату берем из аргументов и прибавляем время из тика, т.к. в тике даты нет, там стоит минимальная дата, но время в тике есть
+                    return allTradesTicks.Select(t => new Tick(0, date.Date.AddHours(t.Ts.Hour).AddMinutes(t.Ts.Minute).AddSeconds(t.Ts.Second), 
+                        insID, t.Lots, t.Price)).ToList();
+                }
+                else // в версии 1.2 в тиках есть и дата, и время, потому берем Ts из тика
+                {
+                    return allTradesTicks.Select(t => new Tick(0, t.Ts, insID, t.Lots, t.Price)).ToList();
+                }
             });
         }
 

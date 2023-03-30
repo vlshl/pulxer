@@ -17,10 +17,10 @@ namespace Pulxer.Drawing
         private readonly IAccountDA _accountDA;
         private readonly IRepositoryBL _reposBL;
         private readonly ChartManagerCache _cmCache;
-        private readonly ITickDispatcher _tickDisp;
+        private readonly TickDispatcher _tickDisp;
 
         public ChartSystem(IChartDA chartDA, IInstrumBL instrumBL, IInsStoreBL insStoreBL, IAccountDA accountDA, IRepositoryBL reposBL, 
-            ChartManagerCache cmCache, ITickDispatcher tickDisp)
+            ChartManagerCache cmCache, TickDispatcher tickDisp)
         {
             _chartDA = chartDA;
             _instrumBL = instrumBL;
@@ -79,18 +79,6 @@ namespace Pulxer.Drawing
                 _cmCache.AddChartManager(accountID, insID, tf, cm);
 
                 return cm;
-            }
-        }
-
-        /// <summary>
-        /// Инициализация перед началом торговой сессии
-        /// </summary>
-        public void Initialize()
-        {
-            _tickDisp.Initialize();
-            lock(_cmCache)
-            {
-                _cmCache.Clear();
             }
         }
     }

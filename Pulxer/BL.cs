@@ -20,9 +20,12 @@ namespace Pulxer
             services.AddSingleton<LeechServerManager>();
             services.AddSingleton<ChartManagerCache>();
             services.AddSingleton<IHistoryProvider, FinamHistoryProvider>();
-            services.AddSingleton<ITickDispatcher, TickDispatcher>();
+            services.AddSingleton<ITickSubscribe, TickDispatcher>();
+            services.AddSingleton<TickDispatcher>();
             services.AddSingleton<Scheduler>();
-            
+            services.AddSingleton<TickProvider>();
+            services.AddSingleton<InstrumCache>();
+
             services.AddTransient<HistoryDownloader>();
             services.AddTransient<IInstrumBL, InstrumBL>();
             services.AddTransient<IInsStoreBL, InsStoreBL>();
