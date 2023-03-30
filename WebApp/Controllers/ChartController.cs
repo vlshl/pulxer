@@ -16,13 +16,9 @@ namespace WebApp.Controllers
     {
         private readonly ChartSystem _chartSystem;
         private readonly IInstrumBL _instrumBL;
-        private readonly LeechServerManager _lsm;
-        private readonly TickDispatcher _tickDisp;
 
-        public ChartController(TickDispatcher tickDisp, LeechServerManager lsm, ChartSystem chartSys, IInstrumBL instrumBL)
+        public ChartController(ChartSystem chartSys, IInstrumBL instrumBL)
         {
-            _tickDisp = tickDisp;
-            _lsm = lsm;
             _chartSystem = chartSys;
             _instrumBL = instrumBL;
         }
