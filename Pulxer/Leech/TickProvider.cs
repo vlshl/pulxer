@@ -39,10 +39,11 @@ namespace Pulxer.Leech
             Task.Run(async () => 
             {
                 TickPipeServer tps = null;
+                LeechServer ls = null;
 
                 while(_isWorking && (tps == null))
                 {
-                    var ls = _lsm.GetServer();
+                    ls = _lsm.GetServer();
                     if (ls == null)
                     {
                         _logger.LogWarning("LeechServer does not exist");
@@ -50,10 +51,10 @@ namespace Pulxer.Leech
                         continue;
                     }
 
-                    tps = ls.GetTickPipe().Result;
+                    tps = ls.CreateTickPipe().Result;
                     if (tps == null)
                     {
-                        _logger.LogWarning("TickPipeServer does not exist");
+                        _logger.LogWarning("TickPipeServer creation error");
                         Thread.Sleep(SLEEP1_MS);
                         continue;
                     }
@@ -79,6 +80,11 @@ namespace Pulxer.Leech
                         }
                     }
                     Thread.Sleep(SLEEP_MS);
+                }
+
+                if ((ls != null) && (tps != null))
+                {
+                    await ls.DeletePipe(tps.GetPipe());
                 }
 
                 _logger.LogInformation("Stop TickProvider");

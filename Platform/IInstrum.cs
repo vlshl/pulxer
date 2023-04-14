@@ -6,6 +6,12 @@ namespace Platform
 {
     public interface IInstrum
     {
-        int InsID { get; set; }
+        public int InsID { get; set; }
+        public string Ticker { get; set; }
+        public string ShortName { get; set; }
+        public string Name { get; set; }
+        public int LotSize { get; set; }
+        public int Decimals { get; set; }
+        public decimal PriceStep { get; set; }
     }
 }

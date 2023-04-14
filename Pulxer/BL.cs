@@ -2,10 +2,12 @@
 using Common.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Platform;
 using Pulxer.Drawing;
 using Pulxer.History;
 using Pulxer.HistoryProvider;
 using Pulxer.Leech;
+using Pulxer.Plugin;
 using Storage;
 
 namespace Pulxer
@@ -25,7 +27,9 @@ namespace Pulxer
             services.AddSingleton<Scheduler>();
             services.AddSingleton<TickProvider>();
             services.AddSingleton<InstrumCache>();
-
+            services.AddSingleton<PluginManager>();
+            
+            services.AddTransient<IPluginPlatform, PluginPlatform>();
             services.AddTransient<HistoryDownloader>();
             services.AddTransient<IInstrumBL, InstrumBL>();
             services.AddTransient<IInsStoreBL, InsStoreBL>();

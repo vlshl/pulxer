@@ -167,5 +167,10 @@ namespace Pulxer.Leech
                 return null;
             }
         }
+
+        public ushort GetPipe()
+        {
+            return _pipe;
+        }
     }
 }

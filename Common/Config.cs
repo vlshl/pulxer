@@ -46,6 +46,11 @@ namespace Common
             return _configSection["BotsPath"];
         }
 
+        public string GetPluginsPath()
+        {
+            return _configSection["PluginsPath"];
+        }
+
         public int GetHistoryDownloaderDays(string tf)
         {
             tf = tf.ToLower();

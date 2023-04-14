@@ -180,7 +180,7 @@ namespace Cli
             _console.WriteLine("Get-InsStore Tf Ticker [FreeDays] - Информация по потоку данных");
             _console.WriteLine("Download Date1 Date2 [Dirty] Tf Ticker Ticker ... - Загрузка указанного потока данных (старт фонового процесса), Dirty - последний день неполный");
             _console.WriteLine("Download Progress|Cancel - Показать состояние фонового процесса загрузки | Прервать фоновый процесс");
-            _console.WriteLine("Download-All [Full] - Загрузка потоков данных (Full - последний день полный, иначе последний день помечается как Dirty)");
+            _console.WriteLine("Download-All [toDate] [Full] - Загрузка потоков данных по дату toDate (если toDate не указана, то по текущее число; Full - последний день полный, иначе последний день помечается как Dirty)");
             _console.WriteLine("Download-All Progress|Cancel - Показать состояние фонового процесса загрузки | Прервать фоновый процесс");
             _console.WriteLine("Get-Bars Tf Ticker Date1, Date2 - Вывод исторических данных");
             _console.WriteLine("Get-TickHistoryDates Ticker [Year] - Вывод списка дат тиковых исторических данных для инструмента за указанный год или за весь период");

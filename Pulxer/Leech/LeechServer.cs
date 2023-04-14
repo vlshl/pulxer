@@ -1,11 +1,6 @@
 ﻿using LeechPipe;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.WebSockets;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Pulxer.Leech
@@ -15,16 +10,12 @@ namespace Pulxer.Leech
         private LpCore _core;
         private SystemLp _sysPipe;
         private ILpFactory _pipeFactory;
-        private ushort _syncPipe;
-        private ushort _tickPipe;
-        private TickPipeServer _tickPipeServer;
         private readonly InstrumCache _instrumCache;
         private readonly ILogger _logger;
 
         public LeechServer(LeechPipeServerSocket socket, InstrumCache instrumCache, ILogger logger)
         {
             _logger = logger;
-            _tickPipeServer = null;
             _instrumCache = instrumCache;
             _core = new LpCore(socket, true); // сервер
             _pipeFactory = new LeechServerPipeFactory(_core);
@@ -49,38 +40,25 @@ namespace Pulxer.Leech
 
         public async Task<SyncPipeServer> CreateSyncPipe()
         {
-            _syncPipe = await _sysPipe.CreatePipeAsync(Encoding.UTF8.GetBytes("sync"));
-            if (_syncPipe == 0) return null;
+            var syncPipe = await _sysPipe.CreatePipeAsync(Encoding.UTF8.GetBytes("sync"));
+            if (syncPipe == 0) return null;
 
-            return new SyncPipeServer(_core, _syncPipe);
+            return new SyncPipeServer(_core, syncPipe);
         }
 
-        public async Task<bool> DeleteSyncPipe()
+        public async Task<TickPipeServer> CreateTickPipe()
         {
-            if (_syncPipe == 0) return false;
+            var tickPipe = await _sysPipe.CreatePipeAsync(Encoding.UTF8.GetBytes("tick"));
+            if (tickPipe == 0) return null;
 
-            return await _sysPipe.DeletePipeAsync(_syncPipe);
+            return new TickPipeServer(_core, tickPipe, _instrumCache, _logger);
         }
 
-        public async Task<TickPipeServer> GetTickPipe()
+        public async Task<bool> DeletePipe(ushort pipe)
         {
-            if (_tickPipeServer != null) return _tickPipeServer;
+            if (pipe == 0) return false;
 
-            _tickPipe = await _sysPipe.CreatePipeAsync(Encoding.UTF8.GetBytes("tick"));
-            if (_tickPipe == 0) return null;
-
-            _tickPipeServer = new TickPipeServer(_core, _tickPipe, _instrumCache, _logger);
-            return _tickPipeServer;
-        }
-
-        public async Task<bool> DeleteTickPipe()
-        {
-            if (_tickPipe == 0) return false;
-
-            bool isSuccess = await _sysPipe.DeletePipeAsync(_tickPipe);
-            _tickPipeServer = null;
-
-            return isSuccess;
+            return await _sysPipe.DeletePipeAsync(pipe);
         }
     }
 }

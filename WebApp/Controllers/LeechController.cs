@@ -33,7 +33,7 @@ namespace WebApp.Controllers
             if (sps == null) return BadRequest();
 
             _importLeech.FullSyncAccountDataAsync(sps).Wait();
-            ls.DeleteSyncPipe().Wait();
+            ls.DeletePipe(sps.GetPipe()).Wait();
 
             return Ok();
         }
@@ -42,17 +42,17 @@ namespace WebApp.Controllers
         [Authorize]
         public IActionResult Sync()
         {
+            var acc = _accountBL.GetRealAccount();
+            if (acc == null) return null;
+
             var ls = _lsm.GetServer();
             if (ls == null) return BadRequest();
 
             var sps = ls.CreateSyncPipe().Result;
             if (sps == null) return BadRequest();
 
-            var acc = _accountBL.GetRealAccount();
-            if (acc == null) return null;
-
             _importLeech.SyncAccountDataAsync(sps, acc.AccountID).Wait();
-            ls.DeleteSyncPipe().Wait();
+            ls.DeletePipe(sps.GetPipe()).Wait();
 
             return Ok();
         }
@@ -65,13 +65,33 @@ namespace WebApp.Controllers
             if (ls == null) return null;
 
             var tickerList = Regex.Split(tickers, @"\s*,\s*");
-            var tps = ls.GetTickPipe().Result;
+            var tps = ls.CreateTickPipe().Result;
             if (tps == null) return null;
 
             var prices = tps.GetLastPrices(tickerList).Result;
-            ls.DeleteTickPipe().Wait();
+            ls.DeletePipe(tps.GetPipe()).Wait();
 
             return prices;
+        }
+
+        [HttpGet("lasttickts")]
+        [Authorize]
+        [Produces("application/json")] // response
+        [Consumes("application/json")] // request        
+        public string GetLastTickTs()
+        {
+            var ls = _lsm.GetServer();
+            if (ls == null) return null;
+
+            var tps = ls.CreateTickPipe().Result;
+            if (tps == null) return null;
+
+            var ts = tps.GetLastTickTs().Result;
+            ls.DeletePipe(tps.GetPipe()).Wait();
+
+            if (ts == null) return "";
+            
+            return ts.Value.ToString("yyyy-MM-ddTHH:mm:ss");
         }
 
         [HttpGet("ident")]

@@ -6,6 +6,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Pulxer.Drawing;
 using Pulxer.History;
+using Pulxer.Plugin;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -20,15 +21,17 @@ namespace Pulxer
         private IServiceProvider _services;
         private int _downloadAllSecondsTimeout = 600; // sec
         private readonly ILogger _logger;
+        private readonly PluginManager _pluginManager;
 
         public SchedulerService(TickDispatcher tickDisp, ChartManagerCache cmCache, ILogger<SchedulerService> logger, IConfiguration config, IServiceProvider services,
-            Scheduler scheduler)
+            Scheduler scheduler, PluginManager pm)
         {
             _tickDisp = tickDisp;
             _cmCache = cmCache;
             _services = services;
             _logger = logger;
             _scheduler = scheduler;
+            _pluginManager = pm;
 
             var section = config.GetSection("Scheduler");
             if (section != null)
@@ -40,8 +43,9 @@ namespace Pulxer
                     {
                         int time;
                         if (!int.TryParse(task["time"], out time)) continue;
-                        string action = task["action"];
-                        if (action.ToLower() == "initialize") _scheduler.AddItem(time, OpenSession);
+                        string action = task["action"].ToLower();
+                        if ((action == "initialize") || (action == "opensession")) _scheduler.AddItem(time, OpenSession);
+                        if (action == "closesession") _scheduler.AddItem(time, CloseSession);
                     }
                 }
 
@@ -92,7 +96,16 @@ namespace Pulxer
                 _cmCache.Clear();
             }
 
+            // загрузка всех плагинов
+            _pluginManager.LoadAllPlugins();
+
             _logger.LogInformation("Session opened.");
+        }
+
+        private void CloseSession()
+        {
+            _pluginManager.UnloadAllPlugins();
+            _logger.LogInformation("Session closed.");
         }
     }
 }

@@ -11,6 +11,7 @@ namespace Common.Interfaces
         string GetHistoryProviderConfig();
         string GetHistoryProviderCache();
         string GetBotsPath();
+        string GetPluginsPath();
         int GetHistoryDownloaderDays(string tf);
         int GetHistoryDownloaderMonths(string tf);
         int GetHistoryDownloaderDelay(string tf);

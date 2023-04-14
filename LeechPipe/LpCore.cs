@@ -42,16 +42,24 @@ namespace LeechPipe
 
         public void Initialize(SystemLp sysPipe, string identity, bool createRecvThread = true)
         {
+            lock (_pipe_recvs)
+            {
+                _pipe_recvs.Clear();
+                _pipe_recvs.Add(0, sysPipe);
+            }
+
+            lock (_waitItems)
+            {
+                _waitItems.Clear();
+            }
+
             lock (this)
             {
                 _identity = identity;
-                _pipe_recvs.Clear();
-                _pipe_recvs.Add(0, sysPipe);
 
                 _recvMessages.Clear();
                 _recvMessages.TryAdd(0, new ConcurrentQueue<byte[]>()); // нулевой пайп
 
-                _waitItems.Clear();
                 _isWorking = true;
 
                 if (createRecvThread)
@@ -85,7 +93,7 @@ namespace LeechPipe
         /// <returns></returns>
         public ushort CreatePipe(ILpReceiver pipeHandler)
         {
-            lock (this)
+            lock (_pipe_recvs)
             {
                 ushort pipe = FindFreeNumber();
                 if (pipe == 0) return 0; // нет свободного номера
@@ -105,7 +113,7 @@ namespace LeechPipe
         {
             if (pipe == 0) return false;
 
-            lock (this)
+            lock (_pipe_recvs)
             {
                 return _pipe_recvs.Remove(pipe);
             }
@@ -134,12 +142,22 @@ namespace LeechPipe
 
         public void Close()
         {
-            _pipe_recvs.Clear();
-            _recvMessages.Clear();
-            _waitItems.Clear();
+            lock (_pipe_recvs)
+            {
+                _pipe_recvs.Clear();
+            }
 
-            _isWorking = false;
-            _recvAre.Set();
+            lock (_waitItems)
+            {
+                _waitItems.Clear();
+            }
+
+            lock (this)
+            {
+                _recvMessages.Clear();
+                _isWorking = false;
+                _recvAre.Set();
+            }
         }
 
         public Task<byte[]> SendMessageAsync(ushort pipe, byte[] data)
@@ -148,16 +166,18 @@ namespace LeechPipe
 
             return Task.Run<byte[]>(() =>
             {
-                if (_waitItems.ContainsKey(pipe)) return null;
-
                 var sendBuffer = new byte[data.Length + 2];
                 sendBuffer[0] = (byte)(pipe & 0xff);
                 sendBuffer[1] = (byte)(pipe >> 8);
                 Array.Copy(data, 0, sendBuffer, 2, data.Length);
-
                 var mre = new ManualResetEvent(false);
                 var waitItem = new WaitRecvItem() { Mre = mre, Data = null };
-                _waitItems.Add(pipe, waitItem);
+
+                lock (_waitItems)
+                {
+                    if (_waitItems.ContainsKey(pipe)) return null;
+                    _waitItems.Add(pipe, waitItem);
+                }
 
                 lock (_transport)
                 {
@@ -183,9 +203,15 @@ namespace LeechPipe
 
             return Task.Run(() =>
             {
-                if (!_pipe_recvs.Values.Contains(handler)) return;
+                ushort pipe;
 
-                var pipe = _pipe_recvs.FirstOrDefault(h => h.Value == handler).Key;
+                lock (_pipe_recvs)
+                {
+                    if (!_pipe_recvs.Values.Contains(handler)) return;
+
+                    pipe = _pipe_recvs.FirstOrDefault(h => h.Value == handler).Key;
+                }
+
                 var sendBuffer = new byte[data.Length + 2];
                 sendBuffer[0] = (byte)(pipe & 0xff);
                 sendBuffer[1] = (byte)(pipe >> 8);
@@ -250,6 +276,7 @@ namespace LeechPipe
                     {
                         while (!_recvMessages[pipe].TryDequeue(out data)) { };
 
+                        bool isWaitItem = false;
                         lock (_waitItems)
                         {
                             if (_waitItems.ContainsKey(pipe))
@@ -258,11 +285,21 @@ namespace LeechPipe
                                 _waitItems.Remove(pipe);
                                 wi.Data = data;
                                 wi.Mre.Set();
+                                isWaitItem = true;
                             }
-                            else if (_pipe_recvs.ContainsKey(pipe))
+                        }
+
+                        if (isWaitItem == false)
+                        {
+                            ILpReceiver receiver = null;
+                            lock (_pipe_recvs)
                             {
-                                _pipe_recvs[pipe].OnRecv(data);
+                                if (_pipe_recvs.ContainsKey(pipe))
+                                {
+                                    receiver = _pipe_recvs[pipe];
+                                }
                             }
+                            if (receiver != null) receiver.OnRecv(data);
                         }
                     }
                 }
