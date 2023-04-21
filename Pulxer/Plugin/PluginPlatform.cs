@@ -36,7 +36,7 @@ namespace Pulxer.Plugin
 
         public async Task<IBarRow> CreateBarRow(int insID, Timeframes tf, int historyDays)
         {
-            BarRow bars = new BarRow(tf, _tickDispatcher, insID);
+            BarRow bars = new BarRow(tf, insID);
 
             var insStore = _insStoreBL.GetLoadHistoryInsStore(insID, tf); // наиболее подходящий insStore
             if (insStore == null) return null;
@@ -46,6 +46,18 @@ namespace Pulxer.Plugin
             if (startHistoryDate != null)
             {
                 await _insStoreBL.LoadHistoryAsync(bars, insID, startHistoryDate.Value, endHistoryDate, insStore.InsStoreID);
+                bars.TickDispatcher = _tickDispatcher;
+                _logger?.LogInformation(string.Format("LoadHistory bars count={0}, insId={1}, tf={2}, start={3}, end={4}", 
+                    bars.Count.ToString(), 
+                    insID.ToString(), 
+                    tf.ToString(), 
+                    startHistoryDate.Value.ToString("yyyy-MM-dd HH:mm:ss"), 
+                    endHistoryDate.ToString("yyyy-MM-dd HH:mm:ss")));
+
+            }
+            else
+            {
+                _logger?.LogWarning("Bar history not loaded and tick dispatcher not attached, startHistoryDate is null.");
             }
             _barRows.Add(bars);
 

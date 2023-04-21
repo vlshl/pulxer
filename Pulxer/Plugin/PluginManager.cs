@@ -83,7 +83,7 @@ namespace Pulxer.Plugin
 
         public void LoadAllPlugins()
         {
-            _logger?.LogInformation("Loading all plugins ...");
+            _logger?.LogInformation("Load all plugins");
 
             if (string.IsNullOrEmpty(_pluginsPath))
             {
@@ -113,8 +113,6 @@ namespace Pulxer.Plugin
                     _logger?.LogInformation("Failed load assembly: " + pc.Assembly);
                 }
             }
-
-            _logger?.LogInformation("Load complete");
         }
 
         public bool LoadPlugin(string key)
@@ -146,8 +144,6 @@ namespace Pulxer.Plugin
             {
                 _logger?.LogInformation("Failed load assembly: " + pc.Assembly);
             }
-
-            _logger?.LogInformation("Load complete: " + key);
 
             return true;
         }
@@ -193,14 +189,12 @@ namespace Pulxer.Plugin
                 _logger?.LogInformation("Failed unload assembly: " + key);
             }
 
-            _logger?.LogInformation("Unload complete:" + key);
-
             return true;
         }
 
         public void UnloadAllPlugins()
         {
-            _logger?.LogInformation("Unloading all plugins ...");
+            _logger?.LogInformation("Unload all plugins");
 
             string[] keys;
             lock (this)
@@ -220,8 +214,6 @@ namespace Pulxer.Plugin
                     _logger?.LogInformation("Failed unload assembly: " + key);
                 }
             }
-
-            _logger?.LogInformation("Unload complete");
         }
 
         private bool LoadAssembly(string dir, string assem)
@@ -240,17 +232,22 @@ namespace Pulxer.Plugin
                 if (_key_context.ContainsKey(key) || _key_plugin.ContainsKey(key))
                     return false;
 
-                AssemblyLoadContext context = new AssemblyLoadContext(null, true);
+                AssemblyLoadContext context = new AssemblyLoadContext(key, true);
+
+                context.Resolving += Context_Resolving;
 
                 try
                 {
-                    var assembly = context.LoadFromAssemblyPath(path);
+                    FileStream fs = new FileStream(path, FileMode.Open);
+                    var assembly = context.LoadFromStream(fs);
+                    fs.Close();
                     if (assembly == null) return false;
 
                     var plugin = ActivatePlugin(key, assembly);
                     if (plugin == null)
                     {
                         context.Unload();
+                        context.Resolving -= Context_Resolving;
                         return false;
                     }
 
@@ -264,6 +261,34 @@ namespace Pulxer.Plugin
                     _logger?.LogError(ex, "Failed load assembly: " + path);
                     return false;
                 }
+            }
+        }
+
+        private Assembly Context_Resolving(AssemblyLoadContext arg1, AssemblyName arg2)
+        {
+            try
+            {
+                string path = Path.Combine(_pluginsPath, arg1.Name, arg2.Name + ".dll");
+                //var asm = arg1.LoadFromAssemblyPath(path);
+                FileStream fs = new FileStream(path, FileMode.Open);
+                var asm = arg1.LoadFromStream(fs);
+                fs.Close();
+
+                if (asm != null)
+                {
+                    _logger?.LogInformation("Context resolving successfully: " + path);
+                }
+                else
+                {
+                    _logger?.LogError("Context resolving error: " + path);
+                }
+
+                return asm;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Context resolving error");
+                return null;
             }
         }
 
@@ -294,10 +319,15 @@ namespace Pulxer.Plugin
 
                     if (_key_context.ContainsKey(key))
                     {
-                        _key_context[key].Unload();
+                        var ctx = _key_context[key];
+                        ctx.Unload();
+                        ctx.Resolving -= Context_Resolving;
                         _key_context.Remove(key);
                     }
                 }
+                
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
 
                 return true;
             }
@@ -321,16 +351,16 @@ namespace Pulxer.Plugin
                     using (var scope = _serviceProvider.CreateScope())
                     {
                         var platform = scope.ServiceProvider.GetRequiredService<IPluginPlatform>();
-                        _key_platform.Add(key, platform);
 
                         IPxPlugin p = null;
                         try
                         {
-                            p = Activator.CreateInstance(type, platform) as IPxPlugin;
+                            string path = Path.Combine(_pluginsPath, key);
+                            p = Activator.CreateInstance(type, platform, path) as IPxPlugin;
                             if (p == null)
                             {
                                 _logger?.LogInformation("Create instance error: " + key);
-                                continue;
+                                return null;
                             }
 
                             p.OnLoad();
@@ -339,7 +369,9 @@ namespace Pulxer.Plugin
                         catch (Exception ex)
                         {
                             _logger?.LogError(ex, "Plugin activate error: " + key);
+                            return null;
                         }
+                        _key_platform.Add(key, platform);
 
                         return p;
                     }
