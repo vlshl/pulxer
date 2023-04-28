@@ -179,10 +179,14 @@ namespace Pulxer.HistoryProvider
                     WriteCache(ticker, tf, date1, date2, data);
                 }
             }
-            if (data == null || !data.Any())
+            if (data == null)
             {
-                _logger?.LogError("Response data is null or empty");
+                _logger?.LogError("Response data is null");
                 return null;
+            }
+            if (!data.Any())
+            {
+                return new Bar[0];
             }
 
             ParserSettings ps = new ParserSettings();

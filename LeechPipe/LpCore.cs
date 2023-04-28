@@ -181,7 +181,12 @@ namespace LeechPipe
 
                 lock (_transport)
                 {
-                    _transport.SendMessageAsync(sendBuffer).Wait();
+                    bool isSuccess = _transport.SendMessageAsync(sendBuffer).Result;
+                    if (!isSuccess)
+                    {
+                        Close();
+                        return null;
+                    }
                 }
 
                 if (!mre.WaitOne(TIMEOUT))
@@ -219,7 +224,12 @@ namespace LeechPipe
 
                 lock (_transport)
                 {
-                    _transport.SendMessageAsync(sendBuffer).Wait();
+                    bool isSuccess = _transport.SendMessageAsync(sendBuffer).Result;
+                    if (!isSuccess)
+                    {
+                        Close();
+                        return;
+                    }
                 }
             });
         }

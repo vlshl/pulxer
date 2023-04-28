@@ -62,7 +62,7 @@ namespace Pulxer.Leech
             }
         }
 
-        public async Task SendMessageAsync(byte[] buffer)
+        public async Task<bool> SendMessageAsync(byte[] buffer)
         {
             int offset = 0;
             try
@@ -78,10 +78,13 @@ namespace Pulxer.Leech
 
                     offset += count;
                 }
+
+                return true;
             }
             catch(Exception ex)
             {
                 _logger.LogError(ex, "SendMessageAsync: send error");
+                return false;
             }
         }
     }

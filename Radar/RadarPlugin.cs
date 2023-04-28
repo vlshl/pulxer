@@ -134,17 +134,17 @@ namespace Radar
                 rr.Name = instrum.ShortName;
                 rr.Decimals = instrum.Decimals;
 
-                var bars1 = _platform.CreateBarRow(instrum.InsID, conf.Ma1.Timeframe, 100).Result;
+                var bars1 = _platform.CreateBarRow(instrum.InsID, conf.Ma1.Timeframe, conf.Ma1.HistoryDays).Result;
                 _insid_bars1.Add(instrum.InsID, bars1);
                 var ma1 = new Ma(bars1.Close, conf.Ma1.Average, conf.Ma1.N);
                 _insid_ma1.Add(instrum.InsID, ma1);
 
-                var bars2 = _platform.CreateBarRow(instrum.InsID, conf.Ma2.Timeframe, 100).Result;
+                var bars2 = _platform.CreateBarRow(instrum.InsID, conf.Ma2.Timeframe, conf.Ma2.HistoryDays).Result;
                 _insid_bars2.Add(instrum.InsID, bars2);
                 var ma2 = new Ma(bars2.Close, conf.Ma2.Average, conf.Ma2.N);
                 _insid_ma2.Add(instrum.InsID, ma2);
 
-                var bars3 = _platform.CreateBarRow(instrum.InsID, conf.Ma3.Timeframe, 100).Result;
+                var bars3 = _platform.CreateBarRow(instrum.InsID, conf.Ma3.Timeframe, conf.Ma3.HistoryDays).Result;
                 _insid_bars3.Add(instrum.InsID, bars3);
                 var ma3 = new Ma(bars3.Close, conf.Ma3.Average, conf.Ma3.N);
                 _insid_ma3.Add(instrum.InsID, ma3);

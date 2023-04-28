@@ -36,6 +36,7 @@ namespace Radar
         public Timeframes Timeframe;
         public AverageMethod Average;
         public int N;
+        public int HistoryDays;
 
         public MaConf()
         {
@@ -44,6 +45,7 @@ namespace Radar
             Timeframe = Timeframes.Min;
             Average = AverageMethod.Exponencial;
             N = 10;
+            HistoryDays = 10;
         }
     }
 

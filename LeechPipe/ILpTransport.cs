@@ -8,7 +8,7 @@ namespace LeechPipe
 {
     public interface ILpTransport
     {
-        Task SendMessageAsync(byte[] buffer);
+        Task<bool> SendMessageAsync(byte[] buffer);
         Task<byte[]> RecvMessageAsync();
     }
 }
