@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Common;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -16,5 +17,9 @@ namespace Radar
         public decimal Diff2 { get; set; }
         public decimal Ma3 { get; set; }
         public decimal Diff3 { get; set; }
+        public decimal Diff12 { get; set; }
+        public decimal Diff13 { get; set; }
+        public decimal Diff23 { get; set; }
+        public Dictionary<string, PxCellStyle> Styles { get; set; }
     }
 }

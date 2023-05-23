@@ -2,28 +2,33 @@
   "Tickers": [ "GAZP", "ROSN", "SBER", "LKOH", "MTSS", "TATN", "VTBR", "RTKM", "SNGS", "HYDR", "FEES", "MAGN", "NLMK", "POLY", "IRAO", "AFLT", "KMAZ", "MTLR", "NVTK", "CHMF", "RASP", "SIBN" ],
   "DiffDecimals": 3,
   "MaDecimalsAdd": 1,
+  "RedColor": "rgba(255, 0, 0, 0.1)",
+  "GreenColor": "rgba(0, 255, 0, 0.1)",
+  "Diff12Name": "Ma(Min10)-Ma(Hour) %",
+  "Diff13Name": "Ma(Min10)-Ma(Day) %",
+  "Diff23Name": "Ma(Hour)-Ma(Day) %",
   "Ma1": {
-    "Name": "Ma(10) Min10",
-    "DiffName": "Разн Min10 (%)",
+    "Name": "Ma(Min10, 10)",
+    "DiffName": "P-Ma(Min10) %",
     "Timeframe": "Min10",
+    "Average": "Exponencial",
+    "N": 10,
+    "HistoryDays": 3
+  },
+  "Ma2": {
+    "Name": "Ma(Hour, 10)",
+    "DiffName": "P-Ma(Hour) %",
+    "Timeframe": "Hour",
     "Average": "Exponencial",
     "N": 10,
     "HistoryDays": 5
   },
-  "Ma2": {
-    "Name": "Ma(10) Hour",
-    "DiffName": "Разн Hour (%)",
-    "Timeframe": "Hour",
-    "Average": "Exponencial",
-    "N": 10,
-    "HistoryDays": 10
-  },
   "Ma3": {
-    "Name": "Ma(10) Day",
-    "DiffName": "Разн Day (%)",
+    "Name": "Ma(Day, 10)",
+    "DiffName": "P-Ma(Day) %",
     "Timeframe": "Day",
     "Average": "Exponencial",
     "N": 10,
-    "HistoryDays": 50
+    "HistoryDays": 30
   }
 }

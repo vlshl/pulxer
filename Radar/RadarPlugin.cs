@@ -23,6 +23,8 @@ namespace Radar
         private string _pluginPath;
         private int _maDecimalsAdd;
         private int _diffDecimals;
+        private string _redColor;
+        private string _greenColor;
 
         public RadarPlugin(IPluginPlatform platform, string pluginPath)
         {
@@ -30,6 +32,7 @@ namespace Radar
             _pluginPath = pluginPath;
             _maDecimalsAdd = 0;
             _diffDecimals = 0;
+            _redColor = _greenColor = "";
 
             _insid_rr = new Dictionary<int, RadarRow>();
             _insid_bars1 = new Dictionary<int, IBarRow>();
@@ -40,7 +43,7 @@ namespace Radar
             _insid_ma3 = new Dictionary<int, Ma>();
             _insid_price = new Dictionary<int, decimal>();
 
-            _cols = new PxColumn[9];
+            _cols = new PxColumn[12];
             _cols[0] = new PxColumn("ticker", "Тикер");
             _cols[1] = new PxColumn("name", "Инструмент");
             _cols[2] = new PxColumn("price", "Цена");
@@ -50,6 +53,9 @@ namespace Radar
             _cols[6] = new PxColumn("diff1", "Diff1");
             _cols[7] = new PxColumn("diff2", "Diff2");
             _cols[8] = new PxColumn("diff3", "Diff3");
+            _cols[9] = new PxColumn("diff12", "Diff12");
+            _cols[10] = new PxColumn("diff13", "Diff13");
+            _cols[11] = new PxColumn("diff23", "Diff23");
         }
 
         ~RadarPlugin()
@@ -77,21 +83,66 @@ namespace Radar
 
                 decimal ma1 = ma1Last != null ? ma1Last.Value : 0;
                 decimal diff1 = rr.Ma1 > 0 ? (rr.Price - rr.Ma1) / rr.Ma1 * 100 : 0;
-                rr.Ma1 = decimal.Round(ma1, rr.Decimals + _maDecimalsAdd, MidpointRounding.AwayFromZero);
-                rr.Diff1 = decimal.Round(diff1, _diffDecimals, MidpointRounding.AwayFromZero);
+                rr.Ma1 = MaRound(ma1, rr.Decimals);
+                rr.Diff1 = DiffRound(diff1);
 
                 decimal ma2 = ma2Last != null ? ma2Last.Value : 0;
                 decimal diff2 = rr.Ma2 > 0 ? (rr.Price - rr.Ma2) / rr.Ma2 * 100 : 0;
-                rr.Ma2 = decimal.Round(ma2, rr.Decimals + _maDecimalsAdd, MidpointRounding.AwayFromZero);
-                rr.Diff2 = decimal.Round(diff2, _diffDecimals, MidpointRounding.AwayFromZero);
+                rr.Ma2 = MaRound(ma2, rr.Decimals);
+                rr.Diff2 = DiffRound(diff2);
 
                 decimal ma3 = ma3Last != null ? ma3Last.Value : 0;
                 decimal diff3 = rr.Ma3 > 0 ? (rr.Price - rr.Ma3) / rr.Ma3 * 100 : 0;
-                rr.Ma3 = decimal.Round(ma3, rr.Decimals + _maDecimalsAdd, MidpointRounding.AwayFromZero);
-                rr.Diff3 = decimal.Round(diff3, _diffDecimals, MidpointRounding.AwayFromZero);
+                rr.Ma3 = MaRound(ma3, rr.Decimals);
+                rr.Diff3 = DiffRound(diff3);
+
+                decimal diff12 = ma2 > 0 ? (ma1 - ma2) / ma2 * 100 : 0;
+                decimal diff13 = ma3 > 0 ? (ma1 - ma3) / ma3 * 100 : 0;
+                decimal diff23 = ma3 > 0 ? (ma2 - ma3) / ma3 * 100 : 0;
+
+                rr.Diff12 = DiffRound(diff12);
+                rr.Diff13 = DiffRound(diff13);
+                rr.Diff23 = DiffRound(diff23);
+
+                Dictionary<string, PxCellStyle> styles = new Dictionary<string, PxCellStyle>();
+                var s1 = new PxCellStyle(); 
+                s1.BackColor = rr.Diff1 < 0 ? _redColor : _greenColor; 
+                styles.Add("diff1", s1);
+                
+                var s2 = new PxCellStyle(); 
+                s2.BackColor = rr.Diff2 < 0 ? _redColor : _greenColor; 
+                styles.Add("diff2", s2);
+                
+                var s3 = new PxCellStyle(); 
+                s3.BackColor = rr.Diff3 < 0 ? _redColor : _greenColor; 
+                styles.Add("diff3", s3);
+
+                var s12 = new PxCellStyle();
+                s12.BackColor = rr.Diff12 < 0 ? _redColor : _greenColor;
+                styles.Add("diff12", s12);
+
+                var s13 = new PxCellStyle();
+                s13.BackColor = rr.Diff13 < 0 ? _redColor : _greenColor;
+                styles.Add("diff13", s13);
+
+                var s23 = new PxCellStyle();
+                s23.BackColor = rr.Diff23 < 0 ? _redColor : _greenColor;
+                styles.Add("diff23", s23);
+
+                rr.Styles = styles;
             }
 
             return _insid_rr.Values.ToArray();
+        }
+
+        private decimal MaRound(decimal ma, int decimals)
+        {
+            return decimal.Round(ma, decimals + _maDecimalsAdd, MidpointRounding.AwayFromZero);
+        }
+
+        private decimal DiffRound(decimal d)
+        {
+            return decimal.Round(d, _diffDecimals, MidpointRounding.AwayFromZero);
         }
 
         public void OnLoad()
@@ -111,9 +162,14 @@ namespace Radar
             _cols[6].Name = conf.Ma1.DiffName;
             _cols[7].Name = conf.Ma2.DiffName;
             _cols[8].Name = conf.Ma3.DiffName;
+            _cols[9].Name = conf.Diff12Name;
+            _cols[10].Name = conf.Diff13Name;
+            _cols[11].Name = conf.Diff23Name;
 
             _maDecimalsAdd = conf.MaDecimalsAdd;
             _diffDecimals = conf.DiffDecimals;
+            _redColor = conf.RedColor;
+            _greenColor = conf.GreenColor;
 
             _insid_rr.Clear();
             _insid_bars1.Clear(); _insid_bars2.Clear(); _insid_bars3.Clear();

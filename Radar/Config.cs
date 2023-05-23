@@ -17,6 +17,11 @@ namespace Radar
         public MaConf Ma1;
         public MaConf Ma2;
         public MaConf Ma3;
+        public string RedColor;
+        public string GreenColor;
+        public string Diff12Name;
+        public string Diff13Name;
+        public string Diff23Name;
 
         public RadarConf()
         {
@@ -26,6 +31,11 @@ namespace Radar
             Ma3 = new MaConf();
             DiffDecimals = 3;
             MaDecimalsAdd = 1;
+            RedColor = "red";
+            GreenColor = "green";
+            Diff12Name = string.Empty;
+            Diff13Name = string.Empty;
+            Diff23Name = string.Empty;
         }
     }
 
