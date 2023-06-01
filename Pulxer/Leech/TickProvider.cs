@@ -16,8 +16,9 @@ namespace Pulxer.Leech
         private Dictionary<int, int> _insId_count; // инструмент - кол-во подписок на него
         private bool _isWorking;
         private TickDispatcher _tickDisp;
-        private int SLEEP_MS = 1000;
-        private int SLEEP1_MS = 60 * 1000;
+        private int SLEEP_1 = 1000;
+        private int SLEEP_10 = 10 * 1000;
+        private int SLEEP_60 = 60 * 1000;
         private ILogger<TickProvider> _logger;
 
         public TickProvider(LeechServerManager lsm, TickDispatcher td, ILogger<TickProvider> logger)
@@ -47,7 +48,7 @@ namespace Pulxer.Leech
                     if (ls == null)
                     {
                         _logger.LogWarning("LeechServer does not exist");
-                        Thread.Sleep(SLEEP1_MS);
+                        Thread.Sleep(SLEEP_60);
                         continue;
                     }
 
@@ -55,7 +56,7 @@ namespace Pulxer.Leech
                     if (tps == null)
                     {
                         _logger.LogWarning("TickPipeServer creation error");
-                        Thread.Sleep(SLEEP1_MS);
+                        Thread.Sleep(SLEEP_60);
                         continue;
                     }
 
@@ -70,6 +71,7 @@ namespace Pulxer.Leech
                         insIds = _insId_count.Keys.ToList();
                     }
 
+                    int emptyCount = 0;
                     foreach (var insId in insIds)
                     {
                         int skip = _tickDisp.GetTicksCount(insId);
@@ -78,8 +80,12 @@ namespace Pulxer.Leech
                         {
                             _tickDisp.AddTicks(ticks);
                         }
+                        else
+                        {
+                            emptyCount++;
+                        }
                     }
-                    Thread.Sleep(SLEEP_MS);
+                    Thread.Sleep(emptyCount < insIds.Count ? SLEEP_1 : SLEEP_10); // если данных нет по всем инструментам, делаем бОльшую паузу
                 }
 
                 if ((ls != null) && (tps != null))
