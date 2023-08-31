@@ -54,6 +54,14 @@ namespace Pulxer.Leech
             return new TickPipeServer(_core, tickPipe, _instrumCache, _logger);
         }
 
+        public async Task<TickHistoryPipeServer> CreateTickHistoryPipe()
+        {
+            var tickHistoryPipe = await _sysPipe.CreatePipeAsync(Encoding.UTF8.GetBytes("tick-history"));
+            if (tickHistoryPipe == 0) return null;
+
+            return new TickHistoryPipeServer(_core, tickHistoryPipe, _logger);
+        }
+
         public async Task<bool> DeletePipe(ushort pipe)
         {
             if (pipe == 0) return false;
