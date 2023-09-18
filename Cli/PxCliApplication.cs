@@ -2,6 +2,7 @@
 using Common.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -37,6 +38,7 @@ namespace Cli
         private void ConfigureServices(IServiceCollection services)
         {
             services.AddSingleton<IConsole, PxConsole>();
+            services.AddLogging(configure => configure.AddConsole());
             Pulxer.BL.ConfigureServices(services, _config, DataProtect.TryUnProtect(_config.GetConnectionString("Pulxer")));
         }
 

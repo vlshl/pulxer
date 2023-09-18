@@ -28,7 +28,9 @@ namespace Pulxer
             services.AddSingleton<TickProvider>();
             services.AddSingleton<InstrumCache>();
             services.AddSingleton<PluginManager>();
-            
+            services.AddSingleton<ITgContextManager, TgContextManager>();
+            services.AddSingleton<OpenPositions>();
+
             services.AddTransient<IPluginPlatform, PluginPlatform>();
             services.AddTransient<HistoryDownloader>();
             services.AddTransient<IInstrumBL, InstrumBL>();
@@ -49,6 +51,8 @@ namespace Pulxer
             services.AddTransient<ISettingsBL, SettingsBL>();
 
             services.AddHostedService<SchedulerService>();
+            services.AddHostedService<TgService>();
+            services.AddHostedService<PositionService>();
         }
     }
 }

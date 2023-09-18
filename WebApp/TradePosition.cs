@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace WebApp
 {
-    public class RemotePosition
+    public class TradePosition
     {
         public int PosID { get; set; }
         public int InsID { get; set; }

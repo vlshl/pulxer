@@ -351,12 +351,13 @@ namespace Pulxer.Plugin
                     using (var scope = _serviceProvider.CreateScope())
                     {
                         var platform = scope.ServiceProvider.GetRequiredService<IPluginPlatform>();
+                        var ctxMan = scope.ServiceProvider.GetRequiredService<ITgContextManager>();
 
                         IPxPlugin p = null;
                         try
                         {
                             string path = Path.Combine(_pluginsPath, key);
-                            p = Activator.CreateInstance(type, platform, path) as IPxPlugin;
+                            p = Activator.CreateInstance(type, platform, path, ctxMan) as IPxPlugin;
                             if (p == null)
                             {
                                 _logger?.LogInformation("Create instance error: " + key);

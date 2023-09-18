@@ -56,7 +56,7 @@ namespace WebApp
                 });
 
             services.AddControllers();
-            
+
             string connectionString = DataProtect.TryUnProtect(_config.GetConnectionString("Pulxer"));
             Pulxer.BL.ConfigureServices(services, _config, connectionString);
         }

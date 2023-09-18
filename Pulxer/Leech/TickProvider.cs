@@ -115,9 +115,9 @@ namespace Pulxer.Leech
                 {
                     _insId_count.Add(insId, 1);
                 }
-
-                return true;
             }
+
+            return true;
         }
 
         public bool RemoveInstrum(int insId)

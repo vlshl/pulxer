@@ -8,7 +8,7 @@ using System.Linq;
 
 namespace Radar
 {
-    public class RadarPlugin : IPxPlugin
+    public class RadarPlugin : IPxPlugin, ITgContext
     {
         private PxColumn[] _cols;
         private readonly IPluginPlatform _platform;
@@ -25,8 +25,10 @@ namespace Radar
         private int _diffDecimals;
         private string _redColor;
         private string _greenColor;
+        private readonly ITgContextManager _tgContextManager;
+        //private ITgContext _tgContext;
 
-        public RadarPlugin(IPluginPlatform platform, string pluginPath)
+        public RadarPlugin(IPluginPlatform platform, string pluginPath, ITgContextManager tgContextManager)
         {
             _platform = platform;
             _pluginPath = pluginPath;
@@ -56,6 +58,7 @@ namespace Radar
             _cols[9] = new PxColumn("diff12", "Diff12");
             _cols[10] = new PxColumn("diff13", "Diff13");
             _cols[11] = new PxColumn("diff23", "Diff23");
+            _tgContextManager = tgContextManager;
         }
 
         ~RadarPlugin()
@@ -211,6 +214,16 @@ namespace Radar
                 _insid_rr.Add(instrum.InsID, rr);
                 _platform.AddLog("radar", "Ticker load: " + ticker);
             }
+
+            var isRegSuccess = _tgContextManager.RegisterContext(this);
+            if (isRegSuccess)
+            {
+                _platform.AddLog("radar", "Context registered successfully");
+            }
+            else
+            {
+                _platform.AddLog("radar", "Context register error");
+            }
         }
 
         private void OnTick(DateTime time, int insId, int lots, decimal price)
@@ -226,7 +239,32 @@ namespace Radar
 
         public void OnDestroy()
         {
+            _tgContextManager.UnregisterContext(this);
             _platform.AddLog("radar", "OnDestroy");
         }
+
+        #region ITgContext
+        public string GetTgName()
+        {
+            return "Radar";
+        }
+
+        public string GetTgCommand()
+        {
+            return "/radar";
+        }
+
+        public void OnSetTgContext()
+        {
+        }
+
+        public void OnCommand(string cmd)
+        {
+        }
+
+        public void OnMessage(string msg)
+        {
+        }
+        #endregion
     }
 }

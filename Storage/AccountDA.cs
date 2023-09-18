@@ -525,16 +525,16 @@ namespace Storage
                 {
                     try
                     {
-                        db.Database.ExecuteSqlCommand(string.Format("delete from postrade where trade_id in (select trade_id from trade where account_id = {0})", accountID.ToString()));
-                        db.Database.ExecuteSqlCommand(string.Format("delete from postrade where pos_id in (select pos_id from positions where account_id = {0})", accountID.ToString()));
-                        db.Database.ExecuteSqlCommand("delete from positions where account_id = " + accountID.ToString());
-                        db.Database.ExecuteSqlCommand("delete from trade where account_id = " + accountID.ToString());
-                        db.Database.ExecuteSqlCommand("delete from stoporder where account_id = " + accountID.ToString());
-                        db.Database.ExecuteSqlCommand("delete from orders where account_id = " + accountID.ToString());
-                        db.Database.ExecuteSqlCommand("delete from holding where account_id = " + accountID.ToString());
-                        db.Database.ExecuteSqlCommand("delete from cash where account_id = " + accountID.ToString());
-                        db.Database.ExecuteSqlCommand("delete from seriesvalue where series_id in (select series_id from series where account_id = " + accountID.ToString() + ")");
-                        db.Database.ExecuteSqlCommand("delete from series where account_id = " + accountID.ToString());
+                        db.Database.ExecuteSqlRaw(string.Format("delete from postrade where trade_id in (select trade_id from trade where account_id = {0})", accountID.ToString()));
+                        db.Database.ExecuteSqlRaw(string.Format("delete from postrade where pos_id in (select pos_id from positions where account_id = {0})", accountID.ToString()));
+                        db.Database.ExecuteSqlRaw("delete from positions where account_id = " + accountID.ToString());
+                        db.Database.ExecuteSqlRaw("delete from trade where account_id = " + accountID.ToString());
+                        db.Database.ExecuteSqlRaw("delete from stoporder where account_id = " + accountID.ToString());
+                        db.Database.ExecuteSqlRaw("delete from orders where account_id = " + accountID.ToString());
+                        db.Database.ExecuteSqlRaw("delete from holding where account_id = " + accountID.ToString());
+                        db.Database.ExecuteSqlRaw("delete from cash where account_id = " + accountID.ToString());
+                        db.Database.ExecuteSqlRaw("delete from seriesvalue where series_id in (select series_id from series where account_id = " + accountID.ToString() + ")");
+                        db.Database.ExecuteSqlRaw("delete from series where account_id = " + accountID.ToString());
 
                         db.Database.CommitTransaction();
                     }

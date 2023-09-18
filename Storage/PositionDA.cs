@@ -183,8 +183,8 @@ namespace Storage
                     {
                         var accountParam = new NpgsqlParameter("@AccountID", accountID);
 
-                        db.Database.ExecuteSqlCommand("delete from postrade where pos_id in (select pos_id from positions where account_id = @AccountID)", accountParam);
-                        db.Database.ExecuteSqlCommand("delete from positions where account_id = @AccountID", accountParam);
+                        db.Database.ExecuteSqlRaw("delete from postrade where pos_id in (select pos_id from positions where account_id = @AccountID)", accountParam);
+                        db.Database.ExecuteSqlRaw("delete from positions where account_id = @AccountID", accountParam);
 
                         db.Database.CommitTransaction();
                     }

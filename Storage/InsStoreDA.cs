@@ -151,7 +151,7 @@ namespace Storage
                         var time1Param = new NpgsqlParameter("@Time1", t1);
                         var time2Param = new NpgsqlParameter("@Time2", t2);
 
-                        db.Database.ExecuteSqlCommand("delete from barhistory where insstore_id = @InsStoreID and bar_time >= @Time1 and bar_time < @Time2",
+                        db.Database.ExecuteSqlRaw("delete from barhistory where insstore_id = @InsStoreID and bar_time >= @Time1 and bar_time < @Time2",
                             insStoreParam, time1Param, time2Param);
 
                         var timeParam = new NpgsqlParameter("@Time", NpgsqlDbType.Integer);
@@ -173,7 +173,7 @@ namespace Storage
                             lpParam.Value = bar.LowDelta;
                             vParam.Value = bar.Volume;
 
-                            db.Database.ExecuteSqlCommand("insert into barhistory (insstore_id, bar_time, open, close_d, high_d, low_d, volume) values (@InsStoreID, @Time, @OpenPrice, @CloseDelta, @HighDelta, @LowDelta, @Volume)",
+                            db.Database.ExecuteSqlRaw("insert into barhistory (insstore_id, bar_time, open, close_d, high_d, low_d, volume) values (@InsStoreID, @Time, @OpenPrice, @CloseDelta, @HighDelta, @LowDelta, @Volume)",
                                 insStoreParam, timeParam, opParam, cpParam, hpParam, lpParam, vParam);
                         }
 
@@ -206,7 +206,7 @@ namespace Storage
                     var time1Param = new NpgsqlParameter("@Time1", StorageLib.ToDbTime(date1.Date));
                     var time2Param = new NpgsqlParameter("@Time2", StorageLib.ToDbTime(date2.Date.AddDays(1)));
 
-                    db.Database.ExecuteSqlCommand("delete from barhistory where insstore_id = @InsStoreID and bar_time >= @Time1 and bar_time < @Time2",
+                    db.Database.ExecuteSqlRaw("delete from barhistory where insstore_id = @InsStoreID and bar_time >= @Time1 and bar_time < @Time2",
                         insStoreParam, time1Param, time2Param);
                 }
                 catch (Exception ex)
@@ -273,7 +273,7 @@ namespace Storage
         {
             using (var db = new DaContext(_options))
             {
-                db.Database.ExecuteSqlCommand("delete from periods where insstore_id = " + insStoreID.ToString());
+                db.Database.ExecuteSqlRaw("delete from periods where insstore_id = " + insStoreID.ToString());
 
                 foreach (var p in periods)
                 {
@@ -316,7 +316,7 @@ namespace Storage
         {
             using (var db = new DaContext(_options))
             {
-                db.Database.ExecuteSqlCommand("delete from freedays where insstore_id = " + insStoreID.ToString());
+                db.Database.ExecuteSqlRaw("delete from freedays where insstore_id = " + insStoreID.ToString());
 
                 foreach (var p in freeDays)
                 {

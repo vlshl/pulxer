@@ -2,6 +2,7 @@
 using Common.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Pulxer;
 using Pulxer.Leech;
 using System;
 using System.Text.RegularExpressions;
@@ -15,12 +16,14 @@ namespace WebApp.Controllers
         private readonly LeechServerManager _lsm;
         private readonly IImportLeech _importLeech;
         private readonly IAccountBL _accountBL;
+        private readonly OpenPositions _openPos;
 
-        public LeechController(LeechServerManager lsm, IImportLeech importLeech, IAccountBL accountBL)
+        public LeechController(LeechServerManager lsm, IImportLeech importLeech, IAccountBL accountBL, OpenPositions openPos)
         {
             _lsm = lsm;
             _importLeech = importLeech;
             _accountBL = accountBL;
+            _openPos = openPos;
         }
 
         [HttpPost("fullsync")]
@@ -34,6 +37,7 @@ namespace WebApp.Controllers
             if (sps == null) return BadRequest();
 
             _importLeech.FullSyncAccountDataAsync(sps).Wait();
+            _openPos.RefreshItems();
             ls.DeletePipe(sps.GetPipe()).Wait();
 
             return Ok();
@@ -53,6 +57,7 @@ namespace WebApp.Controllers
             if (sps == null) return BadRequest();
 
             _importLeech.SyncAccountDataAsync(sps, acc.AccountID).Wait();
+            _openPos.RefreshItems();
             ls.DeletePipe(sps.GetPipe()).Wait();
 
             return Ok();

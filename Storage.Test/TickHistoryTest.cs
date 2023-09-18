@@ -21,6 +21,7 @@ namespace Storage.Test
             DbContextOptionsBuilder<DaContext> builder = new DbContextOptionsBuilder<DaContext>();
             builder.UseNpgsql("Username=postgres;Password=123;Host=localhost;Port=5432;Database=pulxer_test");
             _options = builder.Options;
+            AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
             _tickHistoryDA = new TickHistoryDA(_options);
             _insDA = new InstrumDA(_options);

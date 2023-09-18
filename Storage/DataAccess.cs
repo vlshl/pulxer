@@ -1,6 +1,7 @@
 ﻿using Common.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using System;
 
 namespace Storage
 {
@@ -23,6 +24,7 @@ namespace Storage
             services.AddTransient<ISettingsDA, SettingsDA>();
 
             services.AddDbContext<DaContext>(options => options.UseNpgsql(connectionString));
+            AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
         }
     }
 }

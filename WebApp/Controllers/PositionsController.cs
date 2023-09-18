@@ -1,8 +1,10 @@
-﻿using Common.Interfaces;
+﻿using Common;
+using Common.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Platform;
 using Pulxer;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -14,21 +16,23 @@ namespace WebApp.Controllers
     {
         private IPositionBL _positionBL;
         private IAccountBL _accountBL;
+        private readonly OpenPositions _openPos;
 
-        public PositionsController(IPositionBL positionBL, IAccountBL accountBL)
+        public PositionsController(IPositionBL positionBL, IAccountBL accountBL, OpenPositions openPos)
         {
             _positionBL = positionBL;
             _accountBL = accountBL;
+            _openPos = openPos;
         }
 
         [HttpGet("{ids}")]
         [Authorize]
-        public IEnumerable<RemotePosition> GetPositions(string ids)
+        public IEnumerable<TradePosition> GetPositions(string ids)
         {
             var posList = _positionBL.GetPositions(Lib.Str2Ids(ids));
             var posTrades = _positionBL.GetPosTrades(posList.Select(r => r.PosID).ToList());
 
-            var list = posList.Select(r => new RemotePosition()
+            var list = posList.Select(r => new TradePosition()
             {
                 PosID = r.PosID,
                 InsID = r.InsID,
@@ -47,27 +51,22 @@ namespace WebApp.Controllers
 
         [HttpGet("open")]
         [Authorize]
-        public IEnumerable<RemotePosition> GetOpenPositions()
+        public IEnumerable<OpenPosItem> GetOpenPositions()
         {
-            return GetPositions(true);
+            return _openPos.GetPositions();
         }
 
         [HttpGet("close")]
         [Authorize]
-        public IEnumerable<RemotePosition> GetClosPositions()
-        {
-            return GetPositions(false);
-        }
-
-        private IEnumerable<RemotePosition> GetPositions(bool isOpened)
+        public IEnumerable<TradePosition> GetClosePositions()
         {
             var acc = _accountBL.GetRealAccount();
             if (acc == null) return null;
 
-            var posList = isOpened ? _positionBL.GetOpenedPositions(acc.AccountID) : _positionBL.GetClosedPositions(acc.AccountID);
+            var posList = _positionBL.GetClosedPositions(acc.AccountID);
             var posTrades = _positionBL.GetPosTrades(posList.Select(r => r.PosID).ToList());
 
-            var list = posList.Select(r => new RemotePosition()
+            var list = posList.Select(r => new TradePosition()
             {
                 PosID = r.PosID,
                 InsID = r.InsID,
@@ -92,6 +91,8 @@ namespace WebApp.Controllers
             if (acc == null) return BadRequest();
             
             _positionBL.ClearPositions(acc.AccountID);
+            _openPos.RefreshItems();
+
             return Ok();
         }
 
@@ -103,6 +104,8 @@ namespace WebApp.Controllers
             if (acc == null) return BadRequest();
 
             _positionBL.RefreshPositions(acc.AccountID);
+            _openPos.RefreshItems();
+
             return Ok();
         }
     }

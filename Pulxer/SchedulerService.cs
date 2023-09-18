@@ -34,27 +34,21 @@ namespace Pulxer
             _pluginManager = pm;
 
             var section = config.GetSection("Scheduler");
-            if (section != null)
+            var tasks = section.GetSection("tasks");
+            foreach (var task in tasks.GetChildren())
             {
-                var tasks = section.GetSection("tasks");
-                if (tasks != null)
-                {
-                    foreach(var task in tasks.GetChildren())
-                    {
-                        int time;
-                        if (!int.TryParse(task["time"], out time)) continue;
-                        string action = task["action"].ToLower();
-                        if ((action == "initialize") || (action == "opensession")) _scheduler.AddItem(time, OpenSession);
-                        if (action == "closesession") _scheduler.AddItem(time, CloseSession);
-                    }
-                }
+                int time;
+                if (!int.TryParse(task["time"], out time)) continue;
+                string action = task["action"].ToLower();
+                if ((action == "initialize") || (action == "opensession")) _scheduler.AddItem(time, OpenSession);
+                if (action == "closesession") _scheduler.AddItem(time, CloseSession);
+            }
 
-                var delaySection = section.GetSection("downloadall-timeout");
-                int timeout;
-                if (int.TryParse(delaySection.Value, out timeout))
-                {
-                    _downloadAllSecondsTimeout = timeout;
-                }
+            var delaySection = section.GetSection("downloadall-timeout");
+            int timeout;
+            if (int.TryParse(delaySection.Value, out timeout))
+            {
+                _downloadAllSecondsTimeout = timeout;
             }
         }
 

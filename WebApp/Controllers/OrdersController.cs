@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Platform;
+using System;
 using System.Collections.Generic;
 
 namespace WebApp.Controllers
@@ -11,10 +12,12 @@ namespace WebApp.Controllers
     public class OrdersController : ControllerBase
     {
         private IAccountBL _accountBL;
+        private IAccountDA _accDA;
 
-        public OrdersController(IAccountBL accountBL)
+        public OrdersController(IAccountBL accountBL, IAccountDA accDA)
         {
             _accountBL = accountBL;
+            _accDA = accDA;
         }
 
         [HttpGet("{ids}")]
@@ -23,5 +26,16 @@ namespace WebApp.Controllers
         {
             return _accountBL.GetOrders(Lib.Str2Ids(ids));
         }
+
+        [HttpPost("create")]
+        [Authorize]
+        public IActionResult Create()
+        {
+            DateTime dt = new DateTime(2020, 1, 1, 0, 0, 0);
+            _accDA.CreateOrder(1, dt, 1, BuySell.Buy, 1, null, OrderStatus.Reject, null, 0);
+
+            return Ok();
+        }
+
     }
 }

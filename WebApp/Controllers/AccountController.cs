@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Platform;
 using Pulxer;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -88,13 +89,13 @@ namespace WebApp.Controllers
         #region Position
         [HttpGet("{accountID}/positions/{fromID?}")]
         [Authorize]
-        public IEnumerable<RemotePosition> GetPositions(int accountID, int? fromID)
+        public IEnumerable<TradePosition> GetPositions(int accountID, int? fromID)
         {
             var posList = _positionBL.GetAllPositions(accountID);
             if (fromID != null) posList = posList.Where(r => r.PosID >= fromID);
             var posTrades = _positionBL.GetPosTrades(posList.Select(r => r.PosID).ToList());
 
-            var list = posList.Select(r => new RemotePosition()
+            var list = posList.Select(r => new TradePosition()
             {
                 PosID = r.PosID,
                 InsID = r.InsID,

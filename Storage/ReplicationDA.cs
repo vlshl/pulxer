@@ -64,7 +64,7 @@ namespace Storage
         {
             using (var db = new DaContext(_options))
             {
-                db.Database.ExecuteSqlCommand("delete from replication where repl_object = " + ((int)replObject).ToString());
+                db.Database.ExecuteSqlRaw("delete from replication where repl_object = " + ((int)replObject).ToString());
             }
         }
     }

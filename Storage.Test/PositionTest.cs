@@ -23,6 +23,7 @@ namespace Storage.Test
             DbContextOptionsBuilder<DaContext> builder = new DbContextOptionsBuilder<DaContext>();
             builder.UseNpgsql("Username=postgres;Password=123;Host=localhost;Port=5432;Database=pulxer_test");
             _options = builder.Options;
+            AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
             _insDA = new InstrumDA(_options);
             _accountDA = new AccountDA(_options);
@@ -60,7 +61,7 @@ namespace Storage.Test
             var openPos = _positionDA.CreatePosition(_accountID, _gazpID, Common.Data.PosTypes.Long, od, 100, 10, null, null);
             var closePos = _positionDA.CreatePosition(_accountID, _lkohID, Common.Data.PosTypes.Short, cd, 1000, 7, DateTime.Now, 1100);
 
-            var allPosList = _positionDA.GetPositions(_accountID, false);
+            var allPosList = _positionDA.GetPositions(_accountID, null);
             var openPosList = _positionDA.GetPositions(_accountID, true);
 
             if (allPosList.Count() != 2) throw new Exception();

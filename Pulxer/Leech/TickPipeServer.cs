@@ -34,7 +34,7 @@ namespace Pulxer.Leech
         /// <returns>Список последних сделок</returns>
         public async Task<LastPrice[]> GetLastPrices(string[] tickerList)
         {
-            var res = await _core.SendMessageAsync(_pipe, Encoding.UTF8.GetBytes("GetLastPrices " + tickerList.Join(",")));
+            var res = await _core.SendMessageAsync(_pipe, Encoding.UTF8.GetBytes("GetLastPrices " + string.Join(',', tickerList)));
             if (res == null) return null;
 
             try
