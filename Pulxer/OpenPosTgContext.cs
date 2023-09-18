@@ -145,6 +145,8 @@ namespace Pulxer
 
             foreach (var curItem in curItems)
             {
+                if (curItem.CurPrice == 0) continue;
+
                 if (_posId_prevLevel.ContainsKey(curItem.PosId))
                 {
                     int prevLevel = _posId_prevLevel[curItem.PosId];
@@ -213,10 +215,9 @@ namespace Pulxer
             }
 
             // отправляем оповещения в Телеграм
-            //string msgUp = "";
             List<string> list = new List<string>();
-            list.AddRange(_upItems.Select(r => string.Format("﻿\ufeff\u261d {0}: {1}%", r.Ticker, r.ProfitPerc.ToString(PERC_FORMAT))));
-            list.AddRange(_downItems.Select(r => string.Format("\ud83d\udc47 {0}: {1}%", r.Ticker, r.ProfitPerc.ToString(PERC_FORMAT))));
+            list.AddRange(_upItems.Select(r => string.Format("﻿\ud83d\udfe2 {0}: {1}%", r.Ticker, r.ProfitPerc.ToString(PERC_FORMAT))));
+            list.AddRange(_downItems.Select(r => string.Format("\ud83d\udd34 {0}: {1}%", r.Ticker, r.ProfitPerc.ToString(PERC_FORMAT))));
             if (list.Any()) 
             {
                 var msg = string.Join('\n', list);

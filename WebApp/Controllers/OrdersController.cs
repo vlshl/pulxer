@@ -26,16 +26,5 @@ namespace WebApp.Controllers
         {
             return _accountBL.GetOrders(Lib.Str2Ids(ids));
         }
-
-        [HttpPost("create")]
-        [Authorize]
-        public IActionResult Create()
-        {
-            DateTime dt = new DateTime(2020, 1, 1, 0, 0, 0);
-            _accDA.CreateOrder(1, dt, 1, BuySell.Buy, 1, null, OrderStatus.Reject, null, 0);
-
-            return Ok();
-        }
-
     }
 }
