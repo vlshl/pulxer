@@ -613,41 +613,5 @@ namespace Pulxer
                 if (isUpdate) _accountDA.UpdateCash(cash);
             }
         }
-
-        public async Task SyncAllTradesAsync()
-        {
-            var dbPath = _config.GetLeechDataPath();
-            var dateDirs = Directory.GetDirectories(dbPath);
-
-            foreach (var dateDir in dateDirs)
-            {
-                int year, month, day;
-                var ymd = Path.GetFileName(dateDir).Split('-');
-                if (ymd.Length < 3) continue;
-                if (!int.TryParse(ymd[0], out year)) continue;
-                if (!int.TryParse(ymd[1], out month)) continue;
-                if (!int.TryParse(ymd[2], out day)) continue;
-                if (year < 1900 || year > 2999) continue;
-                if (month < 1 || month > 12) continue;
-                if (day < 1 || day > 31) continue;
-
-                var allTradesPath = Path.Combine(dateDir, "AllTrades");
-                if (!Directory.Exists(allTradesPath)) continue; // нет каталога AllTrades
-
-                var date = new DateTime(year, month, day);
-                var instrumIDs = _tickHistoryDA.GetInstrums(date);
-                var tickers = Directory.GetFiles(allTradesPath).Select(f => Path.GetFileName(f)).ToList();
-
-                foreach (var ticker in tickers)
-                {
-                    var instrum = _instrumDA.GetInstrum(0, ticker);
-                    if (instrum == null) continue; // не найден тикер
-                    if (instrumIDs.Contains(instrum.InsID)) continue; // данные уже есть на нужную дату и тикер
-
-                    var bytes = await File.ReadAllBytesAsync(Path.Combine(allTradesPath, ticker));
-                    _tickHistoryDA.InsertData(instrum.InsID, date, bytes);
-                }
-            }
-        }
     }
 }

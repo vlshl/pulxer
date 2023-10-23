@@ -9,6 +9,5 @@ namespace Common.Interfaces
     {
         Task FullSyncAccountDataAsync(ISyncPipeServer sps);
         Task SyncAccountDataAsync(ISyncPipeServer sps, int lAccountId);
-        Task SyncAllTradesAsync();
     }
 }

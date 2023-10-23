@@ -33,6 +33,8 @@ namespace Pulxer
 
             services.AddTransient<IPluginPlatform, PluginPlatform>();
             services.AddTransient<HistoryDownloader>();
+            services.AddTransient<TickHistoryDownloader>();
+            services.AddTransient<ITickHistory, TickHistory>();
             services.AddTransient<IInstrumBL, InstrumBL>();
             services.AddTransient<IInsStoreBL, InsStoreBL>();
             services.AddTransient<IImportLeech, ImportLeech>();

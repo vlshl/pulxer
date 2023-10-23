@@ -51,24 +51,24 @@ namespace Pulxer
             _ctxMgr.UnregisterContext(_ctx);
         }
 
-        //private void DoWork()
-        //{
-        //    var posList = GetPositions();
+        private void DoWorkTest()
+        {
+            var posList = GetPositions();
 
-        //    while (_isWorking)
-        //    {
-        //        foreach (var pos in posList)
-        //        {
-        //            decimal cp = pos.CurPrice;
-        //            if (cp == 0)
-        //                pos.SetCurPrice(pos.OpenPrice);
-        //            else
-        //                pos.SetCurPrice(cp * 1.001m);
-        //        }
-        //        _ctx.Pulse(posList).Wait();
-        //        Thread.Sleep(SLEEP_10); // sleep 10 sec
-        //    }
-        //}
+            while (_isWorking)
+            {
+                foreach (var pos in posList)
+                {
+                    decimal cp = pos.CurPrice;
+                    if (cp == 0)
+                        pos.SetCurPrice(pos.OpenPrice);
+                    else
+                        pos.SetCurPrice(cp * 1.001m);
+                }
+                _ctx.Pulse(posList).Wait();
+                Thread.Sleep(SLEEP_10); // sleep 10 sec
+            }
+        }
 
         private void DoWork()
         {

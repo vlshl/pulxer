@@ -66,9 +66,9 @@ namespace Pulxer
                 var pos = items.FirstOrDefault(r => r.PosId.ToString() == cmd);
                 if (pos == null) return;
 
-                string msg = string.Format("{0} {1}\nОткрыта: {2}\nРазмер: {3} ({4})\nЦена: {5} ({6})\nТекущ: {7} ({8})\nПрибыль: {9} ({10}%)",
-                    pos.Ticker, 
-                    pos.ShortName,
+                string msg = string.Format("<b>{0}</b>: {1}\n<b>Дата:</b> {2}\n<b>Лотов:</b> {3} ({4})\n<b>Цена отк:</b> {5} ({6})\n<b>Цена тек:</b> {7} ({8})\n<b>Прибыль:</b> {9} ({10}%)",
+                    TgService.Escape(pos.Ticker),
+                    TgService.Escape(pos.ShortName),
                     pos.OpenTime.ToString(DATETIME_FORMAT), 
                     pos.Lots.ToString(),
                     pos.Count.ToString(),
@@ -114,17 +114,17 @@ namespace Pulxer
 
             if (items.Any())
             {
-                var buttons = items.Select(r => new string[] { r.PosId.ToString(), r.Ticker }).ToList();
-                int row_count = items.Length / 3;
-                int rest = items.Length % 3;
-                List<int> rows = new List<int>();
-                for (int r = 0; r < row_count; ++r) rows.Add(3);
-                if (rest > 0) rows.Add(rest);
+                var buttons = items.Select(r => new string[] { r.PosId.ToString(),
+                    string.Format("{0} | {1} | {2} ({3}%)",
+                        r.Ticker,
+                        r.Lots.ToString(),
+                        r.Profit.ToString(SUMMA_FORMAT),
+                        r.ProfitPerc.ToString(PERC_FORMAT))
+                }).ToList();
 
                 buttons.Add(new string[] { "/openpos-settings", "Настройки" });
-                rows.Add(1);
 
-                _ctxMgr.SendMessage(this, "Позиции", buttons, rows).Wait();
+                _ctxMgr.SendMessage(this, "Позиции", buttons).Wait();
             }
             else
             {
@@ -216,12 +216,12 @@ namespace Pulxer
 
             // отправляем оповещения в Телеграм
             List<string> list = new List<string>();
-            list.AddRange(_upItems.Select(r => string.Format("﻿\ud83d\udfe2 {0}: {1}%", r.Ticker, r.ProfitPerc.ToString(PERC_FORMAT))));
-            list.AddRange(_downItems.Select(r => string.Format("\ud83d\udd34 {0}: {1}%", r.Ticker, r.ProfitPerc.ToString(PERC_FORMAT))));
+            list.AddRange(_upItems  .Select(r => string.Format("﻿\u25b2 {0} | {1} | {2} ({3}%)", r.Ticker, r.Lots.ToString(), r.Profit.ToString(SUMMA_FORMAT), r.ProfitPerc.ToString(PERC_FORMAT))));
+            list.AddRange(_downItems.Select(r => string.Format("\u25bc {0} | {1} | {2} ({3}%)", r.Ticker, r.Lots.ToString(), r.Profit.ToString(SUMMA_FORMAT), r.ProfitPerc.ToString(PERC_FORMAT))));
             if (list.Any()) 
             {
                 var msg = string.Join('\n', list);
-                await _ctxMgr.SendMessage(this, "Движение позиций:\n" + msg);
+                await _ctxMgr.SendMessage(this, msg);
             }
         }
     }

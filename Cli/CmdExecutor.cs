@@ -28,11 +28,6 @@ namespace Cli
             {
                 Help();
             }
-            else if (cmd == "sync-alltrades")
-            {
-                var leechCtrl = ActivatorUtilities.CreateInstance<LeechCtrl>(_sp);
-                leechCtrl.SyncAllTrades();
-            }
             else if (cmd == "list-instrum")
             {
                 var instrumCtrl = ActivatorUtilities.CreateInstance<InstrumCtrl>(_sp);

@@ -42,6 +42,7 @@ namespace Pulxer
                 string action = task["action"].ToLower();
                 if ((action == "initialize") || (action == "opensession")) _scheduler.AddItem(time, OpenSession);
                 if (action == "closesession") _scheduler.AddItem(time, CloseSession);
+                if (action == "tickhistorydownload") _scheduler.AddItem(time, TickHistoryDownload);
             }
 
             var delaySection = section.GetSection("downloadall-timeout");
@@ -100,6 +101,18 @@ namespace Pulxer
         {
             _pluginManager.UnloadAllPlugins();
             _logger.LogInformation("Session closed.");
+        }
+
+        private void TickHistoryDownload()
+        {
+            _logger.LogInformation("TickHistory download ...");
+
+            using (var scope = _services.CreateScope())
+            {
+                var downloader = scope.ServiceProvider.GetRequiredService<TickHistoryDownloader>();
+                int count = downloader.DownloadAsync().Result;
+                _logger.LogInformation("Download blobs: " + count);
+            }
         }
     }
 }

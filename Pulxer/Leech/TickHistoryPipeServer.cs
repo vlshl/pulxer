@@ -54,11 +54,11 @@ namespace Pulxer.Leech
         /// <summary>
         /// Получить список тикеров на указанную дату, для которых есть исторические тиковые данные
         /// </summary>
-        /// <param name="date">Дата</param>
+        /// <param name="date">Дата (строка в формате yyyy-MM-dd)</param>
         /// <returns>Список тикеров или пустой список, если null - ошибка</returns>
-        public async Task<string[]> GetTickers(DateTime date)
+        public async Task<string[]> GetTickers(string date)
         {
-            var res = await _core.SendMessageAsync(_pipe, Encoding.UTF8.GetBytes("GetTickers " + date.ToString("yyyy-MM-dd")));
+            var res = await _core.SendMessageAsync(_pipe, Encoding.UTF8.GetBytes("GetTickers " + date));
             if (res == null)
             {
                 _logger?.LogError("GetTickers: null result");
@@ -85,12 +85,12 @@ namespace Pulxer.Leech
         /// <summary>
         /// Получить данные по сделкам в формате AllTrades
         /// </summary>
-        /// <param name="date">Дата</param>
+        /// <param name="date">Дата (строка в формате yyyy-MM-dd)</param>
         /// <param name="ticker">Тикер</param>
         /// <returns>Массив байт в формате AllTrades, если пустой массив - нет данных, если null - ошибка</returns>
-        public async Task<byte[]> GetData(DateTime date, string ticker)
+        public async Task<byte[]> GetData(string date, string ticker)
         {
-            var res = await _core.SendMessageAsync(_pipe, Encoding.UTF8.GetBytes("GetData " + date.ToString("yyyy-MM-dd") + " " + ticker));
+            var res = await _core.SendMessageAsync(_pipe, Encoding.UTF8.GetBytes("GetData " + date + " " + ticker));
             if (res == null)
             {
                 _logger?.LogError("GetData: null result");

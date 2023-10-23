@@ -22,15 +22,6 @@ namespace Common
             LoadHistoryDownloadParts(config);
         }
 
-        /// <summary>
-        /// Путь к данным всех сделок (путь к каталогам с датами)
-        /// </summary>
-        /// <returns></returns>
-        public string GetLeechDataPath()
-        {
-            return _configSection["LeechDataPath"];
-        }
-
         public string GetHistoryProviderConfig()
         {
             return _configSection["HistoryProviderConfig"];
@@ -49,6 +40,11 @@ namespace Common
         public string GetPluginsPath()
         {
             return _configSection["PluginsPath"];
+        }
+
+        public string GetTickHistoryPath()
+        {
+            return _configSection["TickHistoryPath"];
         }
 
         public int GetHistoryDownloaderDays(string tf)
