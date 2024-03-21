@@ -22,6 +22,7 @@ namespace Pulxer
         private readonly ILogger<OpenPositions> _logger;
         private int SLEEP_10 = 10000;
         private int SLEEP_60 = 60 * 1000;
+        private int PULSE_TIMEOUT = 10 * 1000;
         private readonly OpenPosTgContext _ctx;
 
         public OpenPositions(ITgContextManager ctxMgr, LeechServerManager lsm, IServiceProvider services, ILogger<OpenPositions> logger)
@@ -118,7 +119,12 @@ namespace Pulxer
                             item.SetCurPrice(lastPrice.Price);
                         }
                     }
-                    _ctx.Pulse(GetPositions()).Wait();
+
+                    bool isSuccess = _ctx.Pulse(GetPositions()).Wait(PULSE_TIMEOUT);
+                    if (!isSuccess)
+                    {
+                        _logger.LogWarning("OpenPosTgContext:Pulse timeout");
+                    }
                 }
 
                 Thread.Sleep(SLEEP_10); // sleep 10 sec
