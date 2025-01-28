@@ -9,8 +9,4 @@
     <ProjectReference Include="..\Platform\Platform.csproj" />
   </ItemGroup>
 
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="copy $(TargetPath) $(SolutionDir)Cli\bin\Debug\netcoreapp2.1\$(TargetFileName)" />
-  </Target>
-
 </Project>

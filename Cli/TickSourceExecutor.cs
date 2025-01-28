@@ -4,6 +4,7 @@ using Platform;
 using Pulxer;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 
@@ -17,6 +18,7 @@ namespace Cli
         private readonly ITickSourceBL _tickSourceBL = null;
         private readonly IInstrumBL _instrumBL = null;
         private readonly IInsStoreBL _insStoreBL = null;
+        private readonly CultureInfo _ci;
 
         public TickSourceExecutor(IConsole console, ITickSourceBL tickSourceBL, IInstrumBL instrumBL, IInsStoreBL insStoreBL)
         {
@@ -24,6 +26,7 @@ namespace Cli
             _tickSourceBL = tickSourceBL;
             _instrumBL = instrumBL;
             _insStoreBL = insStoreBL;
+            _ci = CultureInfo.GetCultureInfo("ru-RU");
         }
 
         public void InitContext(int id, IExecutor parentExecutor)
@@ -201,13 +204,13 @@ namespace Cli
             }
 
             DateTime start;
-            if (DateTime.TryParse(args[0], out start))
+            if (DateTime.TryParse(args[0], _ci, out start))
             {
                 _tickSource.StartDate = start;
             }
 
             DateTime end;
-            if (DateTime.TryParse(args[1], out end))
+            if (DateTime.TryParse(args[1], _ci, out end))
             {
                 _tickSource.EndDate = end;
             }

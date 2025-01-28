@@ -20,6 +20,7 @@ namespace Cli
         private readonly IInstrumBL _instrumBL;
         private readonly ITickHistoryBL _tickHistoryBL;
         private readonly HistoryDownloader _historyDownloader;
+        private readonly CultureInfo _ci;
 
         public HistoryCtrl(IConsole console, IInsStoreBL insStoreBL, IInstrumBL instrumBL, ITickHistoryBL tickHistoryBL,
             HistoryDownloader historyDownloader) : base(console)
@@ -29,6 +30,7 @@ namespace Cli
             _instrumBL = instrumBL;
             _tickHistoryBL = tickHistoryBL;
             _historyDownloader = historyDownloader;
+            _ci = CultureInfo.GetCultureInfo("ru-RU");
         }
 
         public void HistoryDownloadAll(List<string> args)
@@ -41,7 +43,7 @@ namespace Cli
 
             foreach (var arg in args)
             {
-                if (DateTime.TryParse(arg, out d))
+                if (DateTime.TryParse(arg, _ci, out d))
                 {
                     toDate = d;
                     continue;
@@ -143,7 +145,7 @@ namespace Cli
             }
 
             DateTime d;
-            if (DateTime.TryParse(args[0].Trim(), out d))
+            if (DateTime.TryParse(args[0].Trim(), _ci, out d))
             {
                 date1 = d;
             }
@@ -152,7 +154,7 @@ namespace Cli
                 _console.WriteError("Неверно указана дата начала");
                 return;
             }
-            if (DateTime.TryParse(args[1].Trim(), out d))
+            if (DateTime.TryParse(args[1].Trim(), _ci, out d))
             {
                 date2 = d;
             }
@@ -269,7 +271,7 @@ namespace Cli
 
             DateTime date1, date2;
             DateTime d;
-            if (DateTime.TryParse(args[2].Trim(), out d))
+            if (DateTime.TryParse(args[2].Trim(), _ci, out d))
             {
                 date1 = d;
             }
@@ -278,7 +280,7 @@ namespace Cli
                 _console.WriteError("Неверно указана дата начала");
                 return;
             }
-            if (DateTime.TryParse(args[3].Trim(), out d))
+            if (DateTime.TryParse(args[3].Trim(), _ci, out d))
             {
                 date2 = d;
             }
@@ -411,7 +413,7 @@ namespace Cli
 
             DateTime date;
             DateTime d;
-            if (DateTime.TryParse(args[0].Trim(), out d))
+            if (DateTime.TryParse(args[0].Trim(), _ci, out d))
             {
                 date = d;
             }

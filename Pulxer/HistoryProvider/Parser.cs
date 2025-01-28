@@ -154,7 +154,7 @@ namespace Pulxer.HistoryProvider
 
                         Bar bar = new Bar();
 
-                        var time = DateTime.ParseExact(_date + " " + _time, "yyyyMMdd HHmmss", settings.Nfi);
+                        var time = DateTime.ParseExact(_date + " " + _time, settings.DateFormat + " " + settings.TimeFormat, settings.Nfi);
                         if ((time.Date < d1) || (time.Date > d2))
                         {
                             _logger?.LogError("Line parsing error, date out of range: " + line);
